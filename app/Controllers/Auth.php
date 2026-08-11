@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 
-class Auth extends BaseController 
+class Auth extends BaseController
 {
     protected $userModel;
 
@@ -16,7 +16,7 @@ class Auth extends BaseController
     public function index()
     {
         //jika sudah login, langsung redirect ke password
-        if(session()->get('isLoggedIn')) {
+        if (session()->get('isLoggedIn')) {
             return redirect()->to('/dashboard');
         }
 
@@ -25,39 +25,37 @@ class Auth extends BaseController
 
     public function attemptLogin()
     {
-        //1. validasi input
+        //validasi input
         $rules = [
-            'email' => [
-                'rules' => 'required|valid_email',
-                'errors' => [
-                    'required' => 'Email harus diisi.',
-                    'valid_email' => 'Email tidak valid.'
-                ]
-            ],
-            'password' => [
-                'rules' => 'required|min_length[6]',
-                'errors' => [
-                    'required' => 'Password wajib diisi',
-                    'min_length' => 'Password minimal 6 karakter.'
-                ]
-            ]
+            'username' => 'required',
+            'password' => 'required',
         ];
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $email = $this->request->getPost('email');
+        $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        //2. Cek user di database
-        $user = $this->userModel->getUserByEmail($email);
+        //Cek user di database
+        $user = $this->userModel->getUserByUsername($username);
 
-        //3. Verifikasi Enkripsi Password {BCRYPT}
-        if($user && password_verify ($password, $user['password_hash'])) {
+        if (!$user) {
+            return redirect()->back()->withInput()->with('error', 'Username tidak ditemukan!');
+        }
+
+        //cek status akun (is_active)
+        if (isset($user['is_active']) && (int)$user['is_active'] !== 1) {
+            return redirect()->back()->withInput()->with('error', 'Akun Anda sudah tidak aktif.');
+        }
+
+        //Verifikasi Enkripsi Password {BCRYPT}
+        if (password_verify($password, $user['password_hash'])) {
             //set session handling
             $sessionData = [
                 'user_id'    => $user['id'],
+                'username'   => $user['username'],
                 'name'       => $user['name'],
                 'email'      => $user['email'],
                 'role_id'    => $user['role_id'],
@@ -69,8 +67,8 @@ class Auth extends BaseController
 
             return redirect()->to('/dashboard')->with('success', 'Selamat datang kembali, ' . $user['name']);
         }
-        
-        return redirect()->back()->withInput()->with('error', 'Email atau password salah, atau akun anda sudah tidak aktif');
+
+        return redirect()->back()->withInput()->with('error', 'Password yang anda masukkan salah!');
     }
 
     public function logout()

@@ -79,17 +79,23 @@
                 <?= csrf_field() ?>
 
                 <div class="mb-3">
-                    <label for="email" class="form-label text-secondary fw-semibold small">Alamat Email</label>
+                    <label for="username" class="form-label text-secondary fw-semibold small">Username</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-envelope text-muted"></i></span>
-                        <input type="email" name="email" id="email" class="form-control bg-light border-start-0" placeholder="@gmail.com" value="<?= old('email') ?>" required>
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="fa-solid fa-user text-muted"></i> </span>
+                        <input type="text"
+                            name="username"
+                            id="username"
+                            class="form-control bg-light border-start-0"
+                            placeholder="Masukkan username"
+                            value="<?= old('username') ?>"
+                            required>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <label for="password" class="form-label text-secondary fw-semibold small">Password</label>
-                        <a href="#" class="text-decoration-none small text-primary opacity-75">Lupa password?</a>
                     </div>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
@@ -100,28 +106,22 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-primary-custom w-100 text-white mt-3">Masuk ke sistem</button>
+                <button type="submit" class="btn btn-primary btn-primary-custom w-100 text-white mt-3">Login</button>
             </form>
 
-            <div class="text-center mt-4 pt-2 border-top">
-                <p class="small text-muted mb-0">Belum punya akun? <a href="<?= base_url('/register') ?>" class="text-primary text-decoration-none fw-semibold">Registrasi mandiri</a></p>
-            </div>
-        </div>
-    </div>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                const togglePassword = document.querySelector('#togglePassword');
+                const password = document.querySelector('#password');
+                const eyeIcon = document.querySelector('#eyeIcon');
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#password');
-        const eyeIcon = document.querySelector('#eyeIcon');
-
-        togglePassword.addEventListener('click', function() {
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            eyeIcon.classList.toggle('fa-eye');
-            eyeIcon.classList.toggle('fa-eye-slash');
-        });
-    </script>
+                togglePassword.addEventListener('click', function() {
+                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                    password.setAttribute('type', type);
+                    eyeIcon.classList.toggle('fa-eye');
+                    eyeIcon.classList.toggle('fa-eye-slash');
+                });
+            </script>
 </body>
 
 </html>
