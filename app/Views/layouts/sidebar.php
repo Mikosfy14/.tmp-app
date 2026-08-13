@@ -35,24 +35,31 @@
             <ul class="menu">
                 <li class="sidebar-title">Menu</li>
 
-                <li class="sidebar-item active">
+                <li class="sidebar-item <?= is_active('dashboard') ?>">
                     <a href="<?= base_url('/dashboard') ?>" class='sidebar-link d-flex align-items-center'>
                         <i class="bi bi-grid-fill me-2 fs-5"></i>
                         <span>User Dashboard</span>
                     </a>
                 </li>
 
-                <li class="sidebar-item">
-                    <a href="#" class='sidebar-link d-flex align-items-center'>
+                <li class="sidebar-item <?= is_active('aplikasi') ?>">
+                    <a href="<?= base_url('/aplikasi') ?>" class='sidebar-link d-flex align-items-center'>
                         <i class="bi bi-stack me-2 fs-5"></i>
                         <span>Aplikasi Pengelolaan</span>
                     </a>
                 </li>
 
+                <li class="sidebar-item <?= is_active('projects') ?>">
+                    <a href="<?= base_url('/projects') ?>" class='sidebar-link d-flex align-items-center'>
+                        <i class="bi bi-kanban me-2 fs-5"></i>
+                        <span>Project Tracker</span>
+                    </a>
+                </li>
+
                 <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
                     <li class="sidebar-title">Administrator</li>
-                    <li class="sidebar-item">
-                        <a href="#" class='sidebar-link d-flex align-items-center'>
+                    <li class="sidebar-item <?= is_active('users') ?>">
+                        <a href="<?= base_url('/users') ?>" class='sidebar-link d-flex align-items-center'>
                             <i class="bi bi-people-fill me-2 fs-5"></i>
                             <span>User Management</span>
                         </a>
