@@ -62,7 +62,7 @@ class Dashboard extends BaseController
                     'title'       => 'Redesign UI/UX Portal Internal',
                     'deadline'    => '2026-08-20',
                     'progress'    => 90,
-                    'status'      => 'Review Kadept',
+                    'status'      => 'Review',
                     'status_class' => 'bg-warning'
                 ],
             ],
