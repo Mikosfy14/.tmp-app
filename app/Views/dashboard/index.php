@@ -322,9 +322,6 @@
                     <h5 class="card-title mb-0 fs-6 fw-bold">
                         <i class="bi bi-person-lines-fill me-2 text-primary"></i>Daftar Anggota Tim & Project Tracker
                     </h5>
-                    <a href="#" class="btn btn-sm btn-primary">
-                        <i class="bi bi-gear me-1"></i>User Management
-                    </a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
