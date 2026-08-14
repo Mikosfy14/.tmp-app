@@ -31,16 +31,30 @@
         <div class="col-12 col-lg-8">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h5 class="fw-bold mb-2">Overall Completion Progress</h5>
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="progress w-100" style="height: 18px;">
-                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: <?= $project['progress'] ?>%;"></div>
+                    <h5 class="fw-bold mb-3">Ringkasan Project</h5>
+                    <?php
+                    $statusBadge = match ($project['status']) {
+                        'Completed'    => 'bg-success',
+                        'In Progress'  => 'bg-primary',
+                        'Testing/QA'   => 'bg-info',
+                        'Review'       => 'bg-warning text-dark',
+                        'On Hold'      => 'bg-danger',
+                        default        => 'bg-secondary'
+                    };
+                    ?>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Status</small>
+                            <span class="badge <?= $statusBadge ?>"><?= esc($project['status']) ?></span>
                         </div>
-                        <span class="fs-4 fw-bold text-success"><?= $project['progress'] ?>%</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-sm text-muted">
-                        <span><i class="bi bi-calendar-event me-1"></i> Start Date: <strong><?= date('d M Y', strtotime($project['start_date'])) ?></strong></span>
-                        <span><i class="bi bi-calendar-check me-1"></i> Deadline: <strong><?= date('d M Y', strtotime($project['end_date'])) ?></strong></span>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Start Date</small>
+                            <strong><?= date('d M Y', strtotime($project['start_date'])) ?></strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Deadline</small>
+                            <strong><?= date('d M Y', strtotime($project['end_date'])) ?></strong>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,14 +142,10 @@
             <form action="<?= base_url('/projects/update-progress/' . $project['id']) ?>" method="POST">
                 <?= csrf_field() ?>
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title text-white"><i class="bi bi-pencil-square me-2"></i>Update Progress Proyek</h5>
+                    <h5 class="modal-title text-white"><i class="bi bi-pencil-square me-2"></i>Update Status Proyek</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Percentage Progress (%)</label>
-                        <input type="number" name="progress" class="form-control form-control-lg" min="0" max="100" value="<?= $project['progress'] ?>" required>
-                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Project Status</label>
                         <select name="status" class="form-select" required>
@@ -147,7 +157,7 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Catatan Progress Tambahan</label>
+                        <label class="form-label fw-bold">Catatan Project</label>
                         <textarea name="notes" class="form-control" rows="3"><?= esc($project['notes']) ?></textarea>
                     </div>
                 </div>
