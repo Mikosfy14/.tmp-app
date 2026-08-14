@@ -25,14 +25,19 @@ class ProjectModel extends Model
         'unit_testing_date',
         'sit_date',
         'uat_date',
-        'promote_date'
+        'promote_date',
+        'assigned_to'
     ];
 
-    /**Ambil semua project beserta list developer(PIC) and filter status */
-    public function getProjectsWithDevelopers($statusFilter = null, $keyword = null)
+    /** Ambil project beserta user penanggung jawab dari kolom assigned_to. */
+    public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false): array
     {
         $builder = $this->builder();
         $builder->select('projects.*');
+
+        if (!$includeAll && !empty($userId)) {
+            $this->whereAssignedToContains($builder, $userId);
+        }
 
         if(!empty($statusFilter)) {
             $builder->where('projects.status', $statusFilter);
@@ -46,35 +51,87 @@ class ProjectModel extends Model
         }
 
         $projects = $builder->orderBy('projects.id', 'DESC')->get()->getResultArray();
+        return $this->attachAssignees($projects);
+    }
 
-        //ambil developer untuk setiap project
-        $db = \Config\Database::connect();
-        foreach ($projects as &$prj) {
-            $devs = $db->table('project_developers pd')
-                       ->select('u.id as user_id, u.name, u.job_title')
-                       ->join('users u', 'u.id = pd.user_id')
-                       ->where('pd.project_id', $prj['id'])
-                       ->get()
-                       ->getResultArray();
-            $prj['developers'] = $devs;
+    /** Ambil detail project beserta user penanggung jawab dari kolom assigned_to. */
+    public function getProjectDetail($id, ?int $userId = null, bool $includeAll = false): ?array
+    {
+        $builder = $this->builder();
+        $builder->select('projects.*')
+            ->where('projects.id', $id);
+
+        if (!$includeAll && !empty($userId)) {
+            $this->whereAssignedToContains($builder, $userId);
+        }
+
+        $project = $builder->get()->getRowArray();
+        if (!$project) return null;
+
+        $project['assigned_users'] = $this->getUsersFromAssignedTo($project['assigned_to'] ?? '');
+        return $project;
+    }
+
+    private function whereAssignedToContains($builder, int $userId): void
+    {
+        $userId = (int) $userId;
+
+        if ($userId <= 0) {
+            $builder->where('1 = 0', null, false);
+            return;
+        }
+
+        $builder->where("CHARINDEX(',$userId,', ',' + ISNULL(projects.assigned_to, '') + ',') >", 0, false);
+    }
+
+    private function attachAssignees(array $projects): array
+    {
+        foreach ($projects as &$project) {
+            $project['assigned_users'] = $this->getUsersFromAssignedTo($project['assigned_to'] ?? '');
         }
 
         return $projects;
     }
 
-    /**ambil detail project beserta developer yang bertanggung jawab */
-    public function getProjectDetail($id)
+    private function getUsersFromAssignedTo(?string $assignedTo): array
     {
-        $project = $this->find($id);
-        if (!$project) return null;
+        $userIds = $this->parseAssignedTo($assignedTo);
 
-        $db = \Config\Database::connect();
-        $project['developers'] = $db->table('project_developers pd')
-                                     ->select('u.id as user_id, u.name, u.email, u.job_title')
-                                     ->join('users u', 'u.id = pd.user_id')
-                                     ->where('pd.project_id', $id)
-                                     ->get()
-                                     ->getResultArray();
-        return $project;
+        if (empty($userIds)) {
+            return [];
+        }
+
+        $users = $this->db->table('users')
+            ->select('id as user_id, name, email, job_title')
+            ->whereIn('id', $userIds)
+            ->get()
+            ->getResultArray();
+
+        $usersById = [];
+        foreach ($users as $user) {
+            $usersById[(int) $user['user_id']] = $user;
+        }
+
+        $orderedUsers = [];
+        foreach ($userIds as $userId) {
+            if (isset($usersById[$userId])) {
+                $orderedUsers[] = $usersById[$userId];
+            }
+        }
+
+        return $orderedUsers;
     }
+
+    private function parseAssignedTo(?string $assignedTo): array
+    {
+        if (empty($assignedTo)) {
+            return [];
+        }
+
+        $ids = array_map('trim', explode(',', $assignedTo));
+        $ids = array_filter($ids, static fn ($id) => ctype_digit($id) && (int) $id > 0);
+
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+}
 }   

@@ -3,8 +3,10 @@
 /**
  * @var array $statusOptions
  * @var array $projects
- * @var array $user
+ * @var array $users
  * @var string|null $selectedStatus
+ * @var bool $isFilteredUser
+ * @var array|null $targetUser
  */
 ?>
 
@@ -15,7 +17,15 @@
 <div class="page-heading d-flex justify-content-between align-items-center mb-3">
     <div>
         <h3>Project Tracker</h3>
-        <p class="text-subtitle text-muted mb-0">Kelola dan pantau seluruh proyek departemen secara real-time.</p>
+        <p class="text-subtitle text-muted mb-0">
+            <?php if (!empty($isFilteredUser) && !empty($targetUser)) : ?>
+                Menampilkan project milik <?= esc($targetUser['name']) ?>.
+            <?php elseif (session()->get('role_name') === 'Kepala Departemen') : ?>
+                Kelola dan pantau seluruh proyek departemen secara real-time.
+            <?php else : ?>
+                Kelola dan pantau project yang ditugaskan kepada Anda.
+            <?php endif; ?>
+        </p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddProject">
         <i class="bi bi-plus-circle me-1"></i> Tambah Proyek
@@ -33,7 +43,7 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
-            <form action="<?= base_url('/projects') ?>" method="GET" class="row g-2 align-items-center">
+            <form action="<?= !empty($isFilteredUser) && !empty($targetUser) ? base_url('/projects/user/' . $targetUser['id']) : base_url('/projects') ?>" method="GET" class="row g-2 align-items-center">
                 <div class="col-12 col-md-4">
                     <input type="text" name="keyword" class="form-control" placeholder="Cari Kode atau Nama Proyek..." value="<?= esc($keyword ?? '') ?>">
                 </div>
@@ -47,7 +57,7 @@
                 </div>
                 <div class="col-12 col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter me-1"></i> Filter</button>
-                    <a href="<?= base_url('/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                    <a href="<?= !empty($isFilteredUser) && !empty($targetUser) ? base_url('/projects/user/' . $targetUser['id']) : base_url('/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
                 </div>
             </form>
         </div>
@@ -62,7 +72,7 @@
                             <th>Kode & Nama Proyek</th>
                             <th>Status</th>
                             <th style="width: 20%;">Progress</th>
-                            <th>Developer (PIC)</th>
+                            <th>Assigned To (PIC)</th>
                             <th>Target Promote</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -97,16 +107,16 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php if (!empty($prj['developers'])) : ?>
+                                        <?php if (!empty($prj['assigned_users'])) : ?>
                                             <div class="d-flex flex-wrap gap-1">
-                                                <?php foreach ($prj['developers'] as $dev) : ?>
-                                                    <span class="badge bg-light-primary text-primary" title="<?= esc($dev['job_title']) ?>">
-                                                        <i class="bi bi-person-fill me-1"></i><?= esc($dev['name']) ?>
+                                                <?php foreach ($prj['assigned_users'] as $assignedUser) : ?>
+                                                    <span class="badge bg-light-primary text-primary" title="<?= esc($assignedUser['job_title']) ?>">
+                                                        <i class="bi bi-person-fill me-1"></i><?= esc($assignedUser['name']) ?>
                                                     </span>
                                                 <?php endforeach; ?>
                                             </div>
                                         <?php else : ?>
-                                            <span class="text-muted text-sm">- Belum Ada PIC -</span>
+                                            <span class="text-muted text-sm">- Belum Ada User -</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -166,13 +176,13 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Developer PIC (Bisa Pilih Banyak)</label>
-                            <select name="developer_ids[]" class="form-select" multiple style="height: 100px;">
-                                <?php foreach ($user as $u) : ?>
-                                    <option value="<?= $u['id'] ?>"><?= esc($u['name']) ?> (<?= esc($u['job_title'] ?? 'Staff') ?>)</option>
+                            <label class="form-label fw-bold">Assigned To / PIC (Bisa Pilih Banyak)</label>
+                            <select name="assigned_to[]" class="form-select" multiple style="height: 100px;">
+                                <?php foreach ($users as $u) : ?>
+                                    <option value="<?= $u['id'] ?>" <?= ((int) session()->get('user_id') === (int) $u['id']) ? 'selected' : '' ?>><?= esc($u['name']) ?> (<?= esc($u['job_title'] ?? 'Staff') ?>)</option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted fs-7">*Tahan Ctrl/Cmd untuk memilih lebih dari 1 developer.</small>
+                            <small class="text-muted fs-7">*User login otomatis menjadi ID pertama di assigned_to.</small>
                         </div>
 
                         <div class="col-md-6">
