@@ -121,7 +121,6 @@ class ProjectModel extends Model
 
         return $orderedUsers;
     }
-
     private function parseAssignedTo(?string $assignedTo): array
     {
         if (empty($assignedTo)) {
