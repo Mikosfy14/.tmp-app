@@ -134,3 +134,4 @@ class ProjectModel extends Model
         return array_values(array_unique(array_map('intval', $ids)));
     }
 }
+}   
