@@ -228,7 +228,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0 fs-6 fw-bold text-primary"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Grafik Penyelesaian Project</h5>
-                <span class="badge bg-light-secondary text-dark">Tahun 2026</span>
+                <span class="badge bg-light-secondary text-dark">Tahun <?= date('Y') ?></span>
             </div>
             <div class="card-body">
                 <div id="chart-personal-performance"></div>
@@ -249,7 +249,7 @@
                                 <h6 class="mb-0 text-dark text-sm fw-bold"><?= esc($item['title']) ?></h6>
                                 <small class="text-muted"><i class="bi bi-calendar-event me-1"></i><?= $item['date'] ?></small>
                             </div>
-                            <span class="badge bg-light-<?= $item['class'] ?> text-<?= $item['class'] ?>"><?= $item['badge'] ?></span>
+                            <span class="badge timeline-status-badge bg-light-<?= $item['class'] ?> text-<?= $item['class'] ?>"><?= $item['badge'] ?></span>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -377,8 +377,101 @@
 
 </div>
 
+<style>
+    [data-bs-theme="dark"] .timeline-status-badge.bg-light-danger {
+        background-color: #ffdede !important;
+        color: #dc3545 !important;
+    }
+
+    [data-bs-theme="dark"] .timeline-status-badge.bg-light-info {
+        background-color: #e6fdff !important;
+        color: #0dcaf0 !important;
+    }
+
+    [data-bs-theme="dark"] .timeline-status-badge.bg-light-success {
+        background-color: #d2ffe8 !important;
+        color: #198754 !important;
+    }
+
+    [data-bs-theme="dark"] .timeline-status-badge.bg-light-warning {
+        background-color: #fffdd8 !important;
+        color: #ffc107 !important;
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        function getChartThemeOptions() {
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const textColor = isDark ? '#f5f7ff' : '#25396f';
+            const mutedColor = isDark ? '#a6a8b8' : '#607080';
+            const gridColor = isDark ? '#2b2b40' : '#e6eaee';
+
+            return {
+                chart: {
+                    foreColor: textColor
+                },
+                theme: {
+                    mode: isDark ? 'dark' : 'light'
+                },
+                tooltip: {
+                    theme: isDark ? 'dark' : 'light'
+                },
+                legend: {
+                    labels: {
+                        colors: textColor
+                    }
+                },
+                xaxis: {
+                    labels: {
+                        style: {
+                            colors: mutedColor
+                        }
+                    },
+                    axisBorder: {
+                        color: gridColor
+                    },
+                    axisTicks: {
+                        color: gridColor
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: mutedColor
+                        }
+                    }
+                },
+                grid: {
+                    borderColor: gridColor
+                },
+                dataLabels: {
+                    style: {
+                        colors: [textColor]
+                    }
+                },
+                teamDataLabels: {
+                    style: {
+                        colors: ['#ffffff']
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                value: {
+                                    color: textColor
+                                },
+                                total: {
+                                    color: textColor
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
         // 1. Chart Kinerja Personal (Bar/Column Chart)
         var optionsPersonal = {
             chart: {
@@ -412,6 +505,31 @@
                 position: 'top'
             }
         };
+        var personalThemeOptions = getChartThemeOptions();
+        optionsPersonal = {
+            ...optionsPersonal,
+            chart: {
+                ...optionsPersonal.chart,
+                ...personalThemeOptions.chart
+            },
+            theme: personalThemeOptions.theme,
+            tooltip: personalThemeOptions.tooltip,
+            yaxis: personalThemeOptions.yaxis,
+            grid: personalThemeOptions.grid,
+            xaxis: {
+                ...optionsPersonal.xaxis,
+                ...personalThemeOptions.xaxis
+            },
+            dataLabels: {
+                ...optionsPersonal.dataLabels,
+                ...personalThemeOptions.dataLabels
+            },
+            legend: {
+                ...optionsPersonal.legend,
+                ...personalThemeOptions.legend
+            },
+            plotOptions: optionsPersonal.plotOptions
+        };
         var chartPersonal = new ApexCharts(document.querySelector("#chart-personal-performance"), optionsPersonal);
         chartPersonal.render();
 
@@ -429,9 +547,50 @@
                     position: 'bottom'
                 }
             };
+            var teamThemeOptions = getChartThemeOptions();
+            optionsTeam = {
+                ...optionsTeam,
+                chart: {
+                    ...optionsTeam.chart,
+                    ...teamThemeOptions.chart
+                },
+                theme: teamThemeOptions.theme,
+                tooltip: teamThemeOptions.tooltip,
+                dataLabels: teamThemeOptions.teamDataLabels,
+                plotOptions: teamThemeOptions.plotOptions,
+                legend: {
+                    ...optionsTeam.legend,
+                    ...teamThemeOptions.legend
+                }
+            };
             var chartTeam = new ApexCharts(document.querySelector("#chart-team-performance"), optionsTeam);
             chartTeam.render();
         <?php endif; ?>
+
+        const toggleDark = document.getElementById('toggle-dark');
+        if (toggleDark) {
+            toggleDark.addEventListener('change', function() {
+                setTimeout(function() {
+                    const themeOptions = getChartThemeOptions();
+
+                    chartPersonal.updateOptions({
+                        ...themeOptions,
+                        xaxis: {
+                            ...optionsPersonal.xaxis,
+                            ...themeOptions.xaxis
+                        },
+                        plotOptions: optionsPersonal.plotOptions
+                    });
+
+                    <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
+                        chartTeam.updateOptions({
+                            ...themeOptions,
+                            dataLabels: themeOptions.teamDataLabels
+                        });
+                    <?php endif; ?>
+                }, 0);
+            });
+        }
     });
 </script>
 
