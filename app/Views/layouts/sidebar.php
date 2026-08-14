@@ -42,6 +42,13 @@
                     </a>
                 </li>
 
+                <li class="sidebar-item <?= is_active('aplikasi') ?>">
+                    <a href="<?= base_url('/aplikasi') ?>" class='sidebar-link d-flex align-items-center'>
+                        <i class="bi bi-stack me-2 fs-5"></i>
+                        <span>Aplikasi Pengelolaan</span>
+                    </a>
+                </li>
+
                 <li class="sidebar-item <?= is_active('projects') ?>">
                     <a href="<?= base_url('/projects') ?>" class='sidebar-link d-flex align-items-center'>
                         <i class="bi bi-kanban me-2 fs-5"></i>
