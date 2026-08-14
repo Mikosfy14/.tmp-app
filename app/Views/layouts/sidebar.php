@@ -42,29 +42,12 @@
                     </a>
                 </li>
 
-                <li class="sidebar-item <?= is_active('aplikasi') ?>">
-                    <a href="<?= base_url('/aplikasi') ?>" class='sidebar-link d-flex align-items-center'>
-                        <i class="bi bi-stack me-2 fs-5"></i>
-                        <span>Aplikasi Pengelolaan</span>
-                    </a>
-                </li>
-
                 <li class="sidebar-item <?= is_active('projects') ?>">
                     <a href="<?= base_url('/projects') ?>" class='sidebar-link d-flex align-items-center'>
                         <i class="bi bi-kanban me-2 fs-5"></i>
                         <span>Project Tracker</span>
                     </a>
                 </li>
-
-                <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
-                    <li class="sidebar-title">Administrator</li>
-                    <li class="sidebar-item <?= is_active('users') ?>">
-                        <a href="<?= base_url('/users') ?>" class='sidebar-link d-flex align-items-center'>
-                            <i class="bi bi-people-fill me-2 fs-5"></i>
-                            <span>User Management</span>
-                        </a>
-                    </li>
-                <?php endif; ?>
 
                 <li class="sidebar-item mt-5">
                     <a href="<?= base_url('/logout') ?>" class='sidebar-link text-danger d-flex align-items-center'>
