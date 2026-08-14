@@ -56,6 +56,15 @@
                     </a>
                 </li>
 
+                <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
+                    <li class="sidebar-item <?= is_active('users') ?>">
+                        <a href="<?= base_url('/users') ?>" class='sidebar-link d-flex align-items-center'>
+                            <i class="bi bi-people-fill me-2 fs-5"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
+
                 <li class="sidebar-item mt-5">
                     <a href="<?= base_url('/logout') ?>" class='sidebar-link text-danger d-flex align-items-center'>
                         <i class="bi bi-box-arrow-left text-danger me-2 fs-5"></i>
