@@ -41,7 +41,7 @@ class ProjectModel extends Model
         if(!empty($keyword)) {
             $builder->groupStart()
                     ->like('projects.name', $keyword)
-                    ->orLike('projects.projects_code', $keyword)
+                    ->orLike('projects.project_code', $keyword)
                     ->groupEnd();
         }
 
