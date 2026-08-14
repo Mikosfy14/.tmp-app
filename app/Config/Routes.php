@@ -25,3 +25,7 @@ $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->post('update-progress/(:segment)', 'Projects::updateProgress/$1');
     $routes->get('delete/(:segment)', 'Projects::delete/$1');
 });
+
+$routes->group('users', ['filter' => 'auth'], function($routes) {
+    $routes->get('/', 'Users::index');
+});
