@@ -12,6 +12,10 @@ $routes->get('/logout', 'Auth::logout');
 //Dashboard Protected Route (Menggunakan Filter Auth Guard)
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
+$routes->group('aplikasi', ['filter' => 'auth'], function($routes) {
+    $routes->get('/', 'Application::index');
+});
+
 $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Projects::index');
     $routes->get('user/(:num)', 'Projects::user/$1');
