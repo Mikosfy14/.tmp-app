@@ -14,6 +14,7 @@ $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
 $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Projects::index');
+    $routes->get('user/(:num)', 'Projects::user/$1');
     $routes->post('store', 'Projects::store');
     $routes->get('detail/(:segment)', 'Projects::detail/$1');
     $routes->post('update/(:segment)', 'Projects::update/$1');

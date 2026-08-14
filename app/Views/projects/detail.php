@@ -96,25 +96,25 @@
         <div class="col-12 col-lg-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-header pb-2">
-                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Developer Penanggung Jawab (PIC)</h5>
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Assigned To / PIC</h5>
                 </div>
                 <div class="card-body pt-2">
-                    <?php if (!empty($project['developers'])) : ?>
+                    <?php if (!empty($project['assigned_users'])) : ?>
                         <ul class="list-group list-group-flush">
-                            <?php foreach ($project['developers'] as $dev) : ?>
+                            <?php foreach ($project['assigned_users'] as $assignedUser) : ?>
                                 <li class="list-group-item px-0 d-flex align-items-center gap-3">
                                     <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; border-radius: 50%;">
-                                        <?= strtoupper(substr($dev['name'], 0, 1)) ?>
+                                        <?= strtoupper(substr($assignedUser['name'], 0, 1)) ?>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0 fw-bold"><?= esc($dev['name']) ?></h6>
-                                        <small class="text-muted d-block"><?= esc($dev['job_title'] ?? 'Software Engineer') ?></small>
+                                        <h6 class="mb-0 fw-bold"><?= esc($assignedUser['name']) ?></h6>
+                                        <small class="text-muted d-block"><?= esc($assignedUser['job_title'] ?? 'Software Engineer') ?></small>
                                     </div>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     <?php else : ?>
-                        <p class="text-muted text-sm mb-0 py-2">Belum ada developer yang ditugaskan.</p>
+                        <p class="text-muted text-sm mb-0 py-2">Belum ada user yang ditugaskan.</p>
                     <?php endif; ?>
                 </div>
             </div>
