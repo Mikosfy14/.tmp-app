@@ -4,7 +4,7 @@
 <head>
     <script>
         (function() {
-            const savedTheme = LocalStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
         })();
     </script>
@@ -56,6 +56,12 @@
             color: #a6a8b8 !important;
         }
 
+        [data-bs-theme="dark"] #main,
+        [data-bs-theme="dark"] #main-content {
+            background-color: #151521 !important;
+            color: #a6a8b8 !important;
+        }
+
         [data-bs-theme="dark"] .sidebar-wrapper {
             background-color: #1e1e2d !important;
             border-right: 1px solid #2b2b40 !important;
@@ -80,8 +86,98 @@
             border: 1px solid #2b2b40 !important;
         }
 
+        [data-bs-theme="dark"] .card-header,
+        [data-bs-theme="dark"] .card-footer,
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            background-color: #1e1e2d !important;
+            border-color: #2b2b40 !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .modal-content,
+        [data-bs-theme="dark"] .dropdown-menu,
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: #1e1e2d !important;
+            border-color: #2b2b40 !important;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .table {
+            --bs-table-bg: #1e1e2d;
+            --bs-table-color: #f5f7ff;
+            --bs-table-border-color: #2b2b40;
+            --bs-table-hover-bg: #2b2b40;
+            --bs-table-hover-color: #ffffff;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .table-light,
+        [data-bs-theme="dark"] .table-light>tr,
+        [data-bs-theme="dark"] .table-light>tr>th,
+        [data-bs-theme="dark"] .table-light>tr>td,
+        [data-bs-theme="dark"] .table thead,
+        [data-bs-theme="dark"] .table thead th {
+            background-color: #252539 !important;
+            color: #ffffff !important;
+            border-color: #2b2b40 !important;
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #151521 !important;
+            border-color: #2b2b40 !important;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .form-control::placeholder,
+        [data-bs-theme="dark"] textarea::placeholder {
+            color: #6f7288 !important;
+        }
+
+        [data-bs-theme="dark"] .text-dark,
+        [data-bs-theme="dark"] .text-black,
+        [data-bs-theme="dark"] .text-gray-600,
+        [data-bs-theme="dark"] h1,
+        [data-bs-theme="dark"] h2,
+        [data-bs-theme="dark"] h3,
+        [data-bs-theme="dark"] h4,
+        [data-bs-theme="dark"] h5,
+        [data-bs-theme="dark"] h6 {
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .text-muted,
+        [data-bs-theme="dark"] .text-secondary {
+            color: #a6a8b8 !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light,
+        [data-bs-theme="dark"] .bg-white,
+        [data-bs-theme="dark"] .bg-light-primary,
+        [data-bs-theme="dark"] .bg-light-secondary,
+        [data-bs-theme="dark"] .bg-light-success,
+        [data-bs-theme="dark"] .bg-light-danger,
+        [data-bs-theme="dark"] .bg-light-warning,
+        [data-bs-theme="dark"] .bg-light-info {
+            background-color: #252539 !important;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .border,
+        [data-bs-theme="dark"] .border-top,
+        [data-bs-theme="dark"] .border-bottom,
+        [data-bs-theme="dark"] .border-light {
+            border-color: #2b2b40 !important;
+        }
+
         [data-bs-theme="dark"] .navbar-fixed {
             background-color: #1e1e2d !important;
+        }
+
+        [data-bs-theme="dark"] .navbar-top {
+            background-color: #151521 !important;
         }
     </style>
 </head>
