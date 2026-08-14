@@ -274,7 +274,7 @@
             <div class="card shadow-sm">
                 <div class="card-body py-3">
                     <span class="text-muted text-sm font-semibold">Total Project</span>
-                    <h3 class="fw-bold mb-0 text-primary"><?= $team_stats['total_team_projects'] ?></h3>
+                    <h3 class="team-stat-value fw-bold mb-0 text-primary"><?= $team_stats['total_team_projects'] ?></h3>
                 </div>
             </div>
         </div>
@@ -282,7 +282,7 @@
             <div class="card shadow-sm">
                 <div class="card-body py-3">
                     <span class="text-muted text-sm font-semibold">Anggota Tim Aktif</span>
-                    <h3 class="fw-bold mb-0 text-success"><?= $team_stats['active_members'] ?> Staff</h3>
+                    <h3 class="team-stat-value fw-bold mb-0 text-success"><?= $team_stats['active_members'] ?> Staff</h3>
                 </div>
             </div>
         </div>
@@ -290,7 +290,7 @@
             <div class="card shadow-sm">
                 <div class="card-body py-3">
                     <span class="text-muted text-sm font-semibold">Project Overdue / Delay</span>
-                    <h3 class="fw-bold mb-0 text-danger"><?= $team_stats['overdue_projects'] ?> Project</h3>
+                    <h3 class="team-stat-value fw-bold mb-0 text-danger"><?= $team_stats['overdue_projects'] ?> Project</h3>
                 </div>
             </div>
         </div>
@@ -298,7 +298,7 @@
             <div class="card shadow-sm">
                 <div class="card-body py-3">
                     <span class="text-muted text-sm font-semibold">Efisiensi Tim</span>
-                    <h3 class="fw-bold mb-0 text-info"><?= $team_stats['efficiency_rate'] ?></h3>
+                    <h3 class="team-stat-value fw-bold mb-0 text-info"><?= $team_stats['efficiency_rate'] ?></h3>
                 </div>
             </div>
         </div>
@@ -396,6 +396,22 @@
     [data-bs-theme="dark"] .timeline-status-badge.bg-light-warning {
         background-color: #fffdd8 !important;
         color: #ffc107 !important;
+    }
+
+    [data-bs-theme="dark"] .team-stat-value.text-primary {
+        color: #435ebe !important;
+    }
+
+    [data-bs-theme="dark"] .team-stat-value.text-success {
+        color: #198754 !important;
+    }
+
+    [data-bs-theme="dark"] .team-stat-value.text-danger {
+        color: #dc3545 !important;
+    }
+
+    [data-bs-theme="dark"] .team-stat-value.text-info {
+        color: #0dcaf0 !important;
     }
 </style>
 
