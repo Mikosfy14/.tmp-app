@@ -2,8 +2,17 @@
 
 namespace App\Controllers;
 
+use App\Models\CriticalityRecoveryModel;
+
 class Application extends BaseController
 {
+    protected $criticalityRecoveryModel;
+
+    public function __construct()
+    {
+        $this->criticalityRecoveryModel = new CriticalityRecoveryModel();
+    }
+
     public function index()
     {
         $applications = [
@@ -13,7 +22,8 @@ class Application extends BaseController
                 'description' => 'Sistem informasi SDM, absensi, cuti, dan penggajian internal.',
                 'app_type' => 'Application',
                 'arch_type' => 'Monolithic',
-                'criticality_recovery' => 'Category 2',
+                'criticality_recovery' => 'Criticality 2',
+                'criticality_recovery_description' => 'Essential Functions',
                 'access_type' => 'Internal access',
                 'login_auth' => 'User AD',
                 'platform' => 'Web app',
@@ -38,7 +48,8 @@ class Application extends BaseController
                 'description' => 'Gateway integrasi layanan internal dan partner channel.',
                 'app_type' => 'Services',
                 'arch_type' => 'Microservices',
-                'criticality_recovery' => 'Category 1',
+                'criticality_recovery' => 'Criticality 1',
+                'criticality_recovery_description' => 'Critical Functions',
                 'access_type' => 'Public with internal',
                 'login_auth' => 'MFA',
                 'platform' => 'Hybrid',
@@ -63,7 +74,8 @@ class Application extends BaseController
                 'description' => 'Aplikasi laporan legacy yang masih dipakai operasional bulanan.',
                 'app_type' => 'Application',
                 'arch_type' => 'Monolithic',
-                'criticality_recovery' => 'Category 4',
+                'criticality_recovery' => 'Criticality 4',
+                'criticality_recovery_description' => 'Desirable Functions',
                 'access_type' => 'Internal access',
                 'login_auth' => 'Non User AD',
                 'platform' => 'Web app',
@@ -88,7 +100,8 @@ class Application extends BaseController
                 'description' => 'Aplikasi mobile untuk approval request operasional dan workflow.',
                 'app_type' => 'Application',
                 'arch_type' => 'Cloud',
-                'criticality_recovery' => 'Category 3',
+                'criticality_recovery' => 'Criticality 3',
+                'criticality_recovery_description' => 'Necessary Functions',
                 'access_type' => 'Public access',
                 'login_auth' => 'Userauth',
                 'platform' => 'Mobile',
@@ -119,6 +132,7 @@ class Application extends BaseController
             'title' => 'Aplikasi Pengelolaan',
             'applications' => $applications,
             'users' => $users,
+            'criticalityOptions' => $this->criticalityRecoveryModel->getActiveOptions(),
         ]);
     }
 }

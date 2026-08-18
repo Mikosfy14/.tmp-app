@@ -18,8 +18,7 @@ class ProjectModel extends Model
         'project_code',
         'name',
         'notes',
-        'status',
-        'progress',
+        'project_status_id',
         'start_date',
         'end_date',
         'unit_testing_date',
@@ -33,14 +32,15 @@ class ProjectModel extends Model
     public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false): array
     {
         $builder = $this->builder();
-        $builder->select('projects.*');
+        $builder->select('projects.*, COALESCE(project_status.status_name, projects.status) AS status, project_status.status_name, project_status.sort_order AS status_sort_order');
+        $builder->join('project_status', 'project_status.id = projects.project_status_id', 'left');
 
         if (!$includeAll && !empty($userId)) {
             $this->whereAssignedToContains($builder, $userId);
         }
 
         if(!empty($statusFilter)) {
-            $builder->where('projects.status', $statusFilter);
+            $builder->where('projects.project_status_id', (int) $statusFilter);
         }
 
         if(!empty($keyword)) {
@@ -58,7 +58,8 @@ class ProjectModel extends Model
     public function getProjectDetail($id, ?int $userId = null, bool $includeAll = false): ?array
     {
         $builder = $this->builder();
-        $builder->select('projects.*')
+        $builder->select('projects.*, COALESCE(project_status.status_name, projects.status) AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
+            ->join('project_status', 'project_status.id = projects.project_status_id', 'left')
             ->where('projects.id', $id);
 
         if (!$includeAll && !empty($userId)) {
