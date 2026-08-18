@@ -3,16 +3,19 @@
 namespace App\Controllers;
 
 use App\Models\ProjectModel;
+use App\Models\ProjectStatusModel;
 use App\Models\UserModel;
 
 class Projects extends BaseController
 {
     protected $projectModel;
+    protected $projectStatusModel;
     protected $userModel;
 
     public function __construct()
     {
         $this->projectModel = new ProjectModel();
+        $this->projectStatusModel = new ProjectStatusModel();
         $this->userModel = new UserModel();
     }
 
@@ -48,7 +51,7 @@ class Projects extends BaseController
             'users'          => $this->userModel->where('is_active', 1)->findAll(),
             'selectedStatus' => $statusFilter,
             'keyword'        => $keyword,
-            'statusOptions'  => ['Planning', 'In Progress', 'Testing/QA', 'Review', 'Completed', 'On Hold'],
+            'statusOptions'  => $this->projectStatusModel->getActiveOptions(),
             'isFilteredUser' => $targetUserId !== null,
             'targetUser'     => $targetUser,
         ];
@@ -68,6 +71,7 @@ class Projects extends BaseController
             'title'    => 'Detail Project - ' . $project['name'],
             'project'  => $project,
             'users'    => $this->userModel->where('is_active', 1)->findAll(),
+            'statusOptions' => $this->projectStatusModel->getActiveOptions(),
         ];
 
         return view('projects/detail', $data);
@@ -78,7 +82,7 @@ class Projects extends BaseController
         $rules = [
             'project_code' => 'required',
             'name'        => 'required|max_length[250]',
-            'status'      => 'required',
+            'project_status_id' => 'required|is_natural_no_zero',
             'start_date'  => 'required|valid_date',
             'end_date'    => 'required|valid_date',
         ];
@@ -91,8 +95,7 @@ class Projects extends BaseController
             'project_code'      => $this->request->getPost('project_code'),
             'name'              => $this->request->getPost('name'),
             'notes'             => $this->request->getPost('notes'),
-            'status'            => $this->request->getPost('status'),
-            'progress'          => $this->request->getPost('progress') ?? 0,
+            'project_status_id' => $this->request->getPost('project_status_id'),
             'start_date'        => $this->request->getPost('start_date'),
             'end_date'          => $this->request->getPost('end_date'),
             'unit_testing_date' => $this->request->getPost('unit_testing_date') ?: null,
@@ -113,13 +116,11 @@ class Projects extends BaseController
             return redirect()->to('/projects')->with('error', 'Akses ditolak. Anda tidak memiliki akses untuk memperbarui project ini.');
         }
 
-        $progress = (int)$this->request->getPost('progress');
-        $status = $this->request->getPost('status');
+        $projectStatusId = $this->request->getPost('project_status_id');
         $notes = $this->request->getPost('notes');
 
         $this->projectModel->update($id, [
-            'progress' => $progress,
-            'status' => $status,
+            'project_status_id' => $projectStatusId,
             'notes' => $notes
         ]);
 

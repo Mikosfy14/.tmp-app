@@ -2,17 +2,19 @@
 /**
  * @var array $applications
  * @var array $users
+ * @var array $criticalityOptions
  */
 
 $applications = $applications ?? [];
 $users = $users ?? [];
+$criticalityOptions = $criticalityOptions ?? [];
 
 $criticalityClass = static function (?string $criticality): string {
     return match ($criticality) {
-        'Category 1' => 'danger',
-        'Category 2' => 'warning',
-        'Category 3' => 'info',
-        'Category 4' => 'success',
+        'Criticality 1' => 'danger',
+        'Criticality 2' => 'warning',
+        'Criticality 3' => 'info',
+        'Criticality 4' => 'success',
         default => 'secondary',
     };
 };
@@ -21,7 +23,7 @@ $valueOrDash = static fn ($value): string => $value !== null && $value !== '' ? 
 
 $totalApplications = count($applications);
 $sourceCodeCount = count(array_filter($applications, static fn ($app) => (int) $app['has_source_code'] === 1));
-$criticalApps = count(array_filter($applications, static fn ($app) => in_array($app['criticality_recovery'], ['Category 1', 'Category 2'], true)));
+$criticalApps = count(array_filter($applications, static fn ($app) => in_array($app['criticality_recovery'], ['Criticality 1', 'Criticality 2'], true)));
 $managedUsers = count(array_unique(array_filter(array_column($applications, 'assigned_user_id'))));
 ?>
 
@@ -31,7 +33,7 @@ $managedUsers = count(array_unique(array_filter(array_column($applications, 'ass
 
 <div class="page-heading d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h3><i class="bi bi-stack me-2 text-primary"></i>Aplikasi Pengelolaan</h3>
+        <h3>Aplikasi Pengelolaan</h3>
         <p class="text-subtitle text-muted mb-0">Katalog aplikasi dan services yang dikelola oleh tim.</p>
     </div>
     <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalApplicationForm">
@@ -87,10 +89,11 @@ $managedUsers = count(array_unique(array_filter(array_column($applications, 'ass
                 <div class="col-12 col-md-4 col-lg-3">
                     <select id="criticalityFilter" class="form-select">
                         <option value="">Semua Criticality</option>
-                        <option value="Category 1">Category 1</option>
-                        <option value="Category 2">Category 2</option>
-                        <option value="Category 3">Category 3</option>
-                        <option value="Category 4">Category 4</option>
+                        <?php foreach ($criticalityOptions as $criticalityOption) : ?>
+                            <option value="<?= esc($criticalityOption['criticality_name']) ?>">
+                                <?= esc($criticalityOption['criticality_name']) ?> - <?= esc($criticalityOption['description']) ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-12 col-md-4 col-lg-3">
@@ -159,6 +162,9 @@ $managedUsers = count(array_unique(array_filter(array_column($applications, 'ass
                                     </td>
                                     <td class="py-3">
                                         <span class="badge bg-light-<?= $criticalityColor ?> text-<?= $criticalityColor ?>"><?= esc($app['criticality_recovery']) ?></span>
+                                        <?php if (!empty($app['criticality_recovery_description'])) : ?>
+                                            <small class="d-block text-muted mt-1"><?= esc($app['criticality_recovery_description']) ?></small>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="py-3">
                                         <span class="fw-semibold text-dark"><?= esc($app['platform']) ?></span>
@@ -222,6 +228,9 @@ $managedUsers = count(array_unique(array_filter(array_column($applications, 'ass
                                 <div class="col-md-6">
                                     <small class="text-muted d-block">Criticality Recovery</small>
                                     <span class="badge bg-light-<?= $criticalityColor ?> text-<?= $criticalityColor ?>"><?= esc($app['criticality_recovery']) ?></span>
+                                    <?php if (!empty($app['criticality_recovery_description'])) : ?>
+                                        <small class="d-block text-muted mt-1"><?= esc($app['criticality_recovery_description']) ?></small>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-6">
                                     <small class="text-muted d-block">Source Code</small>
@@ -353,10 +362,11 @@ $managedUsers = count(array_unique(array_filter(array_column($applications, 'ass
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Criticality</label>
                         <select class="form-select">
-                            <option>Category 1</option>
-                            <option>Category 2</option>
-                            <option>Category 3</option>
-                            <option>Category 4</option>
+                            <?php foreach ($criticalityOptions as $criticalityOption) : ?>
+                                <option value="<?= esc($criticalityOption['id']) ?>">
+                                    <?= esc($criticalityOption['criticality_name']) ?> - <?= esc($criticalityOption['description']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-3">
