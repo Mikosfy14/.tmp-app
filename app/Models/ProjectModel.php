@@ -32,7 +32,7 @@ class ProjectModel extends Model
     public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false): array
     {
         $builder = $this->builder();
-        $builder->select('projects.*, COALESCE(project_status.status_name, projects.status) AS status, project_status.status_name, project_status.sort_order AS status_sort_order');
+        $builder->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order');
         $builder->join('project_status', 'project_status.id = projects.project_status_id', 'left');
 
         if (!$includeAll && !empty($userId)) {
@@ -58,7 +58,7 @@ class ProjectModel extends Model
     public function getProjectDetail($id, ?int $userId = null, bool $includeAll = false): ?array
     {
         $builder = $this->builder();
-        $builder->select('projects.*, COALESCE(project_status.status_name, projects.status) AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
+        $builder->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
             ->join('project_status', 'project_status.id = projects.project_status_id', 'left')
             ->where('projects.id', $id);
 
