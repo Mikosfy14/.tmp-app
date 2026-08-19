@@ -189,30 +189,32 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
 
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
-            <form action="<?= !empty($isFilteredUser) && !empty($targetUser) ? base_url('/projects/user/' . $targetUser['id']) : base_url('/projects') ?>" method="GET" class="row g-2 align-items-center">
+            <div class="row g-2 align-items-center">
                 <div class="col-12 col-md-4">
-                    <input type="text" name="keyword" class="form-control" placeholder="Cari Kode atau Nama Proyek..." value="<?= esc($keyword ?? '') ?>">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
+                        <input type="text" id="projectSearch" class="form-control" placeholder="Cari kode, nama project, atau PIC...">
+                    </div>
                 </div>
                 <div class="col-12 col-md-4">
-                    <select name="status" class="form-select">
+                    <select id="projectStatusFilter" class="form-select">
                         <option value="">-- Semua Status --</option>
                         <?php foreach ($statusOptions as $st) : ?>
-                            <option value="<?= esc($st['id']) ?>" <?= ((string) $selectedStatus === (string) $st['id']) ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
+                            <option value="<?= esc($st['status_name']) ?>"><?= esc($st['status_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter me-1"></i> Filter</button>
-                    <a href="<?= !empty($isFilteredUser) && !empty($targetUser) ? base_url('/projects/user/' . $targetUser['id']) : base_url('/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                <div class="col-12 col-md-4">
+                    <button type="button" id="projectFilterReset" class="btn btn-outline-secondary w-100">Reset</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="projectsTable">
                     <thead class="table-light">
                         <tr>
                             <th>Kode & Nama Proyek</th>
@@ -236,8 +238,21 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                                     default        => 'bg-secondary'
                                 };
                                 $isPreview = !empty($prj['is_preview']);
+                                $assignedNames = [];
+                                if (!empty($prj['assigned_users'])) {
+                                    foreach ($prj['assigned_users'] as $assignedUser) {
+                                        $assignedNames[] = $assignedUser['name'] ?? '';
+                                    }
+                                }
+                                $searchText = strtolower(implode(' ', array_filter([
+                                    $prj['project_code'] ?? '',
+                                    $prj['name'] ?? '',
+                                    implode(' ', $assignedNames),
+                                ])));
                                 ?>
-                                <tr>
+                                <tr class="project-row"
+                                    data-search="<?= esc($searchText) ?>"
+                                    data-status="<?= esc($prj['status'] ?? '') ?>">
                                     <td>
                                         <strong class="text-dark d-block"><?= esc($prj['name']) ?></strong>
                                         <span class="badge bg-light-secondary text-muted"><?= esc($prj['project_code']) ?></span>
@@ -291,7 +306,12 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                                 </tr>
                             <?php endforeach; ?>
                         <?php else : ?>
-                            <tr>
+                            <tr id="projectsEmptyRow">
+                                <td colspan="5" class="text-center py-4 text-muted">Data proyek tidak ditemukan.</td>
+                            </tr>
+                        <?php endif; ?>
+                        <?php if (!empty($displayProjects)) : ?>
+                            <tr id="projectsEmptyRow" class="d-none">
                                 <td colspan="5" class="text-center py-4 text-muted">Data proyek tidak ditemukan.</td>
                             </tr>
                         <?php endif; ?>
@@ -526,5 +546,44 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
         </div>
     </div>
 <?php endforeach; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('projectSearch');
+        const statusFilter = document.getElementById('projectStatusFilter');
+        const resetButton = document.getElementById('projectFilterReset');
+        const rows = Array.from(document.querySelectorAll('.project-row'));
+        const emptyRow = document.getElementById('projectsEmptyRow');
+
+        function applyProjectFilters() {
+            const keyword = (searchInput.value || '').trim().toLowerCase();
+            const status = statusFilter.value;
+            let visibleCount = 0;
+
+            rows.forEach(function(row) {
+                const matchesSearch = !keyword || row.dataset.search.includes(keyword);
+                const matchesStatus = !status || row.dataset.status === status;
+                const isVisible = matchesSearch && matchesStatus;
+
+                row.classList.toggle('d-none', !isVisible);
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (emptyRow) {
+                emptyRow.classList.toggle('d-none', visibleCount > 0);
+            }
+        }
+
+        searchInput.addEventListener('input', applyProjectFilters);
+        statusFilter.addEventListener('change', applyProjectFilters);
+        resetButton.addEventListener('click', function() {
+            searchInput.value = '';
+            statusFilter.value = '';
+            applyProjectFilters();
+        });
+    });
+</script>
 
 <?= $this->endSection() ?>
