@@ -130,4 +130,4 @@ _modules/*
 # Database Dumps
 *.sql
 *.bak
-!docs/database/*.sql
+/docs/database/
