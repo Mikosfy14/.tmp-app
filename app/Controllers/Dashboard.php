@@ -42,29 +42,58 @@ class Dashboard extends BaseController
             //list project aktif user (PIC = Current User)
             'my_active_projects' => [
                 [
-                    'id'          => 'PRJ-001',
-                    'title'       => 'Migrasi Core System Ke Cloud',
-                    'deadline'    => '2026-09-15',
-                    'progress'    => 75,
-                    'status'      => 'In Progress',
-                    'status_class' => 'bg-primary'
+                    'id'                => 1,
+                    'project_code'      => 'PRJ-2026-014',
+                    'name'              => 'Modernisasi Dashboard Monitoring Project',
+                    'status'            => 'In Progress',
+                    'status_class'      => 'bg-primary',
+                    'start_date'        => '2026-08-03',
+                    'end_date'          => '2026-08-28',
+                    'promote_date'      => '2026-08-31',
+                    'deadline_label'    => 'On Track',
+                    'deadline_class'    => 'success',
+                    'assigned_users'    => [
+                        ['name' => session()->get('name'), 'job_title' => $userDetail['job_title'] ?? 'Staff'],
+                        ['name' => 'Shafiq', 'job_title' => 'Backend Developer'],
+                    ],
                 ],
                 [
-                    'id'          => 'PRJ-004',
-                    'title'       => 'Integrasi Payment Gateway QRIS',
-                    'deadline'    => '2026-08-30',
-                    'progress'    => 40,
-                    'status'      => 'In Progress',
-                    'status_class' => 'bg-info'
+                    'id'                => 2,
+                    'project_code'      => 'PRJ-2026-015',
+                    'name'              => 'Integrasi Auth Lokal Berbasis Role',
+                    'status'            => 'Testing/QA',
+                    'status_class'      => 'bg-info',
+                    'start_date'        => '2026-07-27',
+                    'end_date'          => '2026-08-15',
+                    'promote_date'      => '2026-08-18',
+                    'deadline_label'    => 'Urgent',
+                    'deadline_class'    => 'danger',
+                    'assigned_users'    => [
+                        ['name' => session()->get('name'), 'job_title' => $userDetail['job_title'] ?? 'Staff'],
+                        ['name' => 'Shafiq Manmonth', 'job_title' => 'Business Analyst'],
+                    ],
                 ],
                 [
-                    'id'          => 'PRJ-007',
-                    'title'       => 'Redesign UI/UX Portal Internal',
-                    'deadline'    => '2026-08-20',
-                    'progress'    => 90,
-                    'status'      => 'Review',
-                    'status_class' => 'bg-warning'
+                    'id'                => 3,
+                    'project_code'      => 'PRJ-2026-016',
+                    'name'              => 'Katalog Aplikasi Pengelolaan Tim',
+                    'status'            => 'Review',
+                    'status_class'      => 'bg-warning text-dark',
+                    'start_date'        => '2026-08-10',
+                    'end_date'          => '2026-08-20',
+                    'promote_date'      => '2026-08-21',
+                    'deadline_label'    => 'Risk',
+                    'deadline_class'    => 'warning',
+                    'assigned_users'    => [
+                        ['name' => session()->get('name'), 'job_title' => $userDetail['job_title'] ?? 'Staff'],
+                    ],
                 ],
+            ],
+
+            'completion_chart' => [
+                'months'  => ['Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu'],
+                'on_time' => [1, 2, 2, 3, 2, 2],
+                'late'    => [0, 1, 0, 1, 0, 0],
             ],
 
             //timeline / Milestone Terdekat

@@ -20,7 +20,7 @@ $previewProjects = [
         'id' => 'preview-001',
         'project_code' => 'PRJ-2026-014',
         'name' => 'Modernisasi Dashboard Monitoring Project',
-        'status' => 'In Progress',
+        'status' => 'Building',
         'notes' => 'Penyusunan dashboard personal, project tracker, filter assigned_to, dan baseline evaluasi kinerja.',
         'start_date' => '2026-08-03',
         'end_date' => '2026-08-28',
@@ -35,7 +35,7 @@ $previewProjects = [
         'id' => 'preview-002',
         'project_code' => 'PRJ-2026-015',
         'name' => 'Integrasi Auth Lokal Berbasis Role',
-        'status' => 'Testing/QA',
+        'status' => 'Testing',
         'notes' => 'Validasi username dan password, session login, dan tampilan berdasarkan role.',
         'start_date' => '2026-07-27',
         'end_date' => '2026-08-15',
@@ -50,7 +50,7 @@ $previewProjects = [
         'id' => 'preview-003',
         'project_code' => 'PRJ-2026-016',
         'name' => 'Katalog Aplikasi Pengelolaan Tim',
-        'status' => 'Review',
+        'status' => 'Deployment',
         'notes' => 'Pembuatan layout aplikasi pengelolaan berdasarkan kolom DDL applications.',
         'start_date' => '2026-08-10',
         'end_date' => '2026-08-20',
@@ -65,7 +65,7 @@ $previewProjects = [
         'id' => 'preview-004',
         'project_code' => 'PRJ-2026-017',
         'name' => 'Penyusunan ERD dan DDL SQL Server',
-        'status' => 'Completed',
+        'status' => 'Deployment',
         'notes' => 'Finalisasi struktur 4 tabel utama: roles, users, projects, dan applications.',
         'start_date' => '2026-08-03',
         'end_date' => '2026-08-07',
@@ -94,7 +94,15 @@ $previewProjects = [
 ];
 
 if (!empty($selectedStatus)) {
-    $previewProjects = array_filter($previewProjects, static fn ($project) => $project['status'] === $selectedStatus);
+    $selectedStatusName = '';
+    foreach ($statusOptions as $statusOption) {
+        if ((string) ($statusOption['id'] ?? '') === (string) $selectedStatus) {
+            $selectedStatusName = $statusOption['status_name'] ?? '';
+            break;
+        }
+    }
+
+    $previewProjects = array_filter($previewProjects, static fn ($project) => $project['status'] === $selectedStatusName);
 }
 
 if (!empty($keyword)) {
@@ -189,7 +197,7 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                     <select name="status" class="form-select">
                         <option value="">-- Semua Status --</option>
                         <?php foreach ($statusOptions as $st) : ?>
-                            <option value="<?= $st ?>" <?= ($selectedStatus === $st) ? 'selected' : '' ?>><?= $st ?></option>
+                            <option value="<?= esc($st['id']) ?>" <?= ((string) $selectedStatus === (string) $st['id']) ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -219,11 +227,12 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                             <?php foreach ($displayProjects as $prj) : ?>
                                 <?php
                                 $statusBadge = match ($prj['status']) {
-                                    'Completed'    => 'bg-success',
-                                    'In Progress'  => 'bg-primary',
-                                    'Testing/QA'   => 'bg-info',
-                                    'Review' => 'bg-warning text-dark',
-                                    'On Hold'      => 'bg-danger',
+                                    'Planning'   => 'bg-secondary',
+                                    'Defining'   => 'bg-info',
+                                    'Designing'  => 'bg-primary',
+                                    'Building'   => 'bg-warning text-dark',
+                                    'Testing'    => 'bg-danger',
+                                    'Deployment' => 'bg-success',
                                     default        => 'bg-secondary'
                                 };
                                 $isPreview = !empty($prj['is_preview']);
@@ -315,9 +324,9 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Project Status <span class="text-danger">*</span></label>
-                            <select name="status" class="form-select" required>
+                            <select name="project_status_id" class="form-select" required>
                                 <?php foreach ($statusOptions as $st) : ?>
-                                    <option value="<?= $st ?>"><?= $st ?></option>
+                                    <option value="<?= esc($st['id']) ?>"><?= esc($st['status_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -390,11 +399,12 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                         <span class="badge bg-light-primary text-primary mb-2"><?= esc($prj['project_code']) ?></span>
                         <h5 class="fw-bold mb-1"><?= esc($prj['name']) ?></h5>
                         <span class="badge <?= match ($prj['status']) {
-                            'Completed' => 'bg-success',
-                            'In Progress' => 'bg-primary',
-                            'Testing/QA' => 'bg-info',
-                            'Review' => 'bg-warning text-dark',
-                            'On Hold' => 'bg-danger',
+                            'Planning' => 'bg-secondary',
+                            'Defining' => 'bg-info',
+                            'Designing' => 'bg-primary',
+                            'Building' => 'bg-warning text-dark',
+                            'Testing' => 'bg-danger',
+                            'Deployment' => 'bg-success',
                             default => 'bg-secondary',
                         } ?>"><?= esc($prj['status']) ?></span>
                     </div>
@@ -463,7 +473,7 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                                 <label class="form-label fw-bold">Project Status</label>
                                 <select class="form-select">
                                     <?php foreach ($statusOptions as $st) : ?>
-                                        <option value="<?= esc($st) ?>" <?= $prj['status'] === $st ? 'selected' : '' ?>><?= esc($st) ?></option>
+                                        <option value="<?= esc($st['id']) ?>" <?= $prj['status'] === $st['status_name'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>

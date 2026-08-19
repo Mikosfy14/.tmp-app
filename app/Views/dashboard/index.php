@@ -8,6 +8,7 @@
  * @var string $category
  * @var array $my_stats
  * @var array $my_active_projects
+ * @var array $completion_chart
  * @var array $my_timeline
  * @var array $team_stats
  * @var array $team_members
@@ -163,19 +164,19 @@
 
 <div class="card shadow-sm mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Tabel Project Saya</h5>
+        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Overview Project Saya</h5>
         <span class="badge bg-primary"><?= count($my_active_projects) ?> Project</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 custom table">
+            <table class="table table-hover align-middle mb-0 dashboard-project-table">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4" style="width: 32%;">Kode/Nama Project</th>
-                        <th style="width: 18%;">Deadline Project</th>
-                        <th style="width: 25%;">Progress Project</th>
-                        <th style="width: 15%;">Status</th>
-                        <th class="text-center pe-4" style="width: 10%;">Aksi</th>
+                        <th class="ps-4" style="width: 30%;">Kode & Nama Project</th>
+                        <th style="width: 14%;">Status</th>
+                        <th style="width: 22%;">Assigned To</th>
+                        <th style="width: 22%;">Timeline</th>
+                        <th class="text-center pe-4" style="width: 12%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -183,25 +184,40 @@
                         <?php foreach ($my_active_projects as $prj) : ?>
                             <tr>
                                 <td class="ps-4 py-3">
-                                    <strong class="d-block text-dark"><?= esc($prj['title']) ?></strong>
-                                    <small class="text-muted"><?= esc($prj['id']) ?></small>
+                                    <strong class="d-block text-dark"><?= esc($prj['name']) ?></strong>
+                                    <span class="badge bg-light-secondary text-muted"><?= esc($prj['project_code']) ?></span>
                                 </td>
                                 <td class="py-3">
-                                    <small class="fw-bold"><?= date('d M Y', strtotime($prj['deadline'])) ?></small>
+                                    <span class="badge <?= esc($prj['status_class']) ?>"><?= esc($prj['status']) ?></span>
+                                    <span class="badge dashboard-deadline-badge bg-light-<?= esc($prj['deadline_class']) ?> text-<?= esc($prj['deadline_class']) ?> d-block mt-2" style="width: fit-content;">
+                                        <?= esc($prj['deadline_label']) ?>
+                                    </span>
                                 </td>
-                                <td class="py-3 pe-3">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress w-100" style="height: 8px;">
-                                            <div class="progress-bar <?= $prj['status_class'] ?>" role="progressbar" style="width: <?= $prj['progress'] ?>%"></div>
+                                <td class="py-3">
+                                    <?php if (!empty($prj['assigned_users'])) : ?>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <?php foreach (array_slice($prj['assigned_users'], 0, 2) as $assignedUser) : ?>
+                                                <span class="badge bg-light-primary text-primary" title="<?= esc($assignedUser['job_title'] ?? '') ?>">
+                                                    <i class="bi bi-person-fill me-1"></i><?= esc($assignedUser['name']) ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                            <?php if (count($prj['assigned_users']) > 2) : ?>
+                                                <span class="badge bg-light-secondary text-secondary">+<?= count($prj['assigned_users']) - 2 ?></span>
+                                            <?php endif; ?>
                                         </div>
-                                        <small class="fw-bold me-2"><?= $prj['progress'] ?>%</small>
-                                    </div>
+                                    <?php else : ?>
+                                        <span class="text-muted text-sm">-</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="py-3">
-                                    <span class="badge <?= $prj['status_class'] ?>"><?= esc($prj['status']) ?></span>
+                                    <small class="d-block text-muted">Start: <span class="fw-bold text-dark"><?= date('d M Y', strtotime($prj['start_date'])) ?></span></small>
+                                    <small class="d-block text-muted">End: <span class="fw-bold text-dark"><?= date('d M Y', strtotime($prj['end_date'])) ?></span></small>
+                                    <small class="d-block text-muted">Promote: <span class="fw-bold text-dark"><?= !empty($prj['promote_date']) ? date('d M Y', strtotime($prj['promote_date'])) : '-' ?></span></small>
                                 </td>
                                 <td class="text-center pe-4 py-3">
-                                    <a href="#" class="btn btn-sm btn-outline-primary" title="Detail Progress"><i class="bi bi-eye"></i></a>
+                                    <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap" title="Lihat Project Tracker">
+                                        <i class="bi bi-eye-fill"></i> Detail
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -217,7 +233,7 @@
 </div>
 
 <style>
-    .custom-table> :not(caption)>*>* {
+    .dashboard-project-table> :not(caption)>*>* {
         padding-left: 1.25rem !important;
         padding-right: 1.25rem !important;
     }
@@ -228,7 +244,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0 fs-6 fw-bold text-primary"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Grafik Penyelesaian Project</h5>
-                <span class="badge bg-light-secondary text-dark">Tahun <?= date('Y') ?></span>
+                <span class="badge bg-light-secondary text-dark">Tepat Waktu vs Terlambat</span>
             </div>
             <div class="card-body">
                 <div id="chart-personal-performance"></div>
@@ -488,30 +504,55 @@
             };
         }
 
-        // 1. Chart Kinerja Personal (Bar/Column Chart)
+        const completionChartData = <?= json_encode($completion_chart ?? [
+            'months' => ['Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu'],
+            'on_time' => [0, 0, 0, 0, 0, 0],
+            'late' => [0, 0, 0, 0, 0, 0],
+        ]) ?>;
+
+        // 1. Chart Penyelesaian Project Personal
         var optionsPersonal = {
             chart: {
                 type: 'bar',
                 height: 280,
+                stacked: true,
                 toolbar: {
                     show: false
                 }
             },
             series: [{
-                name: 'Tepat Waktu',
-                data: [3, 4, 2, 5, 4, 3]
+                name: 'Selesai Tepat Waktu',
+                data: completionChartData.on_time
             }, {
-                name: 'Terlambat',
-                data: [0, 1, 0, 1, 0, 0]
+                name: 'Selesai Terlambat',
+                data: completionChartData.late
             }],
-            colors: ['#435ebe', '#dc3545'],
+            colors: ['#198754', '#dc3545'],
             xaxis: {
-                categories: ['Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu']
+                categories: completionChartData.months
+            },
+            yaxis: {
+                min: 0,
+                forceNiceScale: true,
+                labels: {
+                    formatter: function(value) {
+                        return Math.round(value);
+                    }
+                }
             },
             plotOptions: {
                 bar: {
                     borderRadius: 4,
-                    columnWidth: '45%'
+                    columnWidth: '48%',
+                    dataLabels: {
+                        total: {
+                            enabled: true,
+                            style: {
+                                fontSize: '12px',
+                                fontWeight: 700
+                            }
+                        }
+                    }
                 }
             },
             dataLabels: {
@@ -519,6 +560,13 @@
             },
             legend: {
                 position: 'top'
+            },
+            tooltip: {
+                y: {
+                    formatter: function(value) {
+                        return value + ' project';
+                    }
+                }
             }
         };
         var personalThemeOptions = getChartThemeOptions();
@@ -529,8 +577,17 @@
                 ...personalThemeOptions.chart
             },
             theme: personalThemeOptions.theme,
-            tooltip: personalThemeOptions.tooltip,
-            yaxis: personalThemeOptions.yaxis,
+            tooltip: {
+                ...optionsPersonal.tooltip,
+                ...personalThemeOptions.tooltip,
+            },
+            yaxis: {
+                ...optionsPersonal.yaxis,
+                labels: {
+                    ...optionsPersonal.yaxis.labels,
+                    ...personalThemeOptions.yaxis.labels
+                }
+            },
             grid: personalThemeOptions.grid,
             xaxis: {
                 ...optionsPersonal.xaxis,
@@ -594,6 +651,17 @@
                         xaxis: {
                             ...optionsPersonal.xaxis,
                             ...themeOptions.xaxis
+                        },
+                        yaxis: {
+                            ...optionsPersonal.yaxis,
+                            labels: {
+                                ...optionsPersonal.yaxis.labels,
+                                ...themeOptions.yaxis.labels
+                            }
+                        },
+                        tooltip: {
+                            ...optionsPersonal.tooltip,
+                            ...themeOptions.tooltip
                         },
                         plotOptions: optionsPersonal.plotOptions
                     });
