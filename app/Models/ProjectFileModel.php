@@ -39,4 +39,30 @@ class ProjectFileModel extends Model
             ->where('project_files.id', $id)
             ->first();
     }
+
+    public function insertUploadedFile(array $metadata, string $binaryData): bool
+    {
+        $hexData = bin2hex($binaryData);
+
+        if ($hexData === '') {
+            return false;
+        }
+
+        $sql = "
+            INSERT INTO project_files
+                (project_id, original_name, mime_type, file_extension, file_size, file_data, uploaded_by, created_at)
+            VALUES
+                (?, ?, ?, ?, ?, CONVERT(VARBINARY(MAX), 0x{$hexData}), ?, ?)
+        ";
+
+        return (bool) $this->db->query($sql, [
+            $metadata['project_id'],
+            $metadata['original_name'],
+            $metadata['mime_type'],
+            $metadata['file_extension'],
+            $metadata['file_size'],
+            $metadata['uploaded_by'],
+            $metadata['created_at'],
+        ]);
+    }
 }

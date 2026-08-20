@@ -19,11 +19,15 @@ $routes->group('aplikasi', ['filter' => 'auth'], function($routes) {
 $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Projects::index');
     $routes->get('user/(:num)', 'Projects::user/$1');
-    $routes->post('store', 'Projects::store');
+    $routes->get('create', 'Projects::create');
     $routes->get('detail/(:segment)', 'Projects::detail/$1');
+    $routes->get('edit/(:segment)', 'Projects::edit/$1');
+    $routes->post('store', 'Projects::store');
     $routes->post('update/(:segment)', 'Projects::update/$1');
     $routes->post('update-progress/(:segment)', 'Projects::updateProgress/$1');
-    $routes->get('delete/(:segment)', 'Projects::delete/$1');
+    $routes->post('delete/(:segment)', 'Projects::delete/$1');
+    $routes->get('files/(:segment)/download', 'Projects::downloadFile/$1');
+    $routes->post('files/delete/(:segment)', 'Projects::deleteFile/$1');
 });
 
 $routes->group('users', ['filter' => 'auth'], function($routes) {
