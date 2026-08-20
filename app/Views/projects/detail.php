@@ -1,22 +1,64 @@
 <?php
 /**
  * @var array $project
+ * @var array $projectFiles
  */
+
+$statusBadge = match ($project['status'] ?? '') {
+    'Planning' => 'bg-secondary',
+    'Defining' => 'bg-info',
+    'Designing' => 'bg-primary',
+    'Building' => 'bg-warning text-dark',
+    'Testing' => 'bg-danger',
+    'Deployment' => 'bg-success',
+    default => 'bg-secondary',
+};
+
+$dateValue = static fn ($value): string => !empty($value) ? date('d M Y', strtotime($value)) : '-';
+
+$deadlineLabel = 'On Track';
+$deadlineBadge = 'bg-success';
+if (!empty($project['end_date'])) {
+    $today = new DateTimeImmutable(date('Y-m-d'));
+    $endDate = new DateTimeImmutable($project['end_date']);
+    $daysLeft = (int) $today->diff($endDate)->format('%r%a');
+
+    if ($daysLeft < 0) {
+        $deadlineLabel = 'Overdue';
+        $deadlineBadge = 'bg-danger';
+    } elseif ($daysLeft <= 1) {
+        $deadlineLabel = 'Critical';
+        $deadlineBadge = 'bg-danger';
+    } elseif ($daysLeft < 3) {
+        $deadlineLabel = 'Urgent';
+        $deadlineBadge = 'bg-danger';
+    } elseif ($daysLeft < 7) {
+        $deadlineLabel = 'Risk';
+        $deadlineBadge = 'bg-warning text-dark';
+    }
+}
 ?>
 
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
 
-<div class="page-heading d-flex justify-content-between align-items-center mb-3">
+<div class="page-heading d-flex justify-content-between align-items-start mb-3">
     <div>
-        <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-outline-secondary mb-2"><i class="bi bi-arrow-left me-1"></i> Kembali ke Project Tracker</a>
+        <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-outline-secondary mb-2">
+            <i class="bi bi-arrow-left me-1"></i> Kembali ke Project Tracker
+        </a>
         <h3><?= esc($project['name']) ?></h3>
         <span class="badge bg-light-primary text-primary"><?= esc($project['project_code']) ?></span>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUpdateProgress">
-        <i class="bi bi-pencil-square me-1"></i> Update Progress & Status
-    </button>
+    <div class="d-flex gap-2">
+        <a href="<?= base_url('/projects/edit/' . $project['id']) ?>" class="btn btn-warning">
+            <i class="bi bi-pencil-square me-1"></i> Edit Project
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalDeleteProject">
+            <i class="bi bi-trash-fill me-1"></i> Hapus Project
+        </button>
+    </div>
 </div>
 
 <?php if (session()->getFlashdata('success')) : ?>
@@ -27,108 +69,125 @@
 <?php endif; ?>
 
 <div class="page-content">
-    <div class="row">
+    <div class="row g-4">
         <div class="col-12 col-lg-8">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Ringkasan Project</h5>
-                    <?php
-                    $statusBadge = match ($project['status']) {
-                        'Completed'    => 'bg-success',
-                        'In Progress'  => 'bg-primary',
-                        'Testing/QA'   => 'bg-info',
-                        'Review'       => 'bg-warning text-dark',
-                        'On Hold'      => 'bg-danger',
-                        default        => 'bg-secondary'
-                    };
-                    ?>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Status</small>
-                            <span class="badge <?= $statusBadge ?>"><?= esc($project['status']) ?></span>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Start Date</small>
-                            <strong><?= date('d M Y', strtotime($project['start_date'])) ?></strong>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Deadline</small>
-                            <strong><?= date('d M Y', strtotime($project['end_date'])) ?></strong>
-                        </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Status SDLC</small>
+                        <span class="badge <?= $statusBadge ?>"><?= esc($project['status'] ?? '-') ?></span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Start Date</small>
+                        <strong><?= $dateValue($project['start_date'] ?? null) ?></strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">End Date</small>
+                        <strong><?= $dateValue($project['end_date'] ?? null) ?></strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Deadline Status</small>
+                        <span class="badge <?= $deadlineBadge ?>"><?= esc($deadlineLabel) ?></span>
                     </div>
                 </div>
             </div>
+        </div>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-header">
-                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-diagram-3 me-2 text-primary"></i>Tahapan & Timeline Milestone</h5>
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-diagram-3 me-2 text-primary"></i>Timeline Project</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center g-3">
+                    <div class="row g-3">
                         <div class="col-6 col-md-3">
-                            <div class="p-3 border rounded <?= $project['unit_testing_date'] ? 'bg-light-success border-success' : 'bg-light' ?>">
-                                <i class="bi bi-bug fs-3 text-primary d-block mb-1"></i>
-                                <span class="fw-bold d-block text-sm">Unit Testing</span>
-                                <small class="text-muted"><?= $project['unit_testing_date'] ? date('d M Y', strtotime($project['unit_testing_date'])) : 'Belum di-set' ?></small>
+                            <div class="p-3 border rounded h-100">
+                                <small class="text-muted d-block">Unit Testing</small>
+                                <strong><?= $dateValue($project['unit_testing_date'] ?? null) ?></strong>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-3 border rounded <?= $project['sit_date'] ? 'bg-light-info border-info' : 'bg-light' ?>">
-                                <i class="bi bi-diagram-2 fs-3 text-info d-block mb-1"></i>
-                                <span class="fw-bold d-block text-sm">SIT Phase</span>
-                                <small class="text-muted"><?= $project['sit_date'] ? date('d M Y', strtotime($project['sit_date'])) : 'Belum di-set' ?></small>
+                            <div class="p-3 border rounded h-100">
+                                <small class="text-muted d-block">SIT</small>
+                                <strong><?= $dateValue($project['sit_date'] ?? null) ?></strong>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-3 border rounded <?= $project['uat_date'] ? 'bg-light-warning border-warning' : 'bg-light' ?>">
-                                <i class="bi bi-shield-check fs-3 text-warning d-block mb-1"></i>
-                                <span class="fw-bold d-block text-sm">UAT Phase</span>
-                                <small class="text-muted"><?= $project['uat_date'] ? date('d M Y', strtotime($project['uat_date'])) : 'Belum di-set' ?></small>
+                            <div class="p-3 border rounded h-100">
+                                <small class="text-muted d-block">UAT</small>
+                                <strong><?= $dateValue($project['uat_date'] ?? null) ?></strong>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-3 border rounded <?= $project['promote_date'] ? 'bg-light-primary border-primary' : 'bg-light' ?>">
-                                <i class="bi bi-rocket-takeoff fs-3 text-success d-block mb-1"></i>
-                                <span class="fw-bold d-block text-sm">Promote (Deploy)</span>
-                                <small class="text-muted"><?= $project['promote_date'] ? date('d M Y', strtotime($project['promote_date'])) : 'Belum di-set' ?></small>
+                            <div class="p-3 border rounded h-100">
+                                <small class="text-muted d-block">Promote</small>
+                                <strong><?= $dateValue($project['promote_date'] ?? null) ?></strong>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header pb-2">
-                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-journal-text me-2 text-primary"></i>Catatan & Dokumentasi</h5>
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-journal-text me-2 text-primary"></i>Notes</h5>
                 </div>
-                <div class="card-body pt-2">
-                    <p class="mb-0 text-muted"><?= nl2br(esc($project['notes'] ?? 'Tidak ada catatan tambahan untuk proyek ini.')) ?></p>
+                <div class="card-body">
+                    <p class="mb-0 text-muted"><?= nl2br(esc($project['notes'] ?? 'Tidak ada catatan tambahan untuk project ini.')) ?></p>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-lg-4">
             <div class="card shadow-sm mb-4">
-                <div class="card-header pb-2">
+                <div class="card-header">
                     <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Assigned To / PIC</h5>
                 </div>
-                <div class="card-body pt-2">
+                <div class="card-body">
                     <?php if (!empty($project['assigned_users'])) : ?>
-                        <ul class="list-group list-group-flush">
+                        <div class="d-flex flex-column gap-3">
                             <?php foreach ($project['assigned_users'] as $assignedUser) : ?>
-                                <li class="list-group-item px-0 d-flex align-items-center gap-3">
-                                    <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; border-radius: 50%;">
-                                        <?= strtoupper(substr($assignedUser['name'], 0, 1)) ?>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-light-primary text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; border-radius: 50%;">
+                                        <?= esc(strtoupper(substr($assignedUser['name'] ?? 'U', 0, 1))) ?>
                                     </div>
                                     <div>
                                         <h6 class="mb-0 fw-bold"><?= esc($assignedUser['name']) ?></h6>
-                                        <small class="text-muted d-block"><?= esc($assignedUser['job_title'] ?? 'Software Engineer') ?></small>
+                                        <small class="text-muted"><?= esc($assignedUser['job_title'] ?? '-') ?></small>
                                     </div>
-                                </li>
+                                </div>
                             <?php endforeach; ?>
-                        </ul>
+                        </div>
                     <?php else : ?>
-                        <p class="text-muted text-sm mb-0 py-2">Belum ada user yang ditugaskan.</p>
+                        <p class="text-muted mb-0">Belum ada user yang ditugaskan.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-paperclip me-2 text-primary"></i>File Project</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($projectFiles)) : ?>
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($projectFiles as $file) : ?>
+                                <a href="<?= base_url('/projects/files/' . $file['id'] . '/download') ?>" class="list-group-item list-group-item-action px-0 d-flex align-items-start gap-3">
+                                    <span class="flex-grow-1 min-width-0">
+                                        <strong class="d-block text-dark text-break"><?= esc($file['original_name']) ?></strong>
+                                        <small class="text-muted d-block text-break">
+                                            <?= number_format(((int) ($file['file_size'] ?? 0)) / 1024, 1) ?> KB
+                                            <?php if (!empty($file['uploaded_by_name'])) : ?>
+                                                oleh <?= esc($file['uploaded_by_name']) ?>
+                                            <?php endif; ?>
+                                        </small>
+                                    </span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else : ?>
+                        <p class="text-muted mb-0">Belum ada file project yang ditampilkan.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -136,36 +195,26 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalUpdateProgress" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalDeleteProject" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="<?= base_url('/projects/update-progress/' . $project['id']) ?>" method="POST">
-                <?= csrf_field() ?>
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title text-white"><i class="bi bi-pencil-square me-2"></i>Update Status Proyek</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Project Status</label>
-                        <select name="status" class="form-select" required>
-                            <?php
-                            $statuses = ['Planning', 'In Progress', 'Testing/QA', 'Review', 'Completed', 'On Hold'];
-                            foreach ($statuses as $st) : ?>
-                                <option value="<?= $st ?>" <?= $project['status'] === $st ? 'selected' : '' ?>><?= $st ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Catatan Project</label>
-                        <textarea name="notes" class="form-control" rows="3"><?= esc($project['notes']) ?></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i> Simpan Perubahan</button>
-                </div>
-            </form>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title text-white"><i class="bi bi-exclamation-triangle me-2"></i>Hapus Project</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">
+                    Project <strong><?= esc($project['name']) ?></strong> akan dihapus permanen dari daftar project.
+                    Lanjutkan hanya jika data ini sudah tidak dibutuhkan.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <form action="<?= base_url('/projects/delete/' . $project['id']) ?>" method="POST">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-danger">Ya, Hapus Project</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
