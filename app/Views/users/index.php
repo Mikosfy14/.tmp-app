@@ -68,7 +68,7 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
 
 <div class="page-heading d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h3><i class="bi bi-people-fill me-2 text-primary"></i>User Management</h3>
+        <h3>User Management</h3>
         <p class="text-subtitle text-muted mb-0">Kelola akun lokal, role, dan status aktif pengguna.</p>
     </div>
     <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalUserForm">
@@ -118,7 +118,7 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <div class="row g-2 align-items-center">
-                <div class="col-12 col-lg-4">
+                <div class="col-12 col-lg-5">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                         <input type="text" id="userSearch" class="form-control" placeholder="Cari nama, username, email, jabatan...">
@@ -132,14 +132,7 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-4 col-lg-2">
-                    <select id="categoryFilter" class="form-select">
-                        <option value="">Semua Kategori</option>
-                        <option value="Organik">Organik</option>
-                        <option value="NonOrganik">NonOrganik</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-4 col-lg-2">
+                <div class="col-12 col-md-4 col-lg-3">
                     <select id="statusFilter" class="form-select">
                         <option value="">Semua Status</option>
                         <option value="1">Aktif</option>
@@ -168,11 +161,13 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                         </tr>
                     </thead>
                     <tbody>
+                        <?php if (!empty($users)) : ?>
                         <?php foreach ($users as $user) : ?>
                             <?php
                             $roleColor = $roleClass($user['role_name'] ?? null);
                             $categoryColor = $categoryClass($user['category'] ?? null);
                             $isActive = (int) ($user['is_active'] ?? 0) === 1;
+                            $isKepalaDepartemenUser = strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
                             $searchText = strtolower(implode(' ', array_filter([
                                 $user['name'] ?? '',
                                 $user['username'] ?? '',
@@ -224,25 +219,34 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalUserDetail<?= esc($user['id']) ?>" title="Detail User">
                                             <i class="bi bi-eye-fill"></i> Detail
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser<?= esc($user['id']) ?>" title="Edit User">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </button>
-                                        <?php if ($isActive) : ?>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" title="Nonaktifkan User">
-                                                <i class="bi bi-person-dash-fill"></i> Nonaktif
+                                        <?php if (!$isKepalaDepartemenUser) : ?>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser<?= esc($user['id']) ?>" title="Edit User">
+                                                <i class="bi bi-pencil-square"></i> Edit
                                             </button>
-                                        <?php else : ?>
-                                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" title="Aktifkan User">
-                                                <i class="bi bi-person-check-fill"></i> Aktif
-                                            </button>
+                                            <?php if ($isActive) : ?>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" title="Nonaktifkan User">
+                                                    <i class="bi bi-person-dash-fill"></i> Nonaktif
+                                                </button>
+                                            <?php else : ?>
+                                                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" title="Aktifkan User">
+                                                    <i class="bi bi-person-check-fill"></i> Aktif
+                                                </button>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr id="usersEmptyRow" class="<?= empty($users) ? '' : 'd-none' ?>">
+                        <?php else : ?>
+                        <tr id="usersEmptyRow">
+                            <td colspan="6" class="text-center py-4 text-muted">Tidak ada user yang bisa ditampilkan.</td>
+                        </tr>
+                        <?php endif; ?>
+                        <?php if (!empty($users)) : ?>
+                        <tr id="usersEmptyRow" class="d-none">
                             <td colspan="6" class="text-center py-4 text-muted">Data user tidak ditemukan.</td>
                         </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -255,6 +259,7 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
     $roleColor = $roleClass($user['role_name'] ?? null);
     $categoryColor = $categoryClass($user['category'] ?? null);
     $isActive = (int) ($user['is_active'] ?? 0) === 1;
+    $isKepalaDepartemenUser = strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
     ?>
     <div class="modal fade" id="modalUserDetail<?= esc($user['id']) ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -310,7 +315,9 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEditUser<?= esc($user['id']) ?>"><i class="bi bi-pencil-square me-1"></i> Edit User</button>
+                    <?php if (!$isKepalaDepartemenUser) : ?>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEditUser<?= esc($user['id']) ?>"><i class="bi bi-pencil-square me-1"></i> Edit User</button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -475,25 +482,26 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('userSearch');
         const roleFilter = document.getElementById('roleFilter');
-        const categoryFilter = document.getElementById('categoryFilter');
         const statusFilter = document.getElementById('statusFilter');
         const resetButton = document.getElementById('userFilterReset');
         const rows = Array.from(document.querySelectorAll('.user-row'));
         const emptyRow = document.getElementById('usersEmptyRow');
 
+        if (!searchInput || !roleFilter || !statusFilter || !resetButton || !emptyRow) {
+            return;
+        }
+
         function applyUserFilters() {
             const keyword = (searchInput.value || '').trim().toLowerCase();
             const role = roleFilter.value;
-            const category = categoryFilter.value;
             const status = statusFilter.value;
             let visibleCount = 0;
 
             rows.forEach(function(row) {
                 const matchesSearch = !keyword || row.dataset.search.includes(keyword);
                 const matchesRole = !role || row.dataset.role === role;
-                const matchesCategory = !category || row.dataset.category === category;
                 const matchesStatus = !status || row.dataset.status === status;
-                const isVisible = matchesSearch && matchesRole && matchesCategory && matchesStatus;
+                const isVisible = matchesSearch && matchesRole && matchesStatus;
 
                 row.classList.toggle('d-none', !isVisible);
                 if (isVisible) {
@@ -506,12 +514,10 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
 
         searchInput.addEventListener('input', applyUserFilters);
         roleFilter.addEventListener('change', applyUserFilters);
-        categoryFilter.addEventListener('change', applyUserFilters);
         statusFilter.addEventListener('change', applyUserFilters);
         resetButton.addEventListener('click', function() {
             searchInput.value = '';
             roleFilter.value = '';
-            categoryFilter.value = '';
             statusFilter.value = '';
             applyUserFilters();
         });

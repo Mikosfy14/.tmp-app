@@ -190,13 +190,13 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <div class="row g-2 align-items-center">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-4 col-lg-5">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                         <input type="text" id="projectSearch" class="form-control" placeholder="Cari kode, nama project, atau PIC...">
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-4 col-lg-4">
                     <select id="projectStatusFilter" class="form-select">
                         <option value="">-- Semua Status --</option>
                         <?php foreach ($statusOptions as $st) : ?>
@@ -204,7 +204,7 @@ $displayProjects = $isPreviewMode ? array_values($previewProjects) : $projects;
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-4 col-lg-3">
                     <button type="button" id="projectFilterReset" class="btn btn-outline-secondary w-100">Reset</button>
                 </div>
             </div>
