@@ -51,6 +51,7 @@ class ProjectModel extends Model
                     ->groupEnd();
         }
 
+        //logic to filter projects based on the provided date range
         if (!empty($dateRange['start_date']) && !empty($dateRange['end_date'])) {
             $builder->where('projects.start_date <=', $dateRange['end_date'])
                 ->where('projects.end_date >=', $dateRange['start_date']);

@@ -152,7 +152,7 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <form method="get" action="<?= base_url('/users') ?>" class="row g-2 align-items-center">
-                <div class="col-12 col-lg-5">
+                <div class="col-12 col-lg-4">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                         <input type="text" name="keyword" class="form-control" placeholder="Cari nama, username, email, jabatan..." value="<?= esc($selectedKeyword ?? '') ?>">
@@ -176,7 +176,7 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                 <div class="col-12 col-lg-2">
                     <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
-                <div class="col-12 col-lg-2">
+                <div class="col-12 col-lg-1">
                     <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary w-100">Reset</a>
                 </div>
             </form>
