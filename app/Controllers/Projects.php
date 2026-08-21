@@ -16,7 +16,7 @@ class Projects extends BaseController
 
     public function __construct()
     {
-        helper('form');
+        helper(['form', 'project_filter']);
         $this->projectModel = new ProjectModel();
         $this->projectFileModel = new ProjectFileModel();
         $this->projectStatusModel = new ProjectStatusModel();
@@ -186,6 +186,12 @@ class Projects extends BaseController
     {
         $statusFilter = $this->request->getGet('status');
         $keyword = $this->request->getGet('keyword');
+        $selectedYear = (int) ($this->request->getGet('year') ?: date('Y'));
+        $selectedQuarter = (string) $this->request->getGet('quarter');
+        $dateRange = get_quarter_date_range($selectedQuarter, $selectedYear) ?? [
+            'start_date' => $selectedYear . '-01-01',
+            'end_date' => $selectedYear . '-12-31',
+        ];
         $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
         $userId = $targetUserId ?? (int) session()->get('user_id');
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
@@ -196,17 +202,40 @@ class Projects extends BaseController
 
         $data = [
             'title' => 'Project Tracker',
-            'projects' => $this->projectModel->getProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll),
+            'projects' => $this->projectModel->getProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange),
             'pager' => $this->projectModel->pager,
             'users' => $this->userModel->where('is_active', 1)->findAll(),
             'selectedStatus' => $statusFilter,
             'keyword' => $keyword,
+            'selectedYear' => $selectedYear,
+            'selectedQuarter' => $selectedQuarter,
+            'yearOptions' => $this->getProjectYearOptions($selectedYear),
             'statusOptions' => $this->projectStatusModel->getActiveOptions(),
             'isFilteredUser' => $targetUserId !== null,
             'targetUser' => $targetUser,
         ];
 
         return view('projects/index', $data);
+    }
+
+    private function getProjectYearOptions(int $selectedYear): array
+    {
+        $years = db_connect()
+            ->table('projects')
+            ->select('YEAR(start_date) AS project_year', false)
+            ->where('start_date IS NOT NULL', null, false)
+            ->groupBy('YEAR(start_date)', false)
+            ->orderBy('project_year', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        $yearOptions = array_map(static fn (array $row): int => (int) $row['project_year'], $years);
+        $yearOptions[] = $selectedYear;
+        $yearOptions[] = (int) date('Y');
+        $yearOptions = array_values(array_unique(array_filter($yearOptions, static fn (int $year): bool => $year > 0)));
+        rsort($yearOptions);
+
+        return $yearOptions;
     }
 
     private function getFormViewData(array $context): array

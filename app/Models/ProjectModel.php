@@ -29,7 +29,7 @@ class ProjectModel extends Model
     ];
 
     /** Ambil project beserta user penanggung jawab dari kolom assigned_to. */
-    public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false): array
+    public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
     {
         $builder = $this->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
             ->join('project_status', 'project_status.id = projects.project_status_id', 'left');
@@ -49,6 +49,11 @@ class ProjectModel extends Model
                     ->orLike('projects.project_code', $keyword)
                     ->orWhere("EXISTS (SELECT 1 FROM users assigned_user WHERE CHARINDEX(',' + CAST(assigned_user.id AS VARCHAR(20)) + ',', ',' + ISNULL(projects.assigned_to, '') + ',') > 0 AND assigned_user.name LIKE {$escapedKeyword})", null, false)
                     ->groupEnd();
+        }
+
+        if (!empty($dateRange['start_date']) && !empty($dateRange['end_date'])) {
+            $builder->where('projects.start_date <=', $dateRange['end_date'])
+                ->where('projects.end_date >=', $dateRange['start_date']);
         }
 
         $projects = $this->orderBy('projects.id', 'DESC')->paginate(5, 'projects');
