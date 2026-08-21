@@ -2,11 +2,13 @@
 /**
  * @var array $users
  * @var array $roles
+ * @var array $userStats
  * @var \CodeIgniter\Pager\Pager|null $pager
  */
 
 $users = $users ?? [];
 $roles = $roles ?? [];
+$userStats = $userStats ?? [];
 
 $roleClass = static function (?string $roleName): string {
     return match ($roleName) {
@@ -27,11 +29,11 @@ $categoryClass = static function (?string $category): string {
 
 $valueOrDash = static fn ($value): string => $value !== null && $value !== '' ? esc($value) : '-';
 
-$totalUsers = count($users);
-$activeUsers = count(array_filter($users, static fn ($user) => (int) ($user['is_active'] ?? 0) === 1));
-$inactiveUsers = $totalUsers - $activeUsers;
-$organicUsers = count(array_filter($users, static fn ($user) => ($user['category'] ?? '') === 'Organik'));
-$nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['category'] ?? '') === 'NonOrganik'));
+$totalUsers = (int) ($userStats['totalUsers'] ?? 0);
+$activeUsers = (int) ($userStats['activeUsers'] ?? 0);
+$inactiveUsers = max(0, $totalUsers - $activeUsers);
+$organicUsers = (int) ($userStats['organicUsers'] ?? 0);
+$nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
 ?>
 
 <?= $this->extend('layouts/main') ?>

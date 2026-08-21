@@ -60,6 +60,7 @@ class Users extends BaseController
             'users' => $users,
             'pager' => $pager,
             'roles' => $this->getRoles(),
+            'userStats' => $this->getUserStats(),
             'selectedKeyword' => $keyword,
             'selectedRole' => $roleFilter,
             'selectedStatus' => $statusFilter,
@@ -269,6 +270,28 @@ class Users extends BaseController
             ->orderBy('id', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    private function getUserStats(): array
+    {
+        $builder = db_connect()
+            ->table('users u')
+            ->select([
+                'COUNT(u.id) AS total_users',
+                'SUM(CASE WHEN u.is_active = 1 THEN 1 ELSE 0 END) AS active_users',
+                'SUM(CASE WHEN r.category = \'Organik\' THEN 1 ELSE 0 END) AS organic_users',
+                'SUM(CASE WHEN r.category = \'NonOrganik\' THEN 1 ELSE 0 END) AS non_organic_users',
+            ], false)
+            ->join('roles r', 'r.id = u.role_id', 'left');
+
+        $stats = $builder->get()->getRowArray() ?: [];
+
+        return [
+            'totalUsers' => (int) ($stats['total_users'] ?? 0),
+            'activeUsers' => (int) ($stats['active_users'] ?? 0),
+            'organicUsers' => (int) ($stats['organic_users'] ?? 0),
+            'nonOrganicUsers' => (int) ($stats['non_organic_users'] ?? 0),
+        ];
     }
 
     private function nullablePost(string $field): ?string
