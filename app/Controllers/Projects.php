@@ -197,6 +197,7 @@ class Projects extends BaseController
         $data = [
             'title' => 'Project Tracker',
             'projects' => $this->projectModel->getProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll),
+            'pager' => $this->projectModel->pager,
             'users' => $this->userModel->where('is_active', 1)->findAll(),
             'selectedStatus' => $statusFilter,
             'keyword' => $keyword,
