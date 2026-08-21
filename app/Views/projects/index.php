@@ -5,6 +5,7 @@
  * @var string|null $selectedStatus
  * @var bool $isFilteredUser
  * @var array|null $targetUser
+ * @var \CodeIgniter\Pager\Pager|null $pager
  */
 
 $displayProjects = $projects ?? [];
@@ -34,6 +35,41 @@ $displayProjects = $projects ?? [];
         justify-content: center;
         gap: .25rem;
         min-width: 4.25rem;
+    }
+
+    .project-pagination .pagination,
+    .user-pagination .pagination {
+        margin: 0;
+        gap: .35rem;
+    }
+
+    .project-pagination .page-item .page-link,
+    .user-pagination .page-item .page-link {
+        border: 0;
+        border-radius: .55rem;
+        min-width: 2.25rem;
+        text-align: center;
+        color: #52606d;
+        font-weight: 600;
+    }
+
+    .project-pagination .page-item.active .page-link,
+    .user-pagination .page-item.active .page-link {
+        background: #435ebe;
+        color: #fff;
+    }
+
+    .project-pagination .page-item:not(.active),
+    .user-pagination .page-item:not(.active) .page-link {
+        color: #435ebe;
+    }
+
+    .project-pagination .page-item.disabled .page-link,
+    .user-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background: #f1f3f5;
+        opacity: .80;
+        cursor: not-allowed;
     }
 
     @media (max-width: 575.98px) {
@@ -88,25 +124,28 @@ $displayProjects = $projects ?? [];
 <div class="page-content">
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
-            <div class="row g-2 align-items-center">
+            <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="row g-2 align-items-center">
                 <div class="col-12 col-md-4 col-lg-5">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
-                        <input type="text" id="projectSearch" class="form-control" placeholder="Cari kode, nama project, atau PIC...">
+                        <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama project, atau PIC..." value="<?= esc($keyword ?? '') ?>">
                     </div>
                 </div>
                 <div class="col-12 col-md-4 col-lg-4">
-                    <select id="projectStatusFilter" class="form-select">
+                    <select name="status" class="form-select">
                         <option value="">-- Semua Status --</option>
                         <?php foreach ($statusOptions as $st) : ?>
-                            <option value="<?= esc($st['status_name']) ?>"><?= esc($st['status_name']) ?></option>
+                            <option value="<?= esc($st['id']) ?>" <?= (string) ($selectedStatus ?? '') === (string) $st['id'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-12 col-md-4 col-lg-3">
-                    <button type="button" id="projectFilterReset" class="btn btn-outline-secondary w-100">Reset</button>
+                    <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
-            </div>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -201,49 +240,13 @@ $displayProjects = $projects ?? [];
                     </tbody>
                 </table>
             </div>
+            <?php if (!empty($displayProjects) && !empty($pager) && $pager->getPageCount('projects') > 1) : ?>
+                <div class="project-pagination d-flex justify-content-end p-3 border-top">
+                    <?= $pager->links('projects', 'complete') ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('projectSearch');
-        const statusFilter = document.getElementById('projectStatusFilter');
-        const resetButton = document.getElementById('projectFilterReset');
-        const rows = Array.from(document.querySelectorAll('.project-row'));
-        const emptyRow = document.getElementById('projectsEmptyRow');
-
-        if (!searchInput || !statusFilter || !resetButton || !emptyRow) {
-            return;
-        }
-
-        function applyProjectFilters() {
-            const keyword = (searchInput.value || '').trim().toLowerCase();
-            const status = statusFilter.value;
-            let visibleCount = 0;
-
-            rows.forEach(function(row) {
-                const matchesSearch = !keyword || row.dataset.search.includes(keyword);
-                const matchesStatus = !status || row.dataset.status === status;
-                const isVisible = matchesSearch && matchesStatus;
-
-                row.classList.toggle('d-none', !isVisible);
-                if (isVisible) {
-                    visibleCount++;
-                }
-            });
-
-            emptyRow.classList.toggle('d-none', visibleCount > 0);
-        }
-
-        searchInput.addEventListener('input', applyProjectFilters);
-        statusFilter.addEventListener('change', applyProjectFilters);
-        resetButton.addEventListener('click', function() {
-            searchInput.value = '';
-            statusFilter.value = '';
-            applyProjectFilters();
-        });
-    });
-</script>
 
 <?= $this->endSection() ?>

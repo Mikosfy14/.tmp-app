@@ -2,6 +2,7 @@
 /**
  * @var array $users
  * @var array $roles
+ * @var \CodeIgniter\Pager\Pager|null $pager
  */
 
 $users = $users ?? [];
@@ -64,6 +65,39 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
         height: 42px;
         border-radius: 50%;
     }
+
+    .user-pagination .pagination {
+        margin: 0;
+        gap: .35rem;
+    }
+
+    .user-pagination .page-item .page-link {
+        border: 0;
+        border-radius: .55rem;
+        min-width: 2.25rem;
+        text-align: center;
+        color: #52606d;
+        font-weight: 600;
+    }
+
+    .user-pagination .page-item.active .page-link {
+        background: #435ebe;
+        color: #fff;
+        box-shadow: 0 .25rem .65rem rgba(67, 94, 190, .25);
+    }
+
+    .user-pagination .page-item:not(.active) .page-link:hover {
+        background: #eef1ff;
+        color: #435ebe;
+    }
+
+    .user-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background: #f1f3f5;
+        opacity: .75;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
 </style>
 
 <div class="page-heading d-flex justify-content-between align-items-center mb-3">
@@ -117,32 +151,35 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
 
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
-            <div class="row g-2 align-items-center">
+            <form method="get" action="<?= base_url('/users') ?>" class="row g-2 align-items-center">
                 <div class="col-12 col-lg-5">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
-                        <input type="text" id="userSearch" class="form-control" placeholder="Cari nama, username, email, jabatan...">
+                        <input type="text" name="keyword" class="form-control" placeholder="Cari nama, username, email, jabatan..." value="<?= esc($selectedKeyword ?? '') ?>">
                     </div>
                 </div>
                 <div class="col-12 col-md-4 col-lg-2">
-                    <select id="roleFilter" class="form-select">
+                    <select name="role" class="form-select">
                         <option value="">Semua Role</option>
                         <?php foreach ($roles as $role) : ?>
-                            <option value="<?= esc($role['role_name']) ?>"><?= esc($role['role_name']) ?></option>
+                            <option value="<?= esc($role['id']) ?>" <?= (string) ($selectedRole ?? '') === (string) $role['id'] ? 'selected' : '' ?>><?= esc($role['role_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-12 col-md-4 col-lg-3">
-                    <select id="statusFilter" class="form-select">
+                    <select name="status" class="form-select">
                         <option value="">Semua Status</option>
-                        <option value="1">Aktif</option>
-                        <option value="0">Nonaktif</option>
+                        <option value="1" <?= ($selectedStatus ?? '') === '1' ? 'selected' : '' ?>>Aktif</option>
+                        <option value="0" <?= ($selectedStatus ?? '') === '0' ? 'selected' : '' ?>>Nonaktif</option>
                     </select>
                 </div>
                 <div class="col-12 col-lg-2">
-                    <button type="button" id="userFilterReset" class="btn btn-outline-secondary w-100">Reset</button>
+                    <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
-            </div>
+                <div class="col-12 col-lg-2">
+                    <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -250,6 +287,11 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                     </tbody>
                 </table>
             </div>
+            <?php if (!empty($users) && !empty($pager) && $pager->getPageCount('users') > 1) : ?>
+                <div class="user-pagination d-flex justify-content-end p-3 border-top">
+                    <?= $pager->links('users', 'complete') ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -477,51 +519,5 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('userSearch');
-        const roleFilter = document.getElementById('roleFilter');
-        const statusFilter = document.getElementById('statusFilter');
-        const resetButton = document.getElementById('userFilterReset');
-        const rows = Array.from(document.querySelectorAll('.user-row'));
-        const emptyRow = document.getElementById('usersEmptyRow');
-
-        if (!searchInput || !roleFilter || !statusFilter || !resetButton || !emptyRow) {
-            return;
-        }
-
-        function applyUserFilters() {
-            const keyword = (searchInput.value || '').trim().toLowerCase();
-            const role = roleFilter.value;
-            const status = statusFilter.value;
-            let visibleCount = 0;
-
-            rows.forEach(function(row) {
-                const matchesSearch = !keyword || row.dataset.search.includes(keyword);
-                const matchesRole = !role || row.dataset.role === role;
-                const matchesStatus = !status || row.dataset.status === status;
-                const isVisible = matchesSearch && matchesRole && matchesStatus;
-
-                row.classList.toggle('d-none', !isVisible);
-                if (isVisible) {
-                    visibleCount++;
-                }
-            });
-
-            emptyRow.classList.toggle('d-none', visibleCount > 0);
-        }
-
-        searchInput.addEventListener('input', applyUserFilters);
-        roleFilter.addEventListener('change', applyUserFilters);
-        statusFilter.addEventListener('change', applyUserFilters);
-        resetButton.addEventListener('click', function() {
-            searchInput.value = '';
-            roleFilter.value = '';
-            statusFilter.value = '';
-            applyUserFilters();
-        });
-    });
-</script>
 
 <?= $this->endSection() ?>
