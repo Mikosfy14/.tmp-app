@@ -3,12 +3,18 @@
  * @var array $statusOptions
  * @var array $projects
  * @var string|null $selectedStatus
+ * @var int $selectedYear
+ * @var string|null $selectedQuarter
+ * @var array $yearOptions
  * @var bool $isFilteredUser
  * @var array|null $targetUser
  * @var \CodeIgniter\Pager\Pager|null $pager
  */
 
 $displayProjects = $projects ?? [];
+$yearOptions = $yearOptions ?? [(int) date('Y')];
+$selectedYear = (int) ($selectedYear ?? date('Y'));
+$selectedQuarter = (string) ($selectedQuarter ?? '');
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -125,13 +131,14 @@ $displayProjects = $projects ?? [];
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="row g-2 align-items-center">
-                <div class="col-12 col-md-4 col-lg-5">
+                <input type="hidden" name="page_projects" value="1">
+                <div class="col-12 col-lg-4">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                         <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama project, atau PIC..." value="<?= esc($keyword ?? '') ?>">
                     </div>
                 </div>
-                <div class="col-12 col-md-4 col-lg-4">
+                <div class="col-12 col-md-6 col-lg-2">
                     <select name="status" class="form-select">
                         <option value="">-- Semua Status --</option>
                         <?php foreach ($statusOptions as $st) : ?>
@@ -139,10 +146,28 @@ $displayProjects = $projects ?? [];
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-4 col-lg-3">
+                <div class="col-12 col-md-3 col-lg-2">
+                    <select name="year" class="form-select">
+                        <?php foreach ($yearOptions as $year) : ?>
+                            <option value="<?= esc($year) ?>" <?= $selectedYear === (int) $year ? 'selected' : '' ?>>
+                                <?= esc($year) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 col-lg-2">
+                    <select name="quarter" class="form-select">
+                        <option value="">Semua Triwulan</option>
+                        <option value="1" <?= $selectedQuarter === '1' ? 'selected' : '' ?>>Triwulan I</option>
+                        <option value="2" <?= $selectedQuarter === '2' ? 'selected' : '' ?>>Triwulan II</option>
+                        <option value="3" <?= $selectedQuarter === '3' ? 'selected' : '' ?>>Triwulan III</option>
+                        <option value="4" <?= $selectedQuarter === '4' ? 'selected' : '' ?>>Triwulan IV</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-1">
                     <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
-                <div class="col-12 col-md-4 col-lg-3">
+                <div class="col-12 col-md-6 col-lg-1">
                     <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
                 </div>
             </form>
