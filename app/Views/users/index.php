@@ -105,10 +105,24 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
         <h3>User Management</h3>
         <p class="text-subtitle text-muted mb-0">Kelola akun lokal, role, dan status aktif pengguna.</p>
     </div>
-    <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalUserForm">
+    <a href="<?= base_url('/users/create') ?>" class="btn btn-primary shadow-sm">
         <i class="bi bi-person-plus-fill me-1"></i> Tambah User
-    </button>
+    </a>
 </div>
+
+<?php if (session()->getFlashdata('success')) : ?>
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="bi bi-check-circle me-2"></i><?= esc(session()->getFlashdata('success')) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')) : ?>
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i><?= esc(session()->getFlashdata('error')) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
 <div class="page-content">
     <div class="row g-3 mb-4">
@@ -253,13 +267,13 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                                 </td>
                                 <td class="text-center user-management-actions pe-4 py-3">
                                     <div class="user-management-action-group">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalUserDetail<?= esc($user['id']) ?>" title="Detail User">
+                                        <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary" title="Detail User">
                                             <i class="bi bi-eye-fill"></i> Detail
-                                        </button>
-                                        <?php if (!$isKepalaDepartemenUser) : ?>
-                                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalEditUser<?= esc($user['id']) ?>" title="Edit User">
+                                        </a>
+                                        <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-warning" title="Edit User">
                                                 <i class="bi bi-pencil-square"></i> Edit
-                                            </button>
+                                        </a>
+                                        <?php if (!$isKepalaDepartemenUser || (int) ($user['id'] ?? 0) !== (int) session()->get('user_id')) : ?>
                                             <?php if ($isActive) : ?>
                                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" title="Nonaktifkan User">
                                                     <i class="bi bi-person-dash-fill"></i> Nonaktif
@@ -437,7 +451,10 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Nonaktifkan</button>
+                    <form action="<?= base_url('/users/deactivate/' . (int) $user['id']) ?>" method="post">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-danger">Nonaktifkan</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -455,7 +472,10 @@ $nonOrganicUsers = count(array_filter($users, static fn ($user) => ($user['categ
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aktifkan</button>
+                    <form action="<?= base_url('/users/activate/' . (int) $user['id']) ?>" method="post">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-success">Aktifkan</button>
+                    </form>
                 </div>
             </div>
         </div>

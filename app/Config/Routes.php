@@ -32,4 +32,12 @@ $routes->group('projects', ['filter' => 'auth'], function($routes) {
 
 $routes->group('users', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Users::index');
+    $routes->get('create', 'Users::create');
+    $routes->post('store', 'Users::store');
+    $routes->get('detail/(:num)', 'Users::detail/$1');
+    $routes->get('edit/(:num)', 'Users::edit/$1');
+    $routes->post('update/(:num)', 'Users::update/$1');
+    $routes->post('reset-password/(:num)', 'Users::resetPassword/$1');
+    $routes->post('activate/(:num)', 'Users::activate/$1');
+    $routes->post('deactivate/(:num)', 'Users::deactivate/$1');
 });
