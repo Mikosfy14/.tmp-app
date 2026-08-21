@@ -6,6 +6,11 @@
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+            // Apply the saved sidebar state before the page is painted.
+            if (localStorage.getItem('sidebar-state') === 'closed') {
+                document.documentElement.classList.add('sidebar-closed');
+            }
         })();
     </script>
 
@@ -49,6 +54,15 @@
             align-items: center !important;
             justify-content: center !important;
             margin-right: 0.75rem !important;
+        }
+
+        html.sidebar-closed #sidebar,
+        html.sidebar-closed #sidebar .sidebar-wrapper {
+            left: -300px !important;
+        }
+
+        html.sidebar-closed #sidebar ~ #main {
+            margin-left: 0 !important;
         }
 
         [data-bs-theme="dark"] body {

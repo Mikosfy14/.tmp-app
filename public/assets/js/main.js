@@ -15,28 +15,43 @@ for(var i = 0; i < sidebarItems.length; i++) {
     })
 }
 
-window.addEventListener('DOMContentLoaded', (event) => {
-    var w = window.innerWidth;
-    if(w < 1200) {
-        document.getElementById('sidebar').classList.remove('active');
-    }
-});
-window.addEventListener('resize', (event) => {
-    var w = window.innerWidth;
-    if(w < 1200) {
-        document.getElementById('sidebar').classList.remove('active');
-    }else{
-        document.getElementById('sidebar').classList.add('active');
-    }
+const sidebarStateKey = 'sidebar-state';
+
+function setSidebarState(isOpen) {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('active', isOpen);
+    document.documentElement.classList.remove('sidebar-closed');
+    localStorage.setItem(sidebarStateKey, isOpen ? 'open' : 'closed');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    const savedState = localStorage.getItem(sidebarStateKey);
+    const defaultState = window.innerWidth >= 1200;
+    setSidebarState(savedState ? savedState === 'open' : defaultState);
 });
 
-document.querySelector('.burger-btn').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('active');
-})
-document.querySelector('.sidebar-hide').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('active');
+window.addEventListener('resize', () => {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
 
-})
+    const savedState = localStorage.getItem(sidebarStateKey);
+    setSidebarState(savedState ? savedState === 'open' : window.innerWidth >= 1200);
+});
+
+document.querySelector('.burger-btn')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) setSidebarState(!sidebar.classList.contains('active'));
+});
+
+document.querySelector('.sidebar-hide')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) setSidebarState(!sidebar.classList.contains('active'));
+});
 
 
 // Perfect Scrollbar Init

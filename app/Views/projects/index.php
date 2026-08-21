@@ -140,13 +140,13 @@ $selectedQuarter = (string) ($selectedQuarter ?? '');
                 </div>
                 <div class="col-12 col-md-6 col-lg-2">
                     <select name="status" class="form-select">
-                        <option value="">-- Semua Status --</option>
+                        <option value="">Semua Status</option>
                         <?php foreach ($statusOptions as $st) : ?>
                             <option value="<?= esc($st['id']) ?>" <?= (string) ($selectedStatus ?? '') === (string) $st['id'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-3 col-lg-2">
+                <div class="col-12 col-md-3 col-lg-1">
                     <select name="year" class="form-select">
                         <?php foreach ($yearOptions as $year) : ?>
                             <option value="<?= esc($year) ?>" <?= $selectedYear === (int) $year ? 'selected' : '' ?>>
@@ -164,7 +164,7 @@ $selectedQuarter = (string) ($selectedQuarter ?? '');
                         <option value="4" <?= $selectedQuarter === '4' ? 'selected' : '' ?>>Triwulan IV</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-6 col-lg-1">
+                <div class="col-12 col-md-6 col-lg-2">
                     <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
                 <div class="col-12 col-md-6 col-lg-1">
