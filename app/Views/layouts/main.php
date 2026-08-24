@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/bootstrap.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <?= $this->renderSection('styles') ?>
 
     <style>
         body,
@@ -216,6 +217,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
+    <?= $this->renderSection('scripts') ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const toggleDark = document.getElementById('toggle-dark');

@@ -51,11 +51,7 @@ class ProjectModel extends Model
                     ->groupEnd();
         }
 
-        //logic to filter projects based on the provided date range
-        if (!empty($dateRange['start_date']) && !empty($dateRange['end_date'])) {
-            $builder->where('projects.start_date <=', $dateRange['end_date'])
-                ->where('projects.end_date >=', $dateRange['start_date']);
-        }
+        $this->applyDateRangeFilter($builder, $dateRange);
 
         $projects = $this->orderBy('projects.id', 'DESC')->paginate(5, 'projects');
         return $this->attachAssignees($projects);
@@ -90,6 +86,16 @@ class ProjectModel extends Model
         }
 
         $builder->where("CHARINDEX(',$userId,', ',' + ISNULL(projects.assigned_to, '') + ',') >", 0, false);
+    }
+
+    private function applyDateRangeFilter($builder, ?array $dateRange): void
+    {
+        if (empty($dateRange['start_date']) || empty($dateRange['end_date'])) {
+            return;
+        }
+
+        $builder->where('projects.start_date >=', $dateRange['start_date'])
+            ->where('projects.end_date <=', $dateRange['end_date']);
     }
 
     private function attachAssignees(array $projects): array
