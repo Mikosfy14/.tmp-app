@@ -12,6 +12,7 @@ use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
+use App\Filters\NoCacheFilter;
 
 class Filters extends BaseFilters
 {
@@ -32,6 +33,7 @@ class Filters extends BaseFilters
         'secureheaders' => \CodeIgniter\Filters\SecureHeaders::class,
         'cors'          => \CodeIgniter\Filters\Cors::class,
         'auth'          => \App\Filters\AuthFilter::class,
+        'nocache'       => NoCacheFilter::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
@@ -53,10 +55,9 @@ class Filters extends BaseFilters
     public array $required = [
         'before' => [
             'forcehttps', // Force Global Secure Requests
-            'pagecache',  // Web Page Caching
         ],
         'after' => [
-            'pagecache',   // Web Page Caching
+            'nocache',     // Prevent authenticated/dynamic pages from browser caching
             'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
         ],

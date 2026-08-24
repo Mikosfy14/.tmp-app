@@ -52,6 +52,9 @@ class Auth extends BaseController
 
         //Verifikasi Enkripsi Password {BCRYPT}
         if (password_verify($password, $user['password_hash'])) {
+            // Rotate the session ID after authentication to prevent session fixation.
+            session()->regenerate(true);
+
             //set session handling
             $sessionData = [
                 'user_id'    => $user['id'],

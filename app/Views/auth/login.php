@@ -111,6 +111,13 @@
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
             <script>
+                // Revalidate the session when the browser restores this page from its back/forward cache.
+                window.addEventListener('pageshow', function(event) {
+                    if (event.persisted) {
+                        window.location.reload();
+                    }
+                });
+
                 const togglePassword = document.querySelector('#togglePassword');
                 const password = document.querySelector('#password');
                 const eyeIcon = document.querySelector('#eyeIcon');
