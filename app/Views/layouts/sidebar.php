@@ -74,4 +74,5 @@
             </ul>
         </div>
     </div>
+    <div id="sidebar-backdrop" aria-hidden="true"></div>
 </div>

@@ -22,7 +22,9 @@ function setSidebarState(isOpen) {
     if (!sidebar) return;
 
     sidebar.classList.toggle('active', isOpen);
-    document.documentElement.classList.remove('sidebar-closed');
+    document.documentElement.classList.toggle('sidebar-closed', !isOpen);
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (backdrop) backdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     localStorage.setItem(sidebarStateKey, isOpen ? 'open' : 'closed');
 }
 
@@ -51,6 +53,10 @@ document.querySelector('.burger-btn')?.addEventListener('click', () => {
 document.querySelector('.sidebar-hide')?.addEventListener('click', () => {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) setSidebarState(!sidebar.classList.contains('active'));
+});
+
+document.getElementById('sidebar-backdrop')?.addEventListener('click', () => {
+    setSidebarState(false);
 });
 
 
