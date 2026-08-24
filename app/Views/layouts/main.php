@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/bootstrap.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <?= $this->renderSection('styles') ?>
 
     <style>
         body,
@@ -56,12 +57,41 @@
             margin-right: 0.75rem !important;
         }
 
-        html.sidebar-closed #sidebar,
-        html.sidebar-closed #sidebar .sidebar-wrapper {
-            left: -300px !important;
+        #sidebar {
+            position: relative;
+            z-index: 1040;
         }
 
-        html.sidebar-closed #sidebar ~ #main {
+        #sidebar .sidebar-wrapper {
+            left: 0 !important;
+            z-index: 1041;
+            box-shadow: 0 0 1.5rem rgba(20, 24, 40, .12);
+            transition: transform .25s ease-out;
+        }
+
+        #sidebar:not(.active) .sidebar-wrapper,
+        html.sidebar-closed #sidebar .sidebar-wrapper {
+            transform: translateX(-100%);
+        }
+
+        #sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1040;
+            background: rgba(15, 18, 30, .48);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .25s ease, visibility .25s ease;
+        }
+
+        #sidebar.active #sidebar-backdrop {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        #main {
             margin-left: 0 !important;
         }
 
@@ -216,6 +246,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
+    <?= $this->renderSection('scripts') ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const toggleDark = document.getElementById('toggle-dark');

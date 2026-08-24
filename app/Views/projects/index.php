@@ -3,21 +3,69 @@
  * @var array $statusOptions
  * @var array $projects
  * @var string|null $selectedStatus
- * @var int $selectedYear
- * @var string|null $selectedQuarter
- * @var array $yearOptions
+ * @var string|null $selectedStartDate
+ * @var string|null $selectedEndDate
  * @var bool $isFilteredUser
  * @var array|null $targetUser
  * @var \CodeIgniter\Pager\Pager|null $pager
  */
 
 $displayProjects = $projects ?? [];
-$yearOptions = $yearOptions ?? [(int) date('Y')];
-$selectedYear = (int) ($selectedYear ?? date('Y'));
-$selectedQuarter = (string) ($selectedQuarter ?? '');
+$selectedStartDate = (string) ($selectedStartDate ?? '');
+$selectedEndDate = (string) ($selectedEndDate ?? '');
 ?>
 
 <?= $this->extend('layouts/main') ?>
+
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .period-filter-group .form-control[readonly] {
+        background-color: var(--bs-body-bg);
+        cursor: pointer;
+    }
+
+    .flatpickr-calendar {
+        border: 1px solid var(--bs-border-color);
+        box-shadow: 0 .75rem 2rem rgba(30, 30, 45, .18);
+    }
+
+    .flatpickr-day.inRange,
+    .flatpickr-day.prevMonthDay.inRange,
+    .flatpickr-day.nextMonthDay.inRange {
+        background: rgba(67, 94, 190, .16);
+        border-color: rgba(67, 94, 190, .08);
+        box-shadow: -5px 0 0 rgba(67, 94, 190, .16), 5px 0 0 rgba(67, 94, 190, .16);
+    }
+
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+        background: #435ebe;
+        border-color: #435ebe;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-calendar,
+    [data-bs-theme="dark"] .flatpickr-months .flatpickr-month,
+    [data-bs-theme="dark"] .flatpickr-weekdays,
+    [data-bs-theme="dark"] span.flatpickr-weekday {
+        background: #1e1e2d;
+        color: #f5f7ff;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-current-month .flatpickr-monthDropdown-months,
+    [data-bs-theme="dark"] .flatpickr-current-month input.cur-year,
+    [data-bs-theme="dark"] .flatpickr-day {
+        color: #f5f7ff;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-day:hover,
+    [data-bs-theme="dark"] .flatpickr-day:focus {
+        background: #2b2b40;
+        border-color: #2b2b40;
+    }
+</style>
+<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
@@ -146,23 +194,17 @@ $selectedQuarter = (string) ($selectedQuarter ?? '');
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-3 col-lg-1">
-                    <select name="year" class="form-select">
-                        <?php foreach ($yearOptions as $year) : ?>
-                            <option value="<?= esc($year) ?>" <?= $selectedYear === (int) $year ? 'selected' : '' ?>>
-                                <?= esc($year) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-3 col-lg-2">
-                    <select name="quarter" class="form-select">
-                        <option value="">Semua Triwulan</option>
-                        <option value="1" <?= $selectedQuarter === '1' ? 'selected' : '' ?>>Triwulan I</option>
-                        <option value="2" <?= $selectedQuarter === '2' ? 'selected' : '' ?>>Triwulan II</option>
-                        <option value="3" <?= $selectedQuarter === '3' ? 'selected' : '' ?>>Triwulan III</option>
-                        <option value="4" <?= $selectedQuarter === '4' ? 'selected' : '' ?>>Triwulan IV</option>
-                    </select>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label for="period_picker" class="visually-hidden">Filter tanggal</label>
+                    <div class="input-group period-filter-group">
+                        <span class="input-group-text bg-transparent"><i class="bi bi-calendar-range"></i></span>
+                        <input type="text" id="period_picker" class="form-control" placeholder="Filter Tanggal" readonly>
+                        <button type="button" class="btn btn-outline-secondary" id="clear_period" title="Hapus Filter Tanggal" aria-label="Hapus Filter Tanggal">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">
+                    <input type="hidden" name="filter_end" id="filter_end" value="<?= esc($selectedEndDate) ?>">
                 </div>
                 <div class="col-12 col-md-6 col-lg-2">
                     <button type="submit" class="btn btn-primary w-100">Cari</button>
@@ -274,4 +316,62 @@ $selectedQuarter = (string) ($selectedQuarter ?? '');
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const pickerInput = document.getElementById('period_picker');
+        const startInput = document.getElementById('filter_start');
+        const endInput = document.getElementById('filter_end');
+        const clearButton = document.getElementById('clear_period');
+
+        if (!pickerInput || typeof flatpickr === 'undefined') {
+            return;
+        }
+
+        const defaultDates = startInput.value && endInput.value
+            ? [startInput.value, endInput.value]
+            : [];
+        const getNextDate = function(date) {
+            const nextDate = new Date(date.getTime());
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            return nextDate;
+        };
+        const picker = flatpickr(pickerInput, {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd M Y',
+            defaultDate: defaultDates,
+            locale: flatpickr.l10ns.id,
+            showMonths: window.matchMedia('(min-width: 992px)').matches ? 2 : 1,
+            onChange: function(selectedDates, dateString, instance) {
+                if (selectedDates.length === 0) {
+                    startInput.value = '';
+                    endInput.value = '';
+                    return;
+                }
+
+                startInput.value = instance.formatDate(selectedDates[0], 'Y-m-d');
+
+                if (selectedDates.length === 1) {
+                    endInput.value = instance.formatDate(getNextDate(selectedDates[0]), 'Y-m-d');
+                    return;
+                }
+
+                endInput.value = instance.formatDate(selectedDates[1], 'Y-m-d');
+            }
+        });
+
+        clearButton.addEventListener('click', function() {
+            picker.clear();
+            startInput.value = '';
+            endInput.value = '';
+        });
+    });
+</script>
 <?= $this->endSection() ?>

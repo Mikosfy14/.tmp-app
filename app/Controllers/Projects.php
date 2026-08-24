@@ -16,7 +16,7 @@ class Projects extends BaseController
 
     public function __construct()
     {
-        helper(['form', 'project_filter']);
+        helper(['form']);
         $this->projectModel = new ProjectModel();
         $this->projectFileModel = new ProjectFileModel();
         $this->projectStatusModel = new ProjectStatusModel();
@@ -186,12 +186,11 @@ class Projects extends BaseController
     {
         $statusFilter = $this->request->getGet('status');
         $keyword = $this->request->getGet('keyword');
-        $selectedYear = (int) ($this->request->getGet('year') ?: date('Y'));
-        $selectedQuarter = (string) $this->request->getGet('quarter');
-        $dateRange = get_quarter_date_range($selectedQuarter, $selectedYear) ?? [
-            'start_date' => $selectedYear . '-01-01',
-            'end_date' => $selectedYear . '-12-31',
-        ];
+        $selectedStartDate = trim((string) $this->request->getGet('filter_start'));
+        $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
+        $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
+        $selectedStartDate = $dateRange['start_date'] ?? '';
+        $selectedEndDate = $dateRange['end_date'] ?? '';
         $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
         $userId = $targetUserId ?? (int) session()->get('user_id');
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
@@ -207,9 +206,8 @@ class Projects extends BaseController
             'users' => $this->userModel->where('is_active', 1)->findAll(),
             'selectedStatus' => $statusFilter,
             'keyword' => $keyword,
-            'selectedYear' => $selectedYear,
-            'selectedQuarter' => $selectedQuarter,
-            'yearOptions' => $this->getProjectYearOptions($selectedYear),
+            'selectedStartDate' => $selectedStartDate,
+            'selectedEndDate' => $selectedEndDate,
             'statusOptions' => $this->projectStatusModel->getActiveOptions(),
             'isFilteredUser' => $targetUserId !== null,
             'targetUser' => $targetUser,
@@ -218,24 +216,45 @@ class Projects extends BaseController
         return view('projects/index', $data);
     }
 
-    private function getProjectYearOptions(int $selectedYear): array
+    /**
+     * @return array{start_date:string,end_date:string}|null
+     */
+    private function resolveProjectDateRange(string $startDate, string $endDate): ?array
     {
-        $years = db_connect()
-            ->table('projects')
-            ->select('YEAR(start_date) AS project_year', false)
-            ->where('start_date IS NOT NULL', null, false)
-            ->groupBy('YEAR(start_date)', false)
-            ->orderBy('project_year', 'DESC')
-            ->get()
-            ->getResultArray();
+        $startDate = $this->isValidFilterDate($startDate) ? $startDate : '';
+        $endDate = $this->isValidFilterDate($endDate) ? $endDate : '';
 
-        $yearOptions = array_map(static fn (array $row): int => (int) $row['project_year'], $years);
-        $yearOptions[] = $selectedYear;
-        $yearOptions[] = (int) date('Y');
-        $yearOptions = array_values(array_unique(array_filter($yearOptions, static fn (int $year): bool => $year > 0)));
-        rsort($yearOptions);
+        if ($startDate === '' && $endDate === '') {
+            return null;
+        }
 
-        return $yearOptions;
+        if ($startDate === '') {
+            $startDate = $endDate;
+            $endDate = $this->getNextFilterDate($startDate);
+        } elseif ($endDate === '') {
+            $endDate = $this->getNextFilterDate($startDate);
+        }
+
+        if ($startDate > $endDate) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
+
+        return [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ];
+    }
+
+    private function isValidFilterDate(string $date): bool
+    {
+        $parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+
+        return $parsedDate !== false && $parsedDate->format('Y-m-d') === $date;
+    }
+
+    private function getNextFilterDate(string $date): string
+    {
+        return (new \DateTimeImmutable($date))->modify('+1 day')->format('Y-m-d');
     }
 
     private function getFormViewData(array $context): array
