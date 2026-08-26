@@ -37,7 +37,17 @@ foreach ($roles as $role) {
         box-shadow: 0 8px 28px rgba(31, 45, 61, .07) !important;
     }
 
-    .user-form-header,
+    .user-form-page-header {
+        max-width: 980px;
+        margin: 0 auto 1.25rem;
+    }
+
+    .user-form-page-header .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
     .user-form-actions {
         display: flex;
         align-items: center;
@@ -47,11 +57,6 @@ foreach ($roles as $role) {
         background: #f8f9fc;
     }
 
-    .user-form-header {
-        border-bottom: 1px solid #e8eaf1;
-    }
-
-    .user-form-header-icon,
     .user-form-section-icon {
         display: inline-flex;
         align-items: center;
@@ -61,13 +66,6 @@ foreach ($roles as $role) {
         background: #eef1ff;
     }
 
-    .user-form-header-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 8px;
-        font-size: 1.15rem;
-    }
-
     .user-form-section-icon {
         width: 34px;
         height: 34px;
@@ -75,7 +73,6 @@ foreach ($roles as $role) {
         font-size: .95rem;
     }
 
-    .user-form-header-icon i,
     .user-form-section-icon i,
     .user-form-card .btn i,
     .user-status-indicator i {
@@ -83,10 +80,6 @@ foreach ($roles as $role) {
         align-items: center;
         justify-content: center;
         line-height: 1;
-    }
-
-    .user-form-header-icon i {
-        font-size: 1.2rem;
     }
 
     .user-form-section-icon i {
@@ -252,13 +245,11 @@ foreach ($roles as $role) {
     }
 
     [data-bs-theme="dark"] .user-form-card,
-    [data-bs-theme="dark"] .user-form-header,
     [data-bs-theme="dark"] .user-form-actions,
     [data-bs-theme="dark"] .user-form-section {
         border-color: #2b2b40;
     }
 
-    [data-bs-theme="dark"] .user-form-header,
     [data-bs-theme="dark"] .user-form-actions,
     [data-bs-theme="dark"] .user-role-preview,
     [data-bs-theme="dark"] .user-security-note {
@@ -286,7 +277,6 @@ foreach ($roles as $role) {
     }
 
     @media (max-width: 575.98px) {
-        .user-form-header,
         .user-form-section,
         .user-form-actions {
             padding: 1rem;
@@ -314,16 +304,6 @@ foreach ($roles as $role) {
 <div class="card user-form-card">
     <form action="<?= esc($formAction) ?>" method="post">
         <?= csrf_field() ?>
-
-        <div class="user-form-header">
-            <div class="d-flex align-items-center gap-3 min-width-0">
-                <div class="min-width-0">
-                    <h4 class="fs-6 fw-bold mb-1"><?= $user ? 'Perbarui Data User' : 'Informasi User Baru' ?></h4>
-                    <p class="text-muted small mb-0">Kelola profil, akses, dan status akun user.</p>
-                </div>
-            </div>
-            <span class="small text-muted flex-shrink-0 d-none d-md-inline"><span class="text-danger">*</span> Wajib diisi</span>
-        </div>
 
         <section class="user-form-section">
             <div class="user-form-section-heading">

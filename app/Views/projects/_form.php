@@ -58,17 +58,17 @@ foreach ($users as $user) {
         box-shadow: 0 8px 28px rgba(31, 45, 61, .07) !important;
     }
 
-    .project-form-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1.25rem 1.5rem;
-        background: #f8f9fc;
-        border-bottom: 1px solid #e8eaf1;
+    .project-form-page-header {
+        max-width: 1120px;
+        margin: 0 auto 1.25rem;
     }
 
-    .project-form-header-icon,
+    .project-form-page-header .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
     .project-form-section-icon {
         display: inline-flex;
         align-items: center;
@@ -78,20 +78,12 @@ foreach ($users as $user) {
         background: #eef1ff;
     }
 
-    .project-form-header-icon i,
     .project-form-section-icon i,
     .project-form-upload-icon {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         line-height: 1;
-    }
-
-    .project-form-header-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 8px;
-        font-size: 1.15rem;
     }
 
     .project-form-section {
@@ -286,13 +278,11 @@ foreach ($users as $user) {
     }
 
     [data-bs-theme="dark"] .project-form-card,
-    [data-bs-theme="dark"] .project-form-header,
     [data-bs-theme="dark"] .project-form-actions,
     [data-bs-theme="dark"] .project-form-section {
         border-color: #2b2b40;
     }
 
-    [data-bs-theme="dark"] .project-form-header,
     [data-bs-theme="dark"] .project-form-actions,
     [data-bs-theme="dark"] .project-form-upload {
         background: #252539;
@@ -303,7 +293,7 @@ foreach ($users as $user) {
     }
 
     @media (max-width: 575.98px) {
-        .project-form-header,
+
         .project-form-section,
         .project-form-actions {
             padding: 1rem;
@@ -327,16 +317,6 @@ foreach ($users as $user) {
 <div class="card project-form-card mb-4">
     <form action="<?= esc($formAction) ?>" method="POST" enctype="multipart/form-data">
         <?= csrf_field() ?>
-
-        <div class="project-form-header">
-            <div class="d-flex align-items-center gap-3 min-width-0">
-                <div class="min-width-0">
-                    <h4 class="fs-6 fw-bold mb-1"><?= $project ? 'Perbarui Informasi Project' : 'Informasi Project Baru' ?></h4>
-                    <p class="text-muted small mb-0">Lengkapi informasi utama, PIC, dan jadwal pelaksanaan project.</p>
-                </div>
-            </div>
-            <span class="small text-muted flex-shrink-0 d-none d-md-inline"><span class="text-danger">*</span> Wajib diisi</span>
-        </div>
 
         <section class="project-form-section">
             <div class="project-form-section-heading">
@@ -566,9 +546,9 @@ foreach ($users as $user) {
             list.classList.toggle('d-none', selectedFiles.length === 0);
 
             selectedFiles.forEach((file, index) => {
-                const extension = file.name.includes('.')
-                    ? file.name.split('.').pop().toLowerCase()
-                    : '';
+                const extension = file.name.includes('.') ?
+                    file.name.split('.').pop().toLowerCase() :
+                    '';
                 const isValid = allowedExtensions.includes(extension) && file.size <= maxSize;
                 const item = document.createElement('div');
                 item.className = `list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 ${isValid ? '' : 'list-group-item-danger'}`;
@@ -577,9 +557,9 @@ foreach ($users as $user) {
                 info.className = 'min-width-0';
                 info.innerHTML = `<div class="fw-semibold text-break"></div><small class="text-muted"></small>`;
                 info.querySelector('div').textContent = file.name;
-                info.querySelector('small').textContent = isValid
-                    ? formatSize(file.size)
-                    : 'Format tidak didukung atau ukuran lebih dari 5 MB';
+                info.querySelector('small').textContent = isValid ?
+                    formatSize(file.size) :
+                    'Format tidak didukung atau ukuran lebih dari 5 MB';
 
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
