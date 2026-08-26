@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @var array $users
  * @var array $roles
@@ -27,7 +28,7 @@ $categoryClass = static function (?string $category): string {
     };
 };
 
-$valueOrDash = static fn ($value): string => $value !== null && $value !== '' ? esc($value) : '-';
+$valueOrDash = static fn($value): string => $value !== null && $value !== '' ? esc($value) : '-';
 
 $totalUsers = (int) ($userStats['totalUsers'] ?? 0);
 $activeUsers = (int) ($userStats['activeUsers'] ?? 0);
@@ -170,8 +171,8 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
             <form method="get" action="<?= base_url('/users') ?>" class="row g-2 align-items-center">
                 <div class="col-12 col-lg-4">
                     <div class="input-group">
-                        <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                         <input type="text" name="keyword" class="form-control" placeholder="Cari nama, username, email, jabatan..." value="<?= esc($selectedKeyword ?? '') ?>">
+                        <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-4 col-lg-2">
@@ -189,11 +190,13 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                         <option value="0" <?= ($selectedStatus ?? '') === '0' ? 'selected' : '' ?>>Nonaktif</option>
                     </select>
                 </div>
-                <div class="col-12 col-lg-2">
-                    <button type="submit" class="btn btn-primary w-100">Cari</button>
+                <div class="col-12 col-md-4 col-lg-auto d-flex">
+                    <button type="submit" class="btn btn-primary px-2" title="Cari" aria-label="Cari">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </button>
                 </div>
-                <div class="col-12 col-lg-1">
-                    <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                <div class="col-12 col-lg">
+                    <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary px-2 w-100">Reset</a>
                 </div>
             </form>
         </div>
@@ -215,90 +218,90 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                     </thead>
                     <tbody>
                         <?php if (!empty($users)) : ?>
-                        <?php foreach ($users as $user) : ?>
-                            <?php
-                            $roleColor = $roleClass($user['role_name'] ?? null);
-                            $categoryColor = $categoryClass($user['category'] ?? null);
-                            $isActive = (int) ($user['is_active'] ?? 0) === 1;
-                            $isKepalaDepartemenUser = strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
-                            $searchText = strtolower(implode(' ', array_filter([
-                                $user['name'] ?? '',
-                                $user['username'] ?? '',
-                                $user['email'] ?? '',
-                                $user['phone_number'] ?? '',
-                                $user['job_title'] ?? '',
-                                $user['role_name'] ?? '',
-                                $user['category'] ?? '',
-                            ])));
-                            ?>
-                            <tr class="user-row"
-                                data-search="<?= esc($searchText) ?>"
-                                data-role="<?= esc($user['role_name'] ?? '') ?>"
-                                data-category="<?= esc($user['category'] ?? '') ?>"
-                                data-status="<?= $isActive ? '1' : '0' ?>">
-                                <td class="ps-4 py-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="user-avatar bg-light-primary text-primary d-flex align-items-center justify-content-center fw-bold">
-                                            <?= esc(strtoupper(substr($user['name'] ?? 'U', 0, 1))) ?>
+                            <?php foreach ($users as $user) : ?>
+                                <?php
+                                $roleColor = $roleClass($user['role_name'] ?? null);
+                                $categoryColor = $categoryClass($user['category'] ?? null);
+                                $isActive = (int) ($user['is_active'] ?? 0) === 1;
+                                $isKepalaDepartemenUser = strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
+                                $searchText = strtolower(implode(' ', array_filter([
+                                    $user['name'] ?? '',
+                                    $user['username'] ?? '',
+                                    $user['email'] ?? '',
+                                    $user['phone_number'] ?? '',
+                                    $user['job_title'] ?? '',
+                                    $user['role_name'] ?? '',
+                                    $user['category'] ?? '',
+                                ])));
+                                ?>
+                                <tr class="user-row"
+                                    data-search="<?= esc($searchText) ?>"
+                                    data-role="<?= esc($user['role_name'] ?? '') ?>"
+                                    data-category="<?= esc($user['category'] ?? '') ?>"
+                                    data-status="<?= $isActive ? '1' : '0' ?>">
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="user-avatar bg-light-primary text-primary d-flex align-items-center justify-content-center fw-bold">
+                                                <?= esc(strtoupper(substr($user['name'] ?? 'U', 0, 1))) ?>
+                                            </div>
+                                            <div>
+                                                <strong class="d-block text-dark"><?= esc($user['name']) ?></strong>
+                                                <small class="text-muted">@<?= esc($user['username']) ?></small>
+                                                <small class="d-block text-muted"><?= $valueOrDash($user['job_title'] ?? null) ?></small>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <strong class="d-block text-dark"><?= esc($user['name']) ?></strong>
-                                            <small class="text-muted">@<?= esc($user['username']) ?></small>
-                                            <small class="d-block text-muted"><?= $valueOrDash($user['job_title'] ?? null) ?></small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-3">
-                                    <span class="badge bg-light-<?= $roleColor ?> text-<?= $roleColor ?>"><?= esc($user['role_name'] ?? '-') ?></span>
-                                    <span class="badge bg-light-<?= $categoryColor ?> text-<?= $categoryColor ?> d-block mt-1" style="width: fit-content;"><?= esc($user['category'] ?? '-') ?></span>
-                                </td>
-                                <td class="py-3">
-                                    <span class="fw-semibold text-dark"><?= $valueOrDash($user['email'] ?? null) ?></span>
-                                    <small class="d-block text-muted"><?= $valueOrDash($user['phone_number'] ?? null) ?></small>
-                                </td>
-                                <td class="py-3">
-                                    <?php if ($isActive) : ?>
-                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Aktif</span>
-                                    <?php else : ?>
-                                        <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>Nonaktif</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="py-3">
-                                    <small class="fw-semibold text-dark"><?= !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-' ?></small>
-                                    <small class="d-block text-muted">Updated: <?= !empty($user['updated_at']) ? date('d M Y', strtotime($user['updated_at'])) : '-' ?></small>
-                                </td>
-                                <td class="text-center user-management-actions pe-4 py-3">
-                                    <div class="user-management-action-group">
-                                        <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary" title="Detail User">
-                                            <i class="bi bi-eye-fill"></i> Detail
-                                        </a>
-                                        <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-warning" title="Edit User">
-                                                <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
-                                        <?php if (!$isKepalaDepartemenUser || (int) ($user['id'] ?? 0) !== (int) session()->get('user_id')) : ?>
-                                            <?php if ($isActive) : ?>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" title="Nonaktifkan User">
-                                                    <i class="bi bi-person-dash-fill"></i> Nonaktif
-                                                </button>
-                                            <?php else : ?>
-                                                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" title="Aktifkan User">
-                                                    <i class="bi bi-person-check-fill"></i> Aktif
-                                                </button>
-                                            <?php endif; ?>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light-<?= $roleColor ?> text-<?= $roleColor ?>"><?= esc($user['role_name'] ?? '-') ?></span>
+                                        <span class="badge bg-light-<?= $categoryColor ?> text-<?= $categoryColor ?> d-block mt-1" style="width: fit-content;"><?= esc($user['category'] ?? '-') ?></span>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="fw-semibold text-dark"><?= $valueOrDash($user['email'] ?? null) ?></span>
+                                        <small class="d-block text-muted"><?= $valueOrDash($user['phone_number'] ?? null) ?></small>
+                                    </td>
+                                    <td class="py-3">
+                                        <?php if ($isActive) : ?>
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Aktif</span>
+                                        <?php else : ?>
+                                            <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>Nonaktif</span>
                                         <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                                    </td>
+                                    <td class="py-3">
+                                        <small class="fw-semibold text-dark"><?= !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-' ?></small>
+                                        <small class="d-block text-muted">Updated: <?= !empty($user['updated_at']) ? date('d M Y', strtotime($user['updated_at'])) : '-' ?></small>
+                                    </td>
+                                    <td class="text-center user-management-actions pe-4 py-3">
+                                        <div class="user-management-action-group">
+                                            <?php if (!$isKepalaDepartemenUser || (int) ($user['id'] ?? 0) !== (int) session()->get('user_id')) : ?>
+                                                <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary" title="Detail User">
+                                                    <i class="bi bi-eye-fill"></i> Detail
+                                                </a>
+                                                <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-warning" title="Edit User">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
+                                                <?php if ($isActive) : ?>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" title="Nonaktifkan User">
+                                                        <i class="bi bi-person-dash-fill"></i> Nonaktif
+                                                    </button>
+                                                <?php else : ?>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" title="Aktifkan User">
+                                                        <i class="bi bi-person-check-fill"></i> Aktif
+                                                    </button>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         <?php else : ?>
-                        <tr id="usersEmptyRow">
-                            <td colspan="6" class="text-center py-4 text-muted">Tidak ada user yang bisa ditampilkan.</td>
-                        </tr>
+                            <tr id="usersEmptyRow">
+                                <td colspan="6" class="text-center py-4 text-muted">Tidak ada user yang bisa ditampilkan.</td>
+                            </tr>
                         <?php endif; ?>
                         <?php if (!empty($users)) : ?>
-                        <tr id="usersEmptyRow" class="d-none">
-                            <td colspan="6" class="text-center py-4 text-muted">Data user tidak ditemukan.</td>
-                        </tr>
+                            <tr id="usersEmptyRow" class="d-none">
+                                <td colspan="6" class="text-center py-4 text-muted">Data user tidak ditemukan.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

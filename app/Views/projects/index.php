@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @var array $statusOptions
  * @var array $projects
@@ -182,8 +183,8 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                 <input type="hidden" name="page_projects" value="1">
                 <div class="col-12 col-lg-4">
                     <div class="input-group">
-                        <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                         <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama project, atau PIC..." value="<?= esc($keyword ?? '') ?>">
+                        <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-6 col-lg-2">
@@ -197,19 +198,18 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                 <div class="col-12 col-md-6 col-lg-3">
                     <label for="period_picker" class="visually-hidden">Filter tanggal</label>
                     <div class="input-group period-filter-group">
-                        <span class="input-group-text bg-transparent"><i class="bi bi-calendar-range"></i></span>
                         <input type="text" id="period_picker" class="form-control" placeholder="Filter Tanggal" readonly>
-                        <button type="button" class="btn btn-outline-secondary" id="clear_period" title="Hapus Filter Tanggal" aria-label="Hapus Filter Tanggal">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
+                        <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-calendar3 lh-1"></i></span>
                     </div>
                     <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">
                     <input type="hidden" name="filter_end" id="filter_end" value="<?= esc($selectedEndDate) ?>">
                 </div>
-                <div class="col-12 col-md-6 col-lg-2">
-                    <button type="submit" class="btn btn-primary w-100">Cari</button>
+                <div class="col-12 col-md-6 col-lg-auto d-flex">
+                    <button type="submit" class="btn btn-primary px-2" title="Cari" aria-label="Cari">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </button>
                 </div>
-                <div class="col-12 col-md-6 col-lg-1">
+                <div class="col-12 col-md-6 col-lg">
                     <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
                 </div>
             </form>
@@ -328,13 +328,11 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
         const endInput = document.getElementById('filter_end');
         const clearButton = document.getElementById('clear_period');
 
-        if (!pickerInput || typeof flatpickr === 'undefined') {
+        if (!pickerInput || !startInput || !endInput || typeof flatpickr === 'undefined') {
             return;
         }
 
-        const defaultDates = startInput.value && endInput.value
-            ? [startInput.value, endInput.value]
-            : [];
+        const defaultDates = startInput.value && endInput.value ? [startInput.value, endInput.value] : [];
         const getNextDate = function(date) {
             const nextDate = new Date(date.getTime());
             nextDate.setDate(nextDate.getDate() + 1);
@@ -348,7 +346,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
             altFormat: 'd M Y',
             defaultDate: defaultDates,
             locale: flatpickr.l10ns.id,
-            showMonths: window.matchMedia('(min-width: 992px)').matches ? 2 : 1,
+            showMonths: 1,
             onChange: function(selectedDates, dateString, instance) {
                 if (selectedDates.length === 0) {
                     startInput.value = '';
@@ -367,11 +365,13 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
             }
         });
 
-        clearButton.addEventListener('click', function() {
-            picker.clear();
-            startInput.value = '';
-            endInput.value = '';
-        });
+        if (clearButton) {
+            clearButton.addEventListener('click', function() {
+                picker.clear();
+                startInput.value = '';
+                endInput.value = '';
+            });
+        }
     });
 </script>
 <?= $this->endSection() ?>
