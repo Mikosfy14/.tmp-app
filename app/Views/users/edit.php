@@ -10,17 +10,17 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-heading d-flex justify-content-between align-items-start mb-3">
-    <div>
-        <a href="<?= base_url('/users') ?>" class="btn btn-sm btn-outline-secondary mb-2">
-            <i class="bi bi-arrow-left me-1"></i> Back to User Management
-        </a>
-        <h3><?= esc($pageTitle) ?></h3>
-        <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
-    </div>
-    <div class="d-flex gap-2">
+<div class="page-heading user-form-page-header">
+    <a href="<?= base_url('/users') ?>" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Kembali ke User Management
+    </a>
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
+        <div>
+            <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
+            <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
+        </div>
         <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
-            <i class="bi bi-key-fill me-1"></i> Reset Password
+            <i class="bi bi-key-fill" aria-hidden="true"></i> Reset Password
         </button>
     </div>
 </div>

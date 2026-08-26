@@ -9,12 +9,12 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-heading d-flex justify-content-between align-items-start mb-3">
+<div class="page-heading project-form-page-header">
     <div>
-        <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-outline-secondary mb-2">
-            <i class="bi bi-arrow-left me-1"></i> Kembali ke Project Tracker
+        <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Kembali ke Project Tracker
         </a>
-        <h3><?= esc($pageTitle) ?></h3>
+        <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
         <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
     </div>
 </div>
