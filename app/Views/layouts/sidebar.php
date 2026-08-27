@@ -64,13 +64,6 @@
                         </a>
                     </li>
                 <?php endif; ?>
-
-                <li class="sidebar-item mt-5">
-                    <a href="<?= base_url('/logout') ?>" class='sidebar-link text-danger d-flex align-items-center'>
-                        <i class="bi bi-box-arrow-left text-danger me-2 fs-5"></i>
-                        <span>Logout</span>
-                    </a>
-                </li>
             </ul>
         </div>
     </div>

@@ -244,9 +244,75 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
     <?= $this->renderSection('scripts') ?>
+    <script>
+        (() => {
+            const idleTimeout = 15 * 60 * 1000;
+            const logoutUrl = <?= json_encode(base_url('/logout')) ?>;
+            const activityUrl = <?= json_encode(base_url('/session/activity')) ?>;
+            const serverSyncInterval = 60 * 1000;
+            const activityStorageKey = 'authenticated-last-activity';
+            let idleTimer;
+            let lastActivityEvent = 0;
+            let lastServerSync = Date.now();
+
+            const resetIdleTimer = () => {
+                window.clearTimeout(idleTimer);
+                const lastActivity = Number(localStorage.getItem(activityStorageKey)) || Date.now();
+                const remainingTime = Math.max(0, idleTimeout - (Date.now() - lastActivity));
+                idleTimer = window.setTimeout(() => {
+                    const latestActivity = Number(localStorage.getItem(activityStorageKey)) || 0;
+                    if (Date.now() - latestActivity < idleTimeout) {
+                        resetIdleTimer();
+                        return;
+                    }
+
+                    window.location.assign(logoutUrl);
+                }, remainingTime);
+            };
+
+            const registerActivity = () => {
+                const now = Date.now();
+                if (now - lastActivityEvent < 1000) {
+                    return;
+                }
+
+                lastActivityEvent = now;
+                localStorage.setItem(activityStorageKey, String(now));
+                resetIdleTimer();
+
+                if (now - lastServerSync >= serverSyncInterval) {
+                    lastServerSync = now;
+                    fetch(activityUrl, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin',
+                        keepalive: true,
+                    }).then((response) => {
+                        if (response.redirected || response.status === 401) {
+                            window.location.assign(logoutUrl);
+                        }
+                    }).catch(() => {
+                        // The server-side timeout remains authoritative if synchronization fails.
+                    });
+                }
+            };
+
+            ['click', 'keydown', 'pointerdown', 'scroll', 'touchstart'].forEach((eventName) => {
+                document.addEventListener(eventName, registerActivity, { passive: true });
+            });
+
+            window.addEventListener('storage', (event) => {
+                if (event.key === activityStorageKey) {
+                    resetIdleTimer();
+                }
+            });
+
+            localStorage.setItem(activityStorageKey, String(Date.now()));
+            resetIdleTimer();
+        })();
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const toggleDark = document.getElementById('toggle-dark');
