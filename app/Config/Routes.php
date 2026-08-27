@@ -22,6 +22,12 @@ $routes->group('profile', ['filter' => 'auth'], function($routes) {
 
 $routes->group('aplikasi', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Application::index');
+    $routes->get('create', 'Application::create');
+    $routes->post('store', 'Application::store');
+    $routes->get('detail/(:num)', 'Application::detail/$1');
+    $routes->get('edit/(:num)', 'Application::edit/$1');
+    $routes->post('update/(:num)', 'Application::update/$1');
+    $routes->post('delete/(:num)', 'Application::delete/$1');
 });
 
 $routes->group('projects', ['filter' => 'auth'], function($routes) {

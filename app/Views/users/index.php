@@ -69,6 +69,36 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
         border-radius: 50%;
     }
 
+    .management-filter-reset {
+        width: 100%;
+        min-width: 0;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .management-filter-reset i { line-height: 1; font-size: 1.05rem; }
+
+    .management-filter-submit { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; line-height: 1; }
+
+    @media (max-width: 767.98px) {
+        .user-page-heading {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: .85rem;
+        }
+
+        .user-page-heading > a {
+            align-self: flex-start;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .management-filter-reset { width: 100%; min-height: 38px; padding-inline: .75rem; }
+    }
+
     .user-pagination .pagination {
         margin: 0;
         gap: .35rem;
@@ -103,7 +133,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
     }
 </style>
 
-<div class="page-heading d-flex justify-content-between align-items-center mb-3">
+<div class="page-heading user-page-heading d-flex justify-content-between align-items-center mb-3">
     <div>
         <h3>User Management</h3>
         <p class="text-subtitle text-muted mb-0">Kelola akun lokal, role, dan status aktif pengguna.</p>
@@ -169,7 +199,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <form method="get" action="<?= base_url('/users') ?>" class="row g-2 align-items-center">
-                <div class="col-12 col-lg-4">
+                <div class="col-12 col-lg-5">
                     <div class="input-group">
                         <input type="text" name="keyword" class="form-control" placeholder="Cari nama, username, email, jabatan..." value="<?= esc($selectedKeyword ?? '') ?>">
                         <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
@@ -190,13 +220,13 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                         <option value="0" <?= ($selectedStatus ?? '') === '0' ? 'selected' : '' ?>>Nonaktif</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-4 col-lg-auto d-flex">
-                    <button type="submit" class="btn btn-primary px-2" title="Cari" aria-label="Cari">
-                        <i class="bi bi-search" aria-hidden="true"></i>
+                <div class="col-12 col-md-4 col-lg-1 d-flex">
+                    <button type="submit" class="btn btn-primary management-filter-submit w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
+                        <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span>
                     </button>
                 </div>
-                <div class="col-12 col-lg">
-                    <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary px-2 w-100">Reset</a>
+                <div class="col-12 col-md-4 col-lg-1 d-flex justify-content-lg-end">
+                    <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary management-filter-reset" title="Reset filter" aria-label="Reset filter"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span></a>
                 </div>
             </form>
         </div>
