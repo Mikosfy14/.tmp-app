@@ -8,9 +8,17 @@ $routes->get('/', 'Auth::index');
 $routes->get('/login', 'Auth::index');
 $routes->post('/login/attempt', 'Auth::attemptLogin');
 $routes->get('/logout', 'Auth::logout');
+$routes->post('/session/activity', 'Auth::activity', ['filter' => 'auth']);
 
 //Dashboard Protected Route (Menggunakan Filter Auth Guard)
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
+
+$routes->group('profile', ['filter' => 'auth'], function($routes) {
+    $routes->get('/', 'Profile::index');
+    $routes->get('edit', 'Profile::edit');
+    $routes->post('update', 'Profile::update');
+    $routes->post('change-password', 'Profile::changePassword');
+});
 
 $routes->group('aplikasi', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Application::index');

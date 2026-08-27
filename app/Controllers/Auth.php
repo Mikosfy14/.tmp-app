@@ -64,7 +64,8 @@ class Auth extends BaseController
                 'role_id'    => $user['role_id'],
                 'role_name'  => $user['role_name'],
                 'category'   => $user['category'],
-                'isLoggedIn' => true
+                'isLoggedIn' => true,
+                'last_activity' => time(),
             ];
             session()->set($sessionData);
 
@@ -78,5 +79,10 @@ class Auth extends BaseController
     {
         session()->destroy();
         return redirect()->to('/login')->with('success', 'Anda telah berhasil logout');
+    }
+
+    public function activity()
+    {
+        return $this->response->setJSON(['active' => true]);
     }
 }
