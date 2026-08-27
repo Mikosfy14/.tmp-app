@@ -26,6 +26,50 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
         cursor: pointer;
     }
 
+    .filter-reset-button {
+        width: 100%;
+        min-width: 0;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .filter-reset-button i {
+        line-height: 1;
+        font-size: 1.05rem;
+    }
+
+    .filter-submit-button {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        line-height: 1;
+    }
+
+    @media (max-width: 767.98px) {
+        .project-page-heading {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: .85rem;
+        }
+
+        .project-page-heading > a {
+            align-self: flex-start;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .filter-reset-button {
+            width: 100%;
+            min-height: 38px;
+            padding-inline: .75rem;
+        }
+    }
+
     .flatpickr-calendar {
         border: 1px solid var(--bs-border-color);
         box-shadow: 0 .75rem 2rem rgba(30, 30, 45, .18);
@@ -144,7 +188,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
     }
 </style>
 
-<div class="page-heading d-flex justify-content-between align-items-center mb-3">
+<div class="page-heading project-page-heading d-flex justify-content-between align-items-center mb-3">
     <div>
         <h3>Project Tracker</h3>
         <p class="text-subtitle text-muted mb-0">
@@ -181,7 +225,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
         <div class="card-body p-3">
             <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="row g-2 align-items-center">
                 <input type="hidden" name="page_projects" value="1">
-                <div class="col-12 col-lg-4">
+                <div class="col-12 col-lg-5">
                     <div class="input-group">
                         <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama project, atau PIC..." value="<?= esc($keyword ?? '') ?>">
                         <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
@@ -204,13 +248,15 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                     <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">
                     <input type="hidden" name="filter_end" id="filter_end" value="<?= esc($selectedEndDate) ?>">
                 </div>
-                <div class="col-12 col-md-6 col-lg-auto d-flex">
-                    <button type="submit" class="btn btn-primary px-2" title="Cari" aria-label="Cari">
-                        <i class="bi bi-search" aria-hidden="true"></i>
+                <div class="col-12 col-md-6 col-lg-1 d-flex">
+                    <button type="submit" class="btn btn-primary filter-submit-button w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
+                        <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span>
                     </button>
                 </div>
-                <div class="col-12 col-md-6 col-lg">
-                    <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                <div class="col-12 col-md-6 col-lg-1 d-flex justify-content-lg-end">
+                    <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary filter-reset-button" title="Reset filter" aria-label="Reset filter">
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span>
+                    </a>
                 </div>
             </form>
         </div>
