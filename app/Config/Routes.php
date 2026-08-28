@@ -12,6 +12,7 @@ $routes->post('/session/activity', 'Auth::activity', ['filter' => 'auth']);
 
 //Dashboard Protected Route (Menggunakan Filter Auth Guard)
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
+$routes->get('/kinerja-tim', 'TeamPerformance::index', ['filter' => 'auth']);
 
 $routes->group('profile', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Profile::index');

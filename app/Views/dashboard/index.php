@@ -119,26 +119,11 @@
                 <div class="card-body p-3 d-flex align-items-center">
                     <div class="d-flex align-items-center gap-3 w-100">
                         <div class="stats-icon green d-flex align-items-center justify-content-center flex-shrink-0">
-                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['on_time_done'] ?></span>
+                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['total_apps_managed'] ?? 0 ?></span>
                         </div>
                         <div>
-                            <h6 class="text fw-bold mb-0">Project Selesai</h6>
-                            <h6 class="text fw-bold mb-0">(Tepat Waktu)</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-lg-3 col-md-6">
-            <div class="card shadow-sm h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="d-flex align-items-center gap-3 w-100">
-                        <div class="stats-icon red d-flex align-items-center justify-content-center flex-shrink-0">
-                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['late_done'] ?></span>
-                        </div>
-                        <div>
-                            <h6 class="text fw-bold mb-0">Project Selesai (Terlambat)</h6>
+                            <h6 class="text fw-bold mb-0">Aplikasi Dikelola</h6>
+                            <h6 class="text fw-bold mb-0 text-muted fs-6">(Sebagai PIC)</h6>
                         </div>
                     </div>
                 </div>
@@ -159,13 +144,34 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-6 col-lg-3 col-md-6">
+            <div class="card shadow-sm h-100 mb-0">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="d-flex align-items-center gap-3 w-100">
+                        <div class="stats-icon red d-flex align-items-center justify-content-center flex-shrink-0">
+                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['completion_rate'] ?? 0 ?>%</span>
+                        </div>
+                        <div>
+                            <h6 class="text fw-bold mb-0">Completion Rate</h6>
+                            <h6 class="text fw-bold mb-0 text-muted fs-6">(Rasio Berhasil)</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+<?php
+$priority_projects = array_filter($my_active_projects, function($p) {
+    return in_array($p['deadline_label'] ?? '', ['Risk', 'Urgent', 'Critical', 'Overdue']);
+});
+?>
 <div class="card shadow-sm mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Overview Project Saya</h5>
-        <span class="badge bg-primary"><?= count($my_active_projects) ?> Project</span>
+        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Priority Tasks (Butuh Perhatian)</h5>
+        <span class="badge bg-danger"><?= count($priority_projects) ?> Project Kritis</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -180,8 +186,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($my_active_projects)): ?>
-                        <?php foreach ($my_active_projects as $prj) : ?>
+                    <?php if (!empty($priority_projects)): ?>
+                        <?php foreach ($priority_projects as $prj) : ?>
                             <tr>
                                 <td class="ps-4 py-3">
                                     <strong class="d-block text-dark"><?= esc($prj['name']) ?></strong>
@@ -215,7 +221,7 @@
                                     <small class="d-block text-muted">Promote: <span class="fw-bold text-dark"><?= !empty($prj['promote_date']) ? date('d M Y', strtotime($prj['promote_date'])) : '-' ?></span></small>
                                 </td>
                                 <td class="text-center pe-4 py-3">
-                                    <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap" title="Lihat Project Tracker">
+                                    <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap" title="Detail Project">
                                         <i class="bi bi-eye-fill"></i> Detail
                                     </a>
                                 </td>
@@ -223,7 +229,7 @@
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="5" class="text-center py-3 text-muted">Belum ada project aktif yang ditangani.</td>
+                            <td colspan="5" class="text-center py-3 text-muted">Bagus! Tidak ada project yang overdue atau berisiko saat ini.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -243,11 +249,15 @@
     <div class="col-12 col-xl-8">
         <div class="card shadow-sm mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fs-6 fw-bold text-primary"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Grafik Penyelesaian Project</h5>
-                <span class="badge bg-light-secondary text-dark">Tepat Waktu vs Terlambat</span>
+                <h5 class="card-title mb-0 fs-6 fw-bold text-primary"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Analisis Beban Kerja</h5>
+                <select id="personalChartToggle" class="form-select form-select-sm w-auto">
+                    <option value="sdlc">Distribusi Fase SDLC</option>
+                    <option value="timeline">Timeline Deadlines</option>
+                </select>
             </div>
             <div class="card-body">
-                <div id="chart-personal-performance"></div>
+                <div id="chart-personal-sdlc"></div>
+                <div id="chart-personal-timeline" class="d-none"></div>
             </div>
         </div>
     </div>
@@ -504,110 +514,179 @@
             };
         }
 
-        const completionChartData = <?= json_encode($completion_chart ?? [
-            'months' => ['Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu'],
-            'on_time' => [0, 0, 0, 0, 0, 0],
-            'late' => [0, 0, 0, 0, 0, 0],
-        ]) ?>;
+        const sdlcDataRaw = <?= json_encode($sdlc_distribution ?? []) ?>;
+        const timelineDataRaw = <?= json_encode($workload_timeline ?? []) ?>;
 
-        // 1. Chart Penyelesaian Project Personal
-        var optionsPersonal = {
+        const sdlcLabels = Object.keys(sdlcDataRaw);
+        const sdlcSeries = Object.values(sdlcDataRaw);
+
+        const ganttData = timelineDataRaw.map(p => {
+            let color = '#435ebe';
+            const statusClass = String(p.class || '');
+            if (statusClass.includes('success')) color = '#198754';
+            else if (statusClass.includes('warning')) color = '#ffc107';
+            else if (statusClass.includes('info')) color = '#0dcaf0';
+            else if (statusClass.includes('danger')) color = '#dc3545';
+            
+            return {
+                x: String(p.name || '').length > 20 ? String(p.name || '').substring(0, 20) + '...' : String(p.name || ''),
+                y: [new Date(p.start).getTime(), new Date(p.end).getTime()],
+                fillColor: color
+            };
+        });
+
+        var personalThemeOptions = getChartThemeOptions();
+
+        // SDLC Chart (Donut)
+        var optionsSdlc = {
             chart: {
-                type: 'bar',
-                height: 280,
-                stacked: true,
-                toolbar: {
-                    show: false
-                }
+                type: 'donut',
+                height: 300,
+                ...personalThemeOptions.chart
             },
-            series: [{
-                name: 'Selesai Tepat Waktu',
-                data: completionChartData.on_time
-            }, {
-                name: 'Selesai Terlambat',
-                data: completionChartData.late
-            }],
-            colors: ['#198754', '#dc3545'],
-            xaxis: {
-                categories: completionChartData.months
+            series: sdlcSeries.length > 0 ? sdlcSeries : [1],
+            labels: sdlcSeries.length > 0 ? sdlcLabels : ['No Active Projects'],
+            colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
+            theme: personalThemeOptions.theme,
+            tooltip: personalThemeOptions.tooltip,
+            legend: {
+                position: 'bottom',
+                ...personalThemeOptions.legend
             },
-            yaxis: {
-                min: 0,
-                forceNiceScale: true,
-                labels: {
-                    formatter: function(value) {
-                        return Math.round(value);
-                    }
-                }
+            dataLabels: {
+                enabled: true,
+                ...personalThemeOptions.teamDataLabels
+            },
+            plotOptions: personalThemeOptions.plotOptions
+        };
+        var chartSdlc = new ApexCharts(document.querySelector("#chart-personal-sdlc"), optionsSdlc);
+        chartSdlc.render();
+
+        // Timeline Chart (Gantt / RangeBar)
+        var chartTimeline = null;
+        var optionsTimeline = {
+            chart: {
+                type: 'rangeBar',
+                height: 300,
+                toolbar: { show: false },
+                ...personalThemeOptions.chart
             },
             plotOptions: {
                 bar: {
-                    borderRadius: 4,
-                    columnWidth: '48%',
-                    dataLabels: {
-                        total: {
-                            enabled: true,
-                            style: {
-                                fontSize: '12px',
-                                fontWeight: 700
-                            }
-                        }
-                    }
+                    horizontal: true,
+                    borderRadius: 4
                 }
             },
+            series: [{
+                name: 'Timeline',
+                data: ganttData.length > 0 ? ganttData : [{x: 'No Active Projects', y: [new Date().getTime(), new Date().getTime()]}]
+            }],
+            xaxis: {
+                type: 'datetime',
+                ...personalThemeOptions.xaxis
+            },
+            theme: personalThemeOptions.theme,
+            tooltip: {
+                ...personalThemeOptions.tooltip,
+                x: { format: 'dd MMM yyyy' }
+            },
+            grid: personalThemeOptions.grid,
+            legend: { show: false },
             dataLabels: {
                 enabled: false
             },
-            legend: {
-                position: 'top'
-            },
-            tooltip: {
-                y: {
-                    formatter: function(value) {
-                        return value + ' project';
+            yaxis: {
+                ...personalThemeOptions.yaxis,
+                labels: {
+                    ...personalThemeOptions.yaxis.labels,
+                    style: {
+                        colors: personalThemeOptions.yaxis.labels.style.colors,
+                        fontSize: '11px',
+                        fontWeight: 600
                     }
                 }
             }
         };
-        var personalThemeOptions = getChartThemeOptions();
-        optionsPersonal = {
-            ...optionsPersonal,
-            chart: {
-                ...optionsPersonal.chart,
-                ...personalThemeOptions.chart
-            },
-            theme: personalThemeOptions.theme,
-            tooltip: {
-                ...optionsPersonal.tooltip,
-                ...personalThemeOptions.tooltip,
-            },
-            yaxis: {
-                ...optionsPersonal.yaxis,
-                labels: {
-                    ...optionsPersonal.yaxis.labels,
-                    ...personalThemeOptions.yaxis.labels
-                }
-            },
-            grid: personalThemeOptions.grid,
-            xaxis: {
-                ...optionsPersonal.xaxis,
-                ...personalThemeOptions.xaxis
-            },
-            dataLabels: {
-                ...optionsPersonal.dataLabels,
-                ...personalThemeOptions.dataLabels
-            },
-            legend: {
-                ...optionsPersonal.legend,
-                ...personalThemeOptions.legend
-            },
-            plotOptions: optionsPersonal.plotOptions
+
+        const renderTimelineChart = async () => {
+            if (chartTimeline) {
+                return;
+            }
+
+            const timelineElement = document.querySelector('#chart-personal-timeline');
+            if (!timelineElement) {
+                return;
+            }
+
+            chartTimeline = new ApexCharts(timelineElement, optionsTimeline);
+            await chartTimeline.render();
         };
-        var chartPersonal = new ApexCharts(document.querySelector("#chart-personal-performance"), optionsPersonal);
-        chartPersonal.render();
+
+        const rebuildPersonalCharts = async () => {
+            const selectedChart = document.getElementById('personalChartToggle').value;
+            if (chartSdlc) {
+                chartSdlc.destroy();
+                chartSdlc = null;
+            }
+            if (chartTimeline) {
+                chartTimeline.destroy();
+                chartTimeline = null;
+            }
+            document.querySelector('#chart-personal-sdlc').innerHTML = '';
+            document.querySelector('#chart-personal-timeline').innerHTML = '';
+
+            // Rebuild from fresh theme options so no stale palette remains after theme changes.
+            const freshTheme = getChartThemeOptions();
+            optionsSdlc.chart = { type: 'donut', height: 300, ...freshTheme.chart };
+            optionsSdlc.theme = freshTheme.theme;
+            optionsSdlc.tooltip = freshTheme.tooltip;
+            optionsSdlc.legend = { position: 'bottom', ...freshTheme.legend };
+            optionsSdlc.dataLabels = { enabled: true, ...freshTheme.teamDataLabels };
+            optionsSdlc.plotOptions = freshTheme.plotOptions;
+            optionsTimeline.chart = { type: 'rangeBar', height: 300, toolbar: { show: false }, ...freshTheme.chart };
+            optionsTimeline.theme = freshTheme.theme;
+            optionsTimeline.tooltip = { ...freshTheme.tooltip, x: { format: 'dd MMM yyyy' } };
+            optionsTimeline.grid = freshTheme.grid;
+            optionsTimeline.xaxis = { type: 'datetime', ...freshTheme.xaxis };
+            optionsTimeline.yaxis = { ...freshTheme.yaxis, labels: { ...freshTheme.yaxis.labels, style: { colors: freshTheme.yaxis.labels.style.colors, fontSize: '11px', fontWeight: 600 } } };
+            chartSdlc = new ApexCharts(document.querySelector('#chart-personal-sdlc'), optionsSdlc);
+            await chartSdlc.render();
+
+            if (selectedChart === 'timeline') {
+                await renderTimelineChart();
+                chartTimeline.resize();
+            }
+        };
+
+        const sdlcContainer = document.getElementById('chart-personal-sdlc');
+        const timelineContainer = document.getElementById('chart-personal-timeline');
+
+        // Toggle visibility first, then resize the chart after the browser lays out its container.
+        const showPersonalChart = (chartType) => {
+            const showSdlc = chartType === 'sdlc';
+            sdlcContainer.classList.toggle('d-none', !showSdlc);
+            timelineContainer.classList.toggle('d-none', showSdlc);
+
+            window.setTimeout(() => {
+                if (showSdlc) {
+                    chartSdlc.resize();
+                } else {
+                    renderTimelineChart().then(() => {
+                        if (chartTimeline) {
+                            chartTimeline.resize();
+                        }
+                    });
+                }
+            }, 50);
+        };
+
+        // Toggle Logic
+        document.getElementById('personalChartToggle').addEventListener('change', function() {
+            showPersonalChart(this.value);
+        });
 
         // 2. Chart Kinerja Tim khusus Kadept (Donut Chart)
-        <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
+        <?php if (!empty($show_team_dashboard)) : ?>
             var optionsTeam = {
                 chart: {
                     type: 'donut',
@@ -643,36 +722,14 @@
         const toggleDark = document.getElementById('toggle-dark');
         if (toggleDark) {
             toggleDark.addEventListener('change', function() {
-                setTimeout(function() {
-                    const themeOptions = getChartThemeOptions();
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    rebuildPersonalCharts();
 
-                    chartPersonal.updateOptions({
-                        ...themeOptions,
-                        xaxis: {
-                            ...optionsPersonal.xaxis,
-                            ...themeOptions.xaxis
-                        },
-                        yaxis: {
-                            ...optionsPersonal.yaxis,
-                            labels: {
-                                ...optionsPersonal.yaxis.labels,
-                                ...themeOptions.yaxis.labels
-                            }
-                        },
-                        tooltip: {
-                            ...optionsPersonal.tooltip,
-                            ...themeOptions.tooltip
-                        },
-                        plotOptions: optionsPersonal.plotOptions
-                    });
-
-                    <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
-                        chartTeam.updateOptions({
-                            ...themeOptions,
-                            dataLabels: themeOptions.teamDataLabels
-                        });
+                    <?php if (!empty($show_team_dashboard)) : ?>
+                        const teamTheme = getChartThemeOptions();
+                        chartTeam.updateOptions({ ...teamTheme, dataLabels: teamTheme.teamDataLabels });
                     <?php endif; ?>
-                }, 0);
+                }));
             });
         }
     });
