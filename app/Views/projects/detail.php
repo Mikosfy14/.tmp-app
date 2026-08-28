@@ -4,6 +4,8 @@
  * @var array $projectFiles
  */
 
+helper('deadline');
+
 $statusBadge = match ($project['status'] ?? '') {
     'Planning' => 'bg-secondary',
     'Defining' => 'bg-info',
@@ -16,27 +18,10 @@ $statusBadge = match ($project['status'] ?? '') {
 
 $dateValue = static fn ($value): string => !empty($value) ? date('d M Y', strtotime($value)) : '-';
 
-$deadlineLabel = 'On Track';
-$deadlineBadge = 'bg-success';
-if (!empty($project['end_date'])) {
-    $today = new DateTimeImmutable(date('Y-m-d'));
-    $endDate = new DateTimeImmutable($project['end_date']);
-    $daysLeft = (int) $today->diff($endDate)->format('%r%a');
-
-    if ($daysLeft < 0) {
-        $deadlineLabel = 'Overdue';
-        $deadlineBadge = 'bg-danger';
-    } elseif ($daysLeft <= 1) {
-        $deadlineLabel = 'Critical';
-        $deadlineBadge = 'bg-danger';
-    } elseif ($daysLeft < 3) {
-        $deadlineLabel = 'Urgent';
-        $deadlineBadge = 'bg-danger';
-    } elseif ($daysLeft < 7) {
-        $deadlineLabel = 'Risk';
-        $deadlineBadge = 'bg-warning text-dark';
-    }
-}
+$isCompleted = is_project_completed($project);
+$deadline = get_deadline_status($project['end_date'] ?? null, $isCompleted);
+$deadlineLabel = $deadline['label'];
+$deadlineBadge = $deadline['badge_class'];
 ?>
 
 <?= $this->extend('layouts/main') ?>

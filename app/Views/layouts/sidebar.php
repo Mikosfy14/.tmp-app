@@ -57,6 +57,13 @@
                 </li>
 
                 <?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
+                    <li class="sidebar-title mt-3">Menu Kepala Departemen</li>
+                    <li class="sidebar-item <?= is_active('kinerja-tim') ?>">
+                        <a href="<?= base_url('/kinerja-tim') ?>" class='sidebar-link d-flex align-items-center'>
+                            <i class="bi bi-bar-chart-line me-2 fs-5"></i>
+                            <span>Kinerja Tim</span>
+                        </a>
+                    </li>
                     <li class="sidebar-item <?= is_active('users') ?>">
                         <a href="<?= base_url('/users') ?>" class='sidebar-link d-flex align-items-center'>
                             <i class="bi bi-people-fill me-2 fs-5"></i>

@@ -11,6 +11,8 @@
  * @var \CodeIgniter\Pager\Pager|null $pager
  */
 
+helper('deadline');
+
 $displayProjects = $projects ?? [];
 $selectedStartDate = (string) ($selectedStartDate ?? '');
 $selectedEndDate = (string) ($selectedEndDate ?? '');
@@ -299,6 +301,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                                     $prj['name'] ?? '',
                                     implode(' ', $assignedNames),
                                 ])));
+                                $deadline = get_deadline_status($prj['end_date'] ?? null, is_project_completed($prj));
                                 ?>
                                 <tr class="project-row"
                                     data-search="<?= esc($searchText) ?>"
@@ -309,6 +312,9 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                                     </td>
                                     <td>
                                         <span class="badge <?= $statusBadge ?>"><?= esc($prj['status'] ?? '-') ?></span>
+                                        <span class="badge bg-light-<?= esc($deadline['class']) ?> text-<?= esc($deadline['class']) ?> d-block mt-2" style="width: fit-content;">
+                                            <?= esc($deadline['label']) ?>
+                                        </span>
                                     </td>
                                     <td>
                                         <?php if (!empty($prj['assigned_users'])) : ?>

@@ -57,6 +57,16 @@ class ProjectModel extends Model
         return $this->attachAssignees($projects);
     }
 
+    /** Return all accessible projects for dashboard aggregation without pagination. */
+    public function getDashboardProjects(?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
+    {
+        $builder = $this->select('projects.*, project_status.status_name AS status, project_status.sort_order AS status_sort_order')
+            ->join('project_status', 'project_status.id = projects.project_status_id', 'left');
+        if (!$includeAll && !empty($userId)) $this->whereAssignedToContains($builder, $userId);
+        $this->applyDateRangeFilter($builder, $dateRange);
+        return $this->attachAssignees($builder->orderBy('projects.id', 'DESC')->findAll());
+    }
+
     /** Ambil detail project beserta user penanggung jawab dari kolom assigned_to. */
     public function getProjectDetail($id, ?int $userId = null, bool $includeAll = false): ?array
     {

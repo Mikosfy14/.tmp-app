@@ -38,6 +38,13 @@ class UserModel extends Model
             ->getRowArray();
     }
 
+    public function getActiveTeamMembers(): array
+    {
+        return $this->db->table('users u')->select('u.id, u.name, u.job_title, r.role_name, r.category')
+            ->join('roles r', 'r.id = u.role_id', 'left')->where('u.is_active', 1)
+            ->where('r.role_name !=', 'Kepala Departemen')->orderBy('u.name', 'ASC')->get()->getResultArray();
+    }
+
     protected function hashPassword(array $data): array
     {
         if (empty($data['data']['password_hash'])) {
