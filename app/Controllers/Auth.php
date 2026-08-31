@@ -69,7 +69,9 @@ class Auth extends BaseController
             ];
             session()->set($sessionData);
 
-            return redirect()->to('/dashboard')->with('success', 'Selamat datang kembali, ' . $user['name']);
+            return redirect()->to('/dashboard')
+                ->with('success', 'Selamat datang kembali, ' . $user['name'])
+                ->with('just_logged_in', true);
         }
 
         return redirect()->back()->withInput()->with('error', 'Password yang anda masukkan salah!');
