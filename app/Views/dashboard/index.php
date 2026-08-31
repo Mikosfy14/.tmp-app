@@ -13,6 +13,8 @@
  * @var array $team_stats
  * @var array $team_members
  */
+helper('deadline');
+$deadlineAlerts = get_user_deadline_notifications();
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -26,6 +28,53 @@
 </div>
 
 <div class="page-content">
+    <?php if (!empty($deadlineAlerts)) : ?>
+        <!-- Windowed Deadline Alert Modal (Centered, 1-Hour Cycle) -->
+        <div class="modal fade" id="modalWindowedDeadlineAlert" tabindex="-1" aria-labelledby="modalDeadlineAlertLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title text-white d-flex align-items-center mb-0" id="modalDeadlineAlertLabel">
+                            Peringatan Tenggat Waktu (Deadline Alert)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                            <div>
+                                <strong class="d-block text-dark">Ada <?= count($deadlineAlerts) ?> project yang memerlukan perhatian segera!</strong>
+                                <small class="text-muted">Daftar project di bawah ini memiliki status Overdue atau mendekati batas akhir penyelesaian.</small>
+                            </div>
+                        </div>
+
+                        <div class="list-group list-group-flush border rounded overflow-hidden" style="max-height: 280px; overflow-y: auto;">
+                            <?php foreach ($deadlineAlerts as $alertItem) : ?>
+                                <div class="list-group-item list-group-item-action d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 p-3">
+                                    <div class="min-width-0">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span class="badge bg-light-<?= esc($alertItem['deadline_class']) ?> text-<?= esc($alertItem['deadline_class']) ?> fw-bold"><?= esc($alertItem['deadline_label']) ?></span>
+                                            <strong class="text-dark text-truncate"><?= esc($alertItem['name']) ?></strong>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <span><i class="bi bi-tag me-1"></i><?= esc($alertItem['project_code']) ?></span> &middot;
+                                            <span><i class="bi bi-calendar-event me-1"></i>Tenggat: <strong class="text-dark"><?= !empty($alertItem['end_date']) ? date('d M Y', strtotime($alertItem['end_date'])) : '-' ?></strong></span>
+                                        </div>
+                                    </div>
+                                    <a href="<?= base_url('/projects/detail/' . $alertItem['id']) ?>" class="btn btn-sm btn-outline-primary text-nowrap align-self-start align-self-md-center">
+                                        <i class="bi bi-eye-fill me-1"></i> Buka Project
+                                    </a>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Saya Mengerti</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="row mb-4">
         <div class="col-12 col-lg-7 mb-3 mb-lg-0">
             <div class="card bg-primary text-white shadow-sm h-100 mb-0">
@@ -94,7 +143,7 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Dashboard Project Pribadi</h4>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Dashboard Pribadi</h4>
         <span class="text-muted text-sm">Target dan kinerja Individu</span>
     </div>
 
@@ -170,19 +219,19 @@ $priority_projects = array_filter($my_active_projects, function($p) {
 ?>
 <div class="card shadow-sm mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Priority Tasks (Butuh Perhatian)</h5>
-        <span class="badge bg-danger"><?= count($priority_projects) ?> Project Kritis</span>
+        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Priority Tasks</h5>
+        <span class="badge bg-danger"><?= count($priority_projects) ?> Project Importance</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 dashboard-project-table">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4" style="width: 30%;">Kode & Nama Project</th>
+                        <th class="ps-4" style="width: 30%;">Code & Project Name</th>
                         <th style="width: 14%;">Status</th>
                         <th style="width: 22%;">Assigned To</th>
                         <th style="width: 22%;">Timeline</th>
-                        <th class="text-center pe-4" style="width: 12%;">Aksi</th>
+                        <th class="text-center pe-4" style="width: 12%;">Quick Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -283,123 +332,6 @@ $priority_projects = array_filter($my_active_projects, function($p) {
         </div>
     </div>
 </div>
-
-
-<?php if (session()->get('role_name') === 'Kepala Departemen') : ?>
-    <hr class="my-5 border-2">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="fw-bold text-dark mb-0"><i class="bi bi-people-fill me-2 text-primary"></i>Dashboard Project Tim & Kinerja Departemen</h4>
-            <p class="text-muted text-sm mb-0">Menu kepala departemen untuk memantau performa anggota tim</p>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body py-3">
-                    <span class="text-muted text-sm font-semibold">Total Project</span>
-                    <h3 class="team-stat-value fw-bold mb-0 text-primary"><?= $team_stats['total_team_projects'] ?></h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body py-3">
-                    <span class="text-muted text-sm font-semibold">Anggota Tim Aktif</span>
-                    <h3 class="team-stat-value fw-bold mb-0 text-success"><?= $team_stats['active_members'] ?> Staff</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body py-3">
-                    <span class="text-muted text-sm font-semibold">Project Overdue / Delay</span>
-                    <h3 class="team-stat-value fw-bold mb-0 text-danger"><?= $team_stats['overdue_projects'] ?> Project</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body py-3">
-                    <span class="text-muted text-sm font-semibold">Efisiensi Tim</span>
-                    <h3 class="team-stat-value fw-bold mb-0 text-info"><?= $team_stats['efficiency_rate'] ?></h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-12 col-xl-5 mb-4">
-            <div class="card shadow-sm h-100 mb-0">
-                <div class="card-header">
-                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-pie-chart me-2 text-primary"></i>Beban Kerja & Kinerja Tim</h5>
-                </div>
-                <div class="card-body">
-                    <div id="chart-team-performance"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-xl-7 mb-4">
-            <div class="card shadow-sm h-100 mb-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fs-6 fw-bold">
-                        <i class="bi bi-person-lines-fill me-2 text-primary"></i>Daftar Anggota Tim & Project Tracker
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 custom-table-team">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4" style="width: 28%;">Anggota</th>
-                                    <th style="width: 24%;">Job Title</th>
-                                    <th class="text-center" style="width: 14%;">Project Aktif</th>
-                                    <th class="text-center" style="width: 14%;">Project Selesai</th>
-                                    <th class="text-center pe-4" style="width: 20%;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($team_members as $member) : ?>
-                                    <tr>
-                                        <td class="ps-4 py-3">
-                                            <strong class="d-block text-dark mb-1"><?= esc($member['name']) ?></strong>
-                                            <span class="badge bg-light-secondary text-secondary fw-semibold"><?= esc($member['role']) ?></span>
-                                        </td>
-                                        <td class="py-3">
-                                            <span class="text-secondary fw-medium"><?= esc($member['job']) ?></span>
-                                        </td>
-                                        <td class="text-center py-3">
-                                            <span class="fw-bold text-primary fs-6"><?= $member['active_tasks'] ?></span>
-                                        </td>
-                                        <td class="text-center py-3">
-                                            <span class="fw-bold text-success fs-6"><?= $member['completed'] ?></span>
-                                        </td>
-                                        <td class="text-center pe-4 py-3">
-                                            <a href="<?= base_url('/dashboard/user/' . $member['id']) ?>" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap">
-                                                <i class="bi bi-speedometer2"></i> Dashboard Staff
-                                            </a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <style>
-            /* Mengatur padding horizontal agar tabel terasa renggang & rapi */
-            .custom-table-team> :not(caption)>*>* {
-                padding-left: 1.1rem !important;
-                padding-right: 1.1rem !important;
-            }
-        </style>
-    </div>
-<?php endif; ?>
 
 </div>
 
@@ -685,54 +617,26 @@ $priority_projects = array_filter($my_active_projects, function($p) {
             showPersonalChart(this.value);
         });
 
-        // 2. Chart Kinerja Tim khusus Kadept (Donut Chart)
-        <?php if (!empty($show_team_dashboard)) : ?>
-            var optionsTeam = {
-                chart: {
-                    type: 'donut',
-                    height: 290
-                },
-                series: [12, 4, 2],
-                labels: ['Project Selesai', 'Sedang Berjalan', 'Terlambat / Pending'],
-                colors: ['#198754', '#435ebe', '#dc3545'],
-                legend: {
-                    position: 'bottom'
-                }
-            };
-            var teamThemeOptions = getChartThemeOptions();
-            optionsTeam = {
-                ...optionsTeam,
-                chart: {
-                    ...optionsTeam.chart,
-                    ...teamThemeOptions.chart
-                },
-                theme: teamThemeOptions.theme,
-                tooltip: teamThemeOptions.tooltip,
-                dataLabels: teamThemeOptions.teamDataLabels,
-                plotOptions: teamThemeOptions.plotOptions,
-                legend: {
-                    ...optionsTeam.legend,
-                    ...teamThemeOptions.legend
-                }
-            };
-            var chartTeam = new ApexCharts(document.querySelector("#chart-team-performance"), optionsTeam);
-            chartTeam.render();
-        <?php endif; ?>
-
         const toggleDark = document.getElementById('toggle-dark');
         if (toggleDark) {
             toggleDark.addEventListener('change', function() {
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     rebuildPersonalCharts();
-
-                    <?php if (!empty($show_team_dashboard)) : ?>
-                        const teamTheme = getChartThemeOptions();
-                        chartTeam.updateOptions({ ...teamTheme, dataLabels: teamTheme.teamDataLabels });
-                    <?php endif; ?>
                 }));
             });
         }
+
+        // Post-Login Windowed Deadline Alert Modal Trigger
+        <?php if (!empty($deadlineAlerts) && session()->getFlashdata('just_logged_in')) : ?>
+            const deadlineModalEl = document.getElementById('modalWindowedDeadlineAlert');
+            if (deadlineModalEl && typeof bootstrap !== 'undefined') {
+                setTimeout(() => {
+                    const modalInstance = new bootstrap.Modal(deadlineModalEl);
+                    modalInstance.show();
+                }, 400);
+            }
+        <?php endif; ?>
     });
 </script>
 
-<?= $this->endSection() ?>``
+<?= $this->endSection() ?>

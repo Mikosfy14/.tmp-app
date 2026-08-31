@@ -94,3 +94,57 @@ if (!function_exists('is_project_completed')) {
             || str_contains($status, 'done');
     }
 }
+
+if (!function_exists('get_user_deadline_notifications')) {
+    /**
+     * Mengambil daftar project berstatus alert (Overdue, Critical, Urgent, Risk) milik user aktif.
+     *
+     * @param int|null $userId ID User (default: session user_id)
+     * @return array<int, array{id: int, name: string, project_code: string, end_date: string, deadline_label: string, deadline_class: string, badge_class: string, days_left: int|null}>
+     */
+    function get_user_deadline_notifications(?int $userId = null): array
+    {
+        $userId = $userId ?? (int) session()->get('user_id');
+        if ($userId <= 0) {
+            return [];
+        }
+
+        try {
+            $projectModel = new \App\Models\ProjectModel();
+            $projects = $projectModel->getDashboardProjects($userId, false);
+            
+            $notifications = [];
+            foreach ($projects as $project) {
+                if (is_project_completed($project)) {
+                    continue;
+                }
+
+                $deadline = get_deadline_status($project['end_date'] ?? null, false);
+                if (in_array($deadline['label'], ['Overdue', 'Critical', 'Urgent', 'Risk'], true)) {
+                    $notifications[] = [
+                        'id'             => (int) $project['id'],
+                        'name'           => (string) $project['name'],
+                        'project_code'   => (string) ($project['project_code'] ?? ''),
+                        'end_date'       => (string) ($project['end_date'] ?? ''),
+                        'deadline_label' => $deadline['label'],
+                        'deadline_class' => $deadline['class'],
+                        'badge_class'    => $deadline['badge_class'],
+                        'days_left'      => $deadline['days_left'],
+                    ];
+                }
+            }
+
+            // Urutkan: Overdue -> Critical -> Urgent -> Risk
+            usort($notifications, static function (array $a, array $b): int {
+                $priority = ['Overdue' => 1, 'Critical' => 2, 'Urgent' => 3, 'Risk' => 4];
+                $pA = $priority[$a['deadline_label']] ?? 99;
+                $pB = $priority[$b['deadline_label']] ?? 99;
+                return $pA <=> $pB;
+            });
+
+            return $notifications;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+}
