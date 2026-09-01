@@ -39,12 +39,18 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
         <p class="text-muted mb-0">Perbarui informasi pribadi atau ganti password akun Anda.</p>
     </div>
 
-    <?php $errors = session()->getFlashdata('errors'); $passwordErrors = session()->getFlashdata('password_errors'); $passwordError = session()->getFlashdata('password_error'); ?>
-    <?php if (!empty($errors) || !empty($passwordErrors) || $passwordError) : ?>
-        <div class="alert alert-danger mb-4">
-            <?php foreach ((array) $errors as $error) : ?><div><?= esc($error) ?></div><?php endforeach; ?>
-            <?php foreach ((array) $passwordErrors as $error) : ?><div><?= esc($error) ?></div><?php endforeach; ?>
-            <?php if ($passwordError) : ?><div><?= esc($passwordError) ?></div><?php endif; ?>
+    <?php
+    $errors = session()->getFlashdata('errors') ?? [];
+    $passwordErrors = session()->getFlashdata('password_errors') ?? [];
+    ?>
+    <?php if (!empty($errors) || !empty($passwordErrors)) : ?>
+        <div class="alert alert-danger alert-dismissible fade show mb-4">
+            <strong class="d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Terjadi kesalahan:</strong>
+            <ul class="mb-0 ps-3">
+                <?php foreach ((array) $errors as $error) : ?><li><?= esc($error) ?></li><?php endforeach; ?>
+                <?php foreach ((array) $passwordErrors as $error) : ?><li><?= esc($error) ?></li><?php endforeach; ?>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
         </div>
     <?php endif; ?>
 
@@ -64,10 +70,18 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
             </div>
             <section class="profile-edit-section">
                 <div class="row g-3">
-                    <div class="col-md-6"><label for="profileName" class="form-label fw-semibold">Nama Lengkap</label><input id="profileName" type="text" name="name" class="form-control" value="<?= esc(old('name', $user['name'] ?? '')) ?>" required></div>
-                    <div class="col-md-6"><label for="profileEmail" class="form-label fw-semibold">Email</label><input id="profileEmail" type="email" name="email" class="form-control" value="<?= esc(old('email', $user['email'] ?? '')) ?>"></div>
-                    <div class="col-md-6"><label for="profilePhone" class="form-label fw-semibold">Nomor Telepon</label><input id="profilePhone" type="tel" name="phone_number" class="form-control" value="<?= esc(old('phone_number', $user['phone_number'] ?? '')) ?>"></div>
-                    <div class="col-md-6"><label for="profileJobTitle" class="form-label fw-semibold">Job Title</label><input id="profileJobTitle" type="text" name="job_title" class="form-control" value="<?= esc(old('job_title', $user['job_title'] ?? '')) ?>"></div>
+                    <div class="col-md-6"><label for="profileName" class="form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label><input id="profileName" type="text" name="name" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" value="<?= esc(old('name', $user['name'] ?? '')) ?>" required>
+                        <?php if (isset($errors['name'])) : ?><div class="invalid-feedback"><?= esc($errors['name']) ?></div><?php endif; ?>
+                    </div>
+                    <div class="col-md-6"><label for="profileEmail" class="form-label fw-semibold">Email</label><input id="profileEmail" type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" value="<?= esc(old('email', $user['email'] ?? '')) ?>">
+                        <?php if (isset($errors['email'])) : ?><div class="invalid-feedback"><?= esc($errors['email']) ?></div><?php endif; ?>
+                    </div>
+                    <div class="col-md-6"><label for="profilePhone" class="form-label fw-semibold">Nomor Telepon</label><input id="profilePhone" type="tel" name="phone_number" class="form-control <?= isset($errors['phone_number']) ? 'is-invalid' : '' ?>" value="<?= esc(old('phone_number', $user['phone_number'] ?? '')) ?>">
+                        <?php if (isset($errors['phone_number'])) : ?><div class="invalid-feedback"><?= esc($errors['phone_number']) ?></div><?php endif; ?>
+                    </div>
+                    <div class="col-md-6"><label for="profileJobTitle" class="form-label fw-semibold">Job Title</label><input id="profileJobTitle" type="text" name="job_title" class="form-control <?= isset($errors['job_title']) ? 'is-invalid' : '' ?>" value="<?= esc(old('job_title', $user['job_title'] ?? '')) ?>">
+                        <?php if (isset($errors['job_title'])) : ?><div class="invalid-feedback"><?= esc($errors['job_title']) ?></div><?php endif; ?>
+                    </div>
                 </div>
             </section>
             <section class="profile-edit-section">
@@ -80,7 +94,7 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
             </section>
             <div class="profile-edit-actions d-flex justify-content-end gap-2">
                 <a href="<?= base_url('/profile') ?>" class="btn btn-outline-secondary">Batal</a>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle" aria-hidden="true"></i> Simpan Perubahan Profil</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1" aria-hidden="true"></i> Simpan Perubahan Profil</button>
             </div>
         </form>
     </div>
@@ -92,12 +106,43 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
                 <h5 class="mb-1">Ganti Password</h5>
                 <p class="text-muted small mb-4">Gunakan minimal 8 karakter dan jangan gunakan password yang mudah ditebak.</p>
                 <div class="row g-3">
-                    <div class="col-12"><label for="currentPassword" class="form-label fw-semibold">Password Lama</label><div class="input-group profile-password-group"><input id="currentPassword" type="password" name="current_password" class="form-control" autocomplete="current-password" required><button type="button" class="profile-password-toggle" data-password-toggle="currentPassword" data-password-label="password lama" aria-label="Tampilkan password lama" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button></div></div>
-                    <div class="col-md-6"><label for="newPassword" class="form-label fw-semibold">Password Baru</label><div class="input-group profile-password-group"><input id="newPassword" type="password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required><button type="button" class="profile-password-toggle" data-password-toggle="newPassword" data-password-label="password baru" aria-label="Tampilkan password baru" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button></div></div>
-                    <div class="col-md-6"><label for="newPasswordConfirmation" class="form-label fw-semibold">Konfirmasi Password Baru</label><div class="input-group profile-password-group"><input id="newPasswordConfirmation" type="password" name="new_password_confirmation" class="form-control" autocomplete="new-password" minlength="8" required><button type="button" class="profile-password-toggle" data-password-toggle="newPasswordConfirmation" data-password-label="konfirmasi password baru" aria-label="Tampilkan konfirmasi password baru" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button></div></div>
+                    <div class="col-12">
+                        <label for="currentPassword" class="form-label fw-semibold">Password Lama <span class="text-danger">*</span></label>
+                        <div class="input-group profile-password-group">
+                            <input id="currentPassword" type="password" name="current_password" class="form-control <?= isset($passwordErrors['current_password']) ? 'is-invalid' : '' ?>" autocomplete="current-password" required>
+                            <button type="button" class="profile-password-toggle" data-password-toggle="currentPassword" data-password-label="password lama" aria-label="Tampilkan password lama" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                        </div>
+                        <?php if (isset($passwordErrors['current_password'])) : ?>
+                            <div class="text-danger small mt-1"><?= esc($passwordErrors['current_password']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="newPassword" class="form-label fw-semibold">Password Baru <span class="text-danger">*</span></label>
+                        <div class="input-group profile-password-group">
+                            <input id="newPassword" type="password" name="new_password" class="form-control <?= isset($passwordErrors['new_password']) ? 'is-invalid' : '' ?>" autocomplete="new-password" minlength="8" required>
+                            <button type="button" class="profile-password-toggle" data-password-toggle="newPassword" data-password-label="password baru" aria-label="Tampilkan password baru" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                        </div>
+                        <?php if (isset($passwordErrors['new_password'])) : ?>
+                            <div class="text-danger small mt-1"><?= esc($passwordErrors['new_password']) ?></div>
+                        <?php else : ?>
+                            <div class="form-text">Minimal 8 karakter.</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="newPasswordConfirmation" class="form-label fw-semibold">Konfirmasi Password Baru <span class="text-danger">*</span></label>
+                        <div class="input-group profile-password-group">
+                            <input id="newPasswordConfirmation" type="password" name="new_password_confirmation" class="form-control <?= isset($passwordErrors['new_password_confirmation']) ? 'is-invalid' : '' ?>" autocomplete="new-password" minlength="8" required>
+                            <button type="button" class="profile-password-toggle" data-password-toggle="newPasswordConfirmation" data-password-label="konfirmasi password baru" aria-label="Tampilkan konfirmasi password baru" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                        </div>
+                        <?php if (isset($passwordErrors['new_password_confirmation'])) : ?>
+                            <div class="text-danger small mt-1"><?= esc($passwordErrors['new_password_confirmation']) ?></div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </section>
-            <div class="profile-edit-actions d-flex justify-content-end"><button type="submit" class="btn btn-warning"><i class="bi bi-key-fill" aria-hidden="true"></i> Ganti Password</button></div>
+            <div class="profile-edit-actions d-flex justify-content-end">
+                <button type="submit" class="btn btn-warning"><i class="bi bi-key-fill me-1" aria-hidden="true"></i> Ganti Password</button>
+            </div>
         </form>
     </div>
 </div>

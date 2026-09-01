@@ -13,7 +13,7 @@ $roles = $roles ?? [];
 $formAction = $formAction ?? '#';
 $submitLabel = $submitLabel ?? 'Simpan';
 $cancelUrl = $cancelUrl ?? base_url('/users');
-$defaultPassword = $defaultPassword ?? 'user123';
+$defaultPassword = $defaultPassword ?? 'user1234';
 
 $oldValue = static function (string $field, $fallback = '') {
     $value = old($field);

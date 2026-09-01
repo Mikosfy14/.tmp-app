@@ -52,8 +52,9 @@ class UserModel extends Model
         }
 
         $password = (string) $data['data']['password_hash'];
+        $info = password_get_info($password);
 
-        if (password_get_info($password)['algo'] === 0) {
+        if ($info['algo'] === null || $info['algo'] === 0) {
             $data['data']['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
         }
 

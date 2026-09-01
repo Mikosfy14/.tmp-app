@@ -237,7 +237,7 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
                 <div class="col-md-4"><label for="businessOwner" class="form-label">Business Owner</label><input id="businessOwner" name="business_owner" class="form-control" placeholder="Unit pemilik proses bisnis" value="<?= esc($value('business_owner')) ?>"></div>
                 <div class="col-md-4"><label for="systemOwner" class="form-label">System Owner</label><input id="systemOwner" name="system_owner" class="form-control" placeholder="Unit pemilik sistem" value="<?= esc($value('system_owner')) ?>"></div>
                 <div class="col-lg-7" id="assignedPicField"><label for="assignedPic" class="form-label">Assigned PIC</label><select id="assignedPic" name="assigned_user_id" class="form-select" data-placeholder="Cari dan pilih PIC">
-                        <option value="">---</option><?php foreach ($users as $user) : ?><option value="<?= (int) $user['id'] ?>" <?= (string) $value('assigned_user_id') === (string) $user['id'] ? 'selected' : '' ?>><?= esc((string) ($user['name'] ?? '')) ?><?= !empty($user['job_title']) ? ' - ' . esc((string) $user['job_title']) : '' ?></option><?php endforeach; ?>
+                        <option value="">Pilih PIC</option><?php foreach ($users as $user) : ?><option value="<?= (int) $user['id'] ?>" <?= (string) $value('assigned_user_id') === (string) $user['id'] ? 'selected' : '' ?>><?= esc((string) ($user['name'] ?? '')) ?><?= !empty($user['job_title']) ? ' - ' . esc((string) $user['job_title']) : '' ?></option><?php endforeach; ?>
                     </select>
                     <div class="form-text">PIC bertanggung jawab atas koordinasi pengelolaan aplikasi.</div>
                 </div>
@@ -267,49 +267,19 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
             return;
         }
 
-        const choices = new window.Choices(assignedPic, {
-            allowHTML: false,
+        new window.Choices(assignedPic, {
             searchEnabled: true,
             searchChoices: true,
-            searchResultLimit: -1,
-            renderChoiceLimit: -1,
+            searchFields: ['label'],
+            searchFloor: 1,
+            searchResultLimit: 100,
             shouldSort: false,
             itemSelectText: 'Pilih',
             noResultsText: 'PIC tidak ditemukan',
             noChoicesText: 'Tidak ada PIC tersedia',
             searchPlaceholderValue: 'Ketik nama atau jabatan PIC...',
-            placeholder: false,
+            placeholder: true,
+            placeholderValue: 'Cari dan pilih PIC...',
         });
-
-        // Keep the optional empty assignment accessible regardless of the search query.
-        const keepUnassignedChoiceFirst = () => {
-            window.requestAnimationFrame(() => {
-                const dropdown = document.querySelector('#assignedPicField .choices__list--dropdown');
-                const choiceList = dropdown?.querySelector('.choices__list');
-                const unassignedChoice = choiceList?.querySelector('[data-choice][data-value=""]');
-
-                if (!choiceList || !unassignedChoice) {
-                    return;
-                }
-
-                unassignedChoice.hidden = false;
-                unassignedChoice.setAttribute('aria-hidden', 'false');
-                unassignedChoice.style.display = '';
-                unassignedChoice.classList.remove('is-hidden');
-                choiceList.prepend(unassignedChoice);
-
-                const noResultsNotice = choiceList.querySelector('.has-no-results');
-                if (noResultsNotice) {
-                    noResultsNotice.classList.add('d-none');
-                }
-            });
-        };
-
-        assignedPic.addEventListener('search', keepUnassignedChoiceFirst);
-        assignedPic.addEventListener('showDropdown', keepUnassignedChoiceFirst);
-
-        if (choices) {
-            keepUnassignedChoiceFirst();
-        }
     })();
 </script>

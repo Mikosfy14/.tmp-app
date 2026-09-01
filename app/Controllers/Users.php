@@ -6,7 +6,7 @@ use App\Models\UserModel;
 
 class Users extends BaseController
 {
-    private const DEFAULT_PASSWORD = 'user123';
+    private const DEFAULT_PASSWORD = 'user1234';
 
     protected UserModel $userModel;
 

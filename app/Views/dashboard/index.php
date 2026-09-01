@@ -29,7 +29,7 @@ $deadlineAlerts = get_user_deadline_notifications();
 
 <div class="page-content">
     <?php if (!empty($deadlineAlerts)) : ?>
-        <!-- Windowed Deadline Alert Modal (Centered, 1-Hour Cycle) -->
+        <!-- Windowed Deadline Alert Modal (Centered) -->
         <div class="modal fade" id="modalWindowedDeadlineAlert" tabindex="-1" aria-labelledby="modalDeadlineAlertLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content shadow-lg border-0">
@@ -47,7 +47,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                             </div>
                         </div>
 
-                        <div class="list-group list-group-flush border rounded overflow-hidden" style="max-height: 280px; overflow-y: auto;">
+                        <div class="list-group list-group-flush border rounded" style="max-height: 360px; overflow-y: auto;">
                             <?php foreach ($deadlineAlerts as $alertItem) : ?>
                                 <div class="list-group-item list-group-item-action d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 p-3">
                                     <div class="min-width-0">
@@ -144,7 +144,6 @@ $deadlineAlerts = get_user_deadline_notifications();
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold text-dark mb-0"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Dashboard Pribadi</h4>
-        <span class="text-muted text-sm">Target dan kinerja Individu</span>
     </div>
 
     <div class="row g-3 mb-4">

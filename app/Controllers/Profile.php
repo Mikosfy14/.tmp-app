@@ -73,9 +73,30 @@ class Profile extends BaseController
         }
 
         $rules = [
-            'current_password' => 'required',
-            'new_password' => 'required|min_length[8]|max_length[72]',
-            'new_password_confirmation' => 'required|matches[new_password]',
+            'current_password' => [
+                'label'  => 'Password Lama',
+                'rules'  => 'required',
+                'errors' => [
+                    'required' => 'Password lama wajib diisi.',
+                ],
+            ],
+            'new_password' => [
+                'label'  => 'Password Baru',
+                'rules'  => 'required|min_length[8]|max_length[72]',
+                'errors' => [
+                    'required'   => 'Password baru wajib diisi.',
+                    'min_length' => 'Password baru minimal harus 8 karakter.',
+                    'max_length' => 'Password baru maksimal 72 karakter.',
+                ],
+            ],
+            'new_password_confirmation' => [
+                'label'  => 'Konfirmasi Password Baru',
+                'rules'  => 'required|matches[new_password]',
+                'errors' => [
+                    'required' => 'Konfirmasi password baru wajib diisi.',
+                    'matches'  => 'Konfirmasi password baru tidak cocok dengan password baru.',
+                ],
+            ],
         ];
 
         if (!$this->validate($rules)) {
@@ -84,12 +105,13 @@ class Profile extends BaseController
 
         $currentPassword = (string) $this->request->getPost('current_password');
         if (!password_verify($currentPassword, (string) $user['password_hash'])) {
-            return redirect()->to('/profile/edit')->withInput()->with('password_error', 'Password lama tidak sesuai.');
+            return redirect()->to('/profile/edit')->withInput()->with('password_errors', [
+                'current_password' => 'Password lama yang Anda masukkan tidak sesuai.',
+            ]);
         }
 
-        db_connect()->table('users')->where('id', $userId)->update([
-            'password_hash' => password_hash((string) $this->request->getPost('new_password'), PASSWORD_DEFAULT),
-            'updated_at' => date('Y-m-d H:i:s'),
+        (new \App\Models\UserModel())->update($userId, [
+            'password_hash' => (string) $this->request->getPost('new_password'),
         ]);
 
         return redirect()->to('/profile')->with('success', 'Password berhasil diganti.');

@@ -53,7 +53,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-0">Password user <strong><?= esc($user['name'] ?? '-') ?></strong> akan direset ke <strong><?= esc($defaultPassword ?? 'user123') ?></strong>.</p>
+                <p class="mb-0">Password user <strong><?= esc($user['name'] ?? '-') ?></strong> akan direset ke <strong><?= esc($defaultPassword ?? 'user1234') ?></strong>.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

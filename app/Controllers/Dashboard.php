@@ -17,8 +17,7 @@ class Dashboard extends BaseController
 
         $totalCompleted = $stats['total_completed'] ?? 0;
         $totalProjects = $totalCompleted + ($stats['active_projects'] ?? 0);
-        $completionRate = $totalProjects > 0 ? round(($stats['on_time_done'] / $totalCompleted) * 100, 1) : 0; // Or just on_time_done / totalCompleted ? Wait, total_completed / total projects ? No, usually completion rate is how many are completed vs active, or how many on_time vs completed. Let's use total_completed / totalProjects.
-        $completionRate = $totalProjects > 0 ? round(($totalCompleted / $totalProjects) * 100, 1) : 0;
+        $completionRate = $totalProjects > 0 ? round(($totalCompleted / $totalProjects) * 100, 1) : 0.0;
 
         return view('dashboard/index', [
             'title' => 'User Dashboard', 'user_detail' => $user,
