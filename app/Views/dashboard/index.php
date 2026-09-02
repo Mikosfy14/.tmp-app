@@ -75,300 +75,319 @@ $deadlineAlerts = get_user_deadline_notifications();
         </div>
     <?php endif; ?>
 
-    <div class="row mb-4">
-        <div class="col-12 col-lg-7 mb-3 mb-lg-0">
-            <div class="card bg-primary text-white shadow-sm h-100 mb-0">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="badge bg-light-primary text-black border border-white px-2 py-1"><?= date('l, d F Y') ?></span>
-                        </div>
-                        <h2 class="text-white fw-bold mt-2 mb-1">
-                            Selamat Datang, <?= esc(session()->get('name')) ?>!
-                        </h2>
-                    </div>
-                    <div class="mt-3 pt-3 border-top border-white-50 d-flex gap-4">
-                        <div>
-                            <small class="text-white-50 d-block">Status Akun</small>
-                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Aktif</span>
-                        </div>
-                        <div>
-                            <small class="text-white-50 d-block">Akses Role</small>
-                            <span class="fw-bold"><?= esc(session()->get('role_name')) ?></span>
-                        </div>
-                    </div>
+    <!-- User Profile & Status Header -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4 flex-shrink-0" style="width: 52px; height: 52px; border-radius: 50%;">
+                    <?= strtoupper(substr(session()->get('name') ?? 'U', 0, 1)) ?>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-5">
-            <div class="card shadow-sm h-100 mb-0">
-                <div class="card-header pb-2 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fs-6 fw-bold text-primary"><i class="bi bi-person-badge me-2"></i>Informasi Akun</h5>
-                    <span class="badge bg-light-primary text-primary"><?= esc(session()->get('category')) ?? 'Organik' ?></span>
-                </div>
-                <div class="card-body pt-2">
-                    <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-                        <div class="avatar avatar-lg bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 50px; height: 50px; border-radius: 50%;">
-                            <?= strtoupper(substr(session()->get('name'), 0, 1)) ?>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h5 class="mb-0 fw-bold text-dark">Selamat Datang, <?= esc(session()->get('name')) ?>!</h5>
+                            <span class="badge bg-light-primary text-primary"><?= esc(session()->get('role_name')) ?></span>
+                            <span class="badge bg-light-info text-info"><?= esc(session()->get('category') ?? 'Organik') ?></span>
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Aktif</span>
                         </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold"><?= esc(session()->get('name')) ?></h6>
-                            <p class="text-muted text-sm mb-0"><?= esc($user_detail['job_title'] ?? 'Staff Developer') ?></p>
-                        </div>
+                        <span class="badge bg-light-secondary text-muted"><?= date('l, d F Y') ?></span>
                     </div>
-                    <div class="row g-2 text-sm">
-                        <div class="col-6">
-                            <span class="text-muted d-block"><i class="bi bi-person me-1"></i> Username:</span>
-                            <strong class="text-dark"><?= esc(session()->get('username')) ?></strong>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-truncate">
-                                <span class="text-muted d-block"><i class="bi bi-envelope me-1"></i> Email:</span>
-                                <strong class="text-dark"><?= esc($user_detail['email'] ?? 'N/A') ?></strong>
-                            </div>
-                        </div>
-                        <div class="col-6 mt-2">
-                            <span class="text-muted d-block"><i class="bi bi-telephone me-1"></i> No. Telepon:</span>
-                            <strong class="text-dark"><?= esc($user_detail['phone_number'] ?? 'N/A') ?></strong>
-                        </div>
-                        <div class="col-6 mt-2">
-                            <span class="text-muted d-block"><i class="bi bi-shield-check me-1"></i> Role & Akses:</span>
-                            <strong class="text-dark"><?= esc(session()->get('role_name')) ?></strong>
-                        </div>
+                    <div class="d-flex align-items-center gap-3 flex-wrap text-sm text-muted mt-1">
+                        <span><i class="bi bi-briefcase me-1 text-primary"></i><?= esc($user_detail['job_title'] ?? 'Staff Developer') ?></span>
+                        <span><i class="bi bi-person me-1 text-primary"></i>@<?= esc(session()->get('username')) ?></span>
+                        <?php if (!empty($user_detail['email'])) : ?>
+                            <span><i class="bi bi-envelope me-1 text-primary"></i><?= esc($user_detail['email']) ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($user_detail['phone_number'])) : ?>
+                            <span><i class="bi bi-telephone me-1 text-primary"></i><?= esc($user_detail['phone_number']) ?></span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Dashboard Pribadi</h4>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3 col-md-6">
+    <!-- 4 KPI Counters -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-xl-3">
             <div class="card shadow-sm h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="d-flex align-items-center gap-3 w-100">
-                        <div class="stats-icon blue d-flex align-items-center justify-content-center flex-shrink-0">
-                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['active_projects'] ?></span>
-                        </div>
-                        <div>
-                            <h6 class="text fw-bold mb-0">Project Aktif</h6>
-                        </div>
-                    </div>
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">Project Aktif</small>
+                    <h3 class="text-info mb-0"><?= (int) $my_stats['active_projects'] ?></h3>
                 </div>
             </div>
         </div>
 
-        <div class="col-6 col-lg-3 col-md-6">
+        <div class="col-6 col-xl-3">
             <div class="card shadow-sm h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="d-flex align-items-center gap-3 w-100">
-                        <div class="stats-icon green d-flex align-items-center justify-content-center flex-shrink-0">
-                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['total_apps_managed'] ?? 0 ?></span>
-                        </div>
-                        <div>
-                            <h6 class="text fw-bold mb-0">Aplikasi Dikelola</h6>
-                            <h6 class="text fw-bold mb-0 text-muted fs-6">(Sebagai PIC)</h6>
-                        </div>
-                    </div>
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">Aplikasi Dikelola (PIC)</small>
+                    <h3 class="text-primary mb-0"><?= (int) ($my_stats['total_apps_managed'] ?? 0) ?></h3>
                 </div>
             </div>
         </div>
 
-        <div class="col-6 col-lg-3 col-md-6">
+        <div class="col-6 col-xl-3">
             <div class="card shadow-sm h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="d-flex align-items-center gap-3 w-100">
-                        <div class="stats-icon purple d-flex align-items-center justify-content-center flex-shrink-0">
-                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['total_completed'] ?></span>
-                        </div>
-                        <div>
-                            <h6 class="text fw-bold mb-0">Total Selesai</h6>
-                        </div>
-                    </div>
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">Total Selesai</small>
+                    <h3 class="text-success mb-0"><?= (int) $my_stats['total_completed'] ?></h3>
                 </div>
             </div>
         </div>
 
-        <div class="col-6 col-lg-3 col-md-6">
+        <div class="col-6 col-xl-3">
             <div class="card shadow-sm h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center">
-                    <div class="d-flex align-items-center gap-3 w-100">
-                        <div class="stats-icon red d-flex align-items-center justify-content-center flex-shrink-0">
-                            <span class="fw-bold text-white fs-4 lh-1"><?= $my_stats['completion_rate'] ?? 0 ?>%</span>
-                        </div>
-                        <div>
-                            <h6 class="text fw-bold mb-0">Completion Rate</h6>
-                            <h6 class="text fw-bold mb-0 text-muted fs-6">(Rasio Berhasil)</h6>
-                        </div>
-                    </div>
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">Completion Rate</small>
+                    <h3 class="text-warning mb-0"><?= number_format((float) ($my_stats['completion_rate'] ?? 0), 1) ?>%</h3>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<?php
-$priority_projects = array_filter($my_active_projects, function($p) {
-    return in_array($p['deadline_label'] ?? '', ['Risk', 'Urgent', 'Critical', 'Overdue']);
-});
-?>
-<div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-list-task me-2 text-primary"></i>Priority Tasks</h5>
-        <span class="badge bg-danger"><?= count($priority_projects) ?> Project Importance</span>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 dashboard-project-table">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4" style="width: 30%;">Code & Project Name</th>
-                        <th style="width: 14%;">Status</th>
-                        <th style="width: 22%;">Assigned To</th>
-                        <th style="width: 22%;">Timeline</th>
-                        <th class="text-center pe-4" style="width: 12%;">Quick Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($priority_projects)): ?>
-                        <?php foreach ($priority_projects as $prj) : ?>
-                            <tr>
-                                <td class="ps-4 py-3">
-                                    <strong class="d-block text-dark"><?= esc($prj['name']) ?></strong>
-                                    <span class="badge bg-light-secondary text-muted"><?= esc($prj['project_code']) ?></span>
-                                </td>
-                                <td class="py-3">
-                                    <span class="badge <?= esc($prj['status_class']) ?>"><?= esc($prj['status']) ?></span>
-                                    <span class="badge dashboard-deadline-badge bg-light-<?= esc($prj['deadline_class']) ?> text-<?= esc($prj['deadline_class']) ?> d-block mt-2" style="width: fit-content;">
-                                        <?= esc($prj['deadline_label']) ?>
-                                    </span>
-                                </td>
-                                <td class="py-3">
-                                    <?php if (!empty($prj['assigned_users'])) : ?>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <?php foreach (array_slice($prj['assigned_users'], 0, 2) as $assignedUser) : ?>
-                                                <span class="badge bg-light-primary text-primary" title="<?= esc($assignedUser['job_title'] ?? '') ?>">
-                                                    <i class="bi bi-person-fill me-1"></i><?= esc($assignedUser['name']) ?>
+    <!-- Main 2-Column Work Area -->
+    <?php
+    $priority_projects = array_filter($my_active_projects, function ($p) {
+        return in_array($p['deadline_label'] ?? '', ['Risk', 'Urgent', 'Critical', 'Overdue']);
+    });
+    ?>
+    <div class="row g-3 mb-3">
+        <!-- Left Column: Priority Tasks & Workload Analysis -->
+        <div class="col-12 col-xl-7">
+            <!-- Priority Tasks -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Priority Tasks</h5>
+                        <small class="text-muted d-none d-sm-inline">| Proyek Mendekati Tenggat / Overdue</small>
+                    </div>
+                    <?php if (count($priority_projects) > 0) : ?>
+                        <span class="badge bg-light-danger text-danger border border-danger-subtle py-1 px-2 fw-semibold">
+                            <?= count($priority_projects) ?> Perlu Perhatian
+                        </span>
+                    <?php else : ?>
+                        <span class="badge bg-light-success text-success border border-success-subtle py-1 px-2 fw-semibold">
+                            Semua Aman
+                        </span>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 dashboard-project-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3 py-2" style="width: 40%;">Project Name</th>
+                                    <th class="py-2" style="width: 25%;">Status & Deadline</th>
+                                    <th class="py-2" style="width: 23%;">Tenggat</th>
+                                    <th class="text-center pe-3 py-2" style="width: 12%;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($priority_projects)): ?>
+                                    <?php foreach (array_slice($priority_projects, 0, 4) as $prj) : ?>
+                                        <tr>
+                                            <td class="ps-3 py-2">
+                                                <strong class="d-block text-dark text-truncate" style="max-width: 220px;" title="<?= esc($prj['name']) ?>"><?= esc($prj['name']) ?></strong>
+                                                <small class="text-muted"><?= esc($prj['project_code']) ?></small>
+                                            </td>
+                                            <td class="py-2">
+                                                <span class="badge <?= esc($prj['status_class']) ?>"><?= esc($prj['status']) ?></span>
+                                                <span class="badge bg-light-<?= esc($prj['deadline_class']) ?> text-<?= esc($prj['deadline_class']) ?> d-block mt-1" style="width: fit-content; font-size: 0.72rem;">
+                                                    <?= esc($prj['deadline_label']) ?>
                                                 </span>
-                                            <?php endforeach; ?>
-                                            <?php if (count($prj['assigned_users']) > 2) : ?>
-                                                <span class="badge bg-light-secondary text-secondary">+<?= count($prj['assigned_users']) - 2 ?></span>
+                                            </td>
+                                            <td class="py-2">
+                                                <small class="d-block text-muted"><i class="bi bi-calendar-event me-1"></i><?= date('d M Y', strtotime($prj['end_date'])) ?></small>
+                                            </td>
+                                            <td class="text-center pe-3 py-2">
+                                                <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary py-0 px-2 text-nowrap" title="Detail Project">
+                                                    <i class="bi bi-eye-fill"></i> Detail
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else : ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3 text-muted">
+                                            <i class="bi bi-check-circle-fill text-success me-1"></i> Bagus! Tidak ada project berisiko atau overdue saat ini.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workload Analysis Chart -->
+            <div class="card shadow-sm mb-0">
+                <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Analisis Beban Kerja</h5>
+                        <small class="text-muted d-none d-sm-inline">| Distribusi & Timeline</small>
+                    </div>
+                    <select id="personalChartToggle" class="form-select form-select-sm w-auto py-1">
+                        <option value="sdlc">Distribusi Fase SDLC</option>
+                        <option value="timeline">Timeline Deadlines</option>
+                    </select>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-personal-sdlc"></div>
+                    <div id="chart-personal-timeline" class="d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Aplikasi yang Dikelola & Pusat Aksi / Berkas Project -->
+        <div class="col-12 col-xl-5">
+            <!-- Card 1: Aplikasi yang Dikelola -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Aplikasi yang Dikelola</h5>
+                        <small class="text-muted d-none d-sm-inline">| Penugasan Sebagai PIC</small>
+                    </div>
+                    <span class="badge bg-light-primary text-primary border border-primary-subtle py-1 px-2 fw-semibold">
+                        <?= count($my_managed_apps ?? []) ?> Aplikasi
+                    </span>
+                </div>
+                <div class="card-body p-3">
+                    <?php if (!empty($my_managed_apps)) : ?>
+                        <div class="d-flex flex-column gap-2">
+                            <?php foreach ($my_managed_apps as $app) : ?>
+                                <div class="p-2 border rounded d-flex justify-content-between align-items-center">
+                                    <div class="min-width-0 me-2">
+                                        <div class="fw-bold text-dark text-truncate text-sm" title="<?= esc($app['app_component']) ?>">
+                                            <?= esc($app['app_component']) ?>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
+                                            <?php if (!empty($app['criticality_name'])) : ?>
+                                                <span class="badge bg-light-warning text-dark border border-warning" style="font-size: 0.68rem;">
+                                                    <?= esc($app['criticality_name']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($app['platform'])) : ?>
+                                                <span class="badge bg-light-secondary text-muted" style="font-size: 0.68rem;">
+                                                    <?= esc($app['platform']) ?>
+                                                </span>
                                             <?php endif; ?>
                                         </div>
-                                    <?php else : ?>
-                                        <span class="text-muted text-sm">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="py-3">
-                                    <small class="d-block text-muted">Start: <span class="fw-bold text-dark"><?= date('d M Y', strtotime($prj['start_date'])) ?></span></small>
-                                    <small class="d-block text-muted">End: <span class="fw-bold text-dark"><?= date('d M Y', strtotime($prj['end_date'])) ?></span></small>
-                                    <small class="d-block text-muted">Promote: <span class="fw-bold text-dark"><?= !empty($prj['promote_date']) ? date('d M Y', strtotime($prj['promote_date'])) : '-' ?></span></small>
-                                </td>
-                                <td class="text-center pe-4 py-3">
-                                    <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 text-nowrap" title="Detail Project">
-                                        <i class="bi bi-eye-fill"></i> Detail
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                        <?php if (!empty($app['url_prod'])) : ?>
+                                            <a href="<?= esc($app['url_prod']) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Buka URL Produksi">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <a href="<?= base_url('/aplikasi/detail/' . $app['id']) ?>" class="btn btn-sm btn-outline-primary py-0 px-2" title="Detail Aplikasi">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     <?php else : ?>
-                        <tr>
-                            <td colspan="5" class="text-center py-3 text-muted">Bagus! Tidak ada project yang overdue atau berisiko saat ini.</td>
-                        </tr>
+                        <div class="text-center py-3 text-muted">
+                            <i class="bi bi-laptop fs-3 d-block mb-1 text-secondary opacity-50"></i>
+                            <p class="mb-1 text-sm">Belum ada aplikasi yang ditugaskan sebagai PIC.</p>
+                            <a href="<?= base_url('/aplikasi') ?>" class="btn btn-sm btn-outline-primary py-0 px-2">
+                                <i class="bi bi-grid me-1"></i>Katalog Aplikasi
+                            </a>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
+
+            <!-- Card 2: Pusat Aksi & Berkas Project -->
+            <div class="card shadow-sm mb-0">
+                <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Pusat Aksi & Berkas Project</h5>
+                        <small class="text-muted d-none d-sm-inline">| Pintasan & Repositori</small>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <!-- Quick Actions Grid -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <a href="<?= base_url('/projects/create') ?>" class="btn btn-sm btn-primary text-white w-100 d-flex align-items-center justify-content-center gap-2 py-2 text-nowrap">
+                                <i class="bi bi-plus-circle-fill lh-1"></i> <span class="fw-semibold">Project Baru</span>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="<?= base_url('/aplikasi/create') ?>" class="btn btn-sm btn-info text-white w-100 d-flex align-items-center justify-content-center gap-2 py-2 text-nowrap">
+                                <i class="bi bi-plus-square-fill lh-1"></i> <span class="fw-semibold">Aplikasi Baru</span>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="<?= base_url('/projects') ?>" class="btn btn-sm btn-secondary text-white w-100 d-flex align-items-center justify-content-center gap-2 py-2 text-nowrap">
+                                <i class="bi bi-kanban lh-1"></i> <span class="fw-semibold">Tracker Project</span>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="<?= base_url('/aplikasi') ?>" class="btn btn-sm btn-dark text-white w-100 d-flex align-items-center justify-content-center gap-2 py-2 text-nowrap">
+                                <i class="bi bi-grid-3x3-gap lh-1"></i> <span class="fw-semibold">Katalog App</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Project Files -->
+                    <div class="border-top pt-2 mt-2">
+                        <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.72rem;">
+                            Berkas Project Terbaru
+                        </small>
+                        <?php if (!empty($recent_project_files)) : ?>
+                            <div class="d-flex flex-column gap-2">
+                                <?php foreach ($recent_project_files as $file) : ?>
+                                    <?php
+                                    $ext = strtolower($file['file_extension'] ?? '');
+                                    $iconClass = 'bi-file-earmark-text text-secondary';
+                                    if (in_array($ext, ['pdf'])) $iconClass = 'bi-file-earmark-pdf-fill text-danger';
+                                    elseif (in_array($ext, ['doc', 'docx'])) $iconClass = 'bi-file-earmark-word-fill text-primary';
+                                    elseif (in_array($ext, ['xls', 'xlsx', 'csv'])) $iconClass = 'bi-file-earmark-excel-fill text-success';
+                                    ?>
+                                    <div class="p-2 border rounded d-flex justify-content-between align-items-center bg-light-subtle">
+                                        <div class="d-flex align-items-center gap-2 min-width-0 me-2 flex-grow-1">
+                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded bg-white border" style="width: 38px; height: 38px;">
+                                                <i class="bi <?= $iconClass ?> fs-5 lh-1"></i>
+                                            </div>
+                                            <div class="min-width-0 flex-grow-1">
+                                                <strong class="d-block text-dark text-truncate text-sm mb-1" title="<?= esc($file['original_name']) ?>">
+                                                    <?= esc($file['original_name']) ?>
+                                                </strong>
+                                                <div class="text-muted d-flex align-items-center justify-content-between flex-wrap gap-1" style="font-size: 0.74rem;">
+                                                    <span class="text-truncate text-secondary fw-medium me-1" style="max-width: 170px;" title="<?= esc($file['project_name'] ?? '-') ?>">
+                                                        <i class="bi bi-folder2 me-1"></i><?= esc($file['project_name'] ?? '-') ?>
+                                                    </span>
+                                                    <span class="text-nowrap text-muted">
+                                                        <i class="bi bi-clock me-1"></i><?= !empty($file['created_at']) ? date('d M Y', strtotime($file['created_at'])) : '-' ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a href="<?= base_url('/projects/files/' . $file['id'] . '/download') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2 flex-shrink-0 d-inline-flex align-items-center gap-1" title="Unduh Berkas">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else : ?>
+                            <div class="text-center py-3 text-muted small">
+                                Belum ada berkas terunggah pada project Anda.
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
     .dashboard-project-table> :not(caption)>*>* {
-        padding-left: 1.25rem !important;
-        padding-right: 1.25rem !important;
-    }
-</style>
-
-<div class="row">
-    <div class="col-12 col-xl-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fs-6 fw-bold text-primary"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Analisis Beban Kerja</h5>
-                <select id="personalChartToggle" class="form-select form-select-sm w-auto">
-                    <option value="sdlc">Distribusi Fase SDLC</option>
-                    <option value="timeline">Timeline Deadlines</option>
-                </select>
-            </div>
-            <div class="card-body">
-                <div id="chart-personal-sdlc"></div>
-                <div id="chart-personal-timeline" class="d-none"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-xl-4 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header pb-2">
-                <h5 class="card-title mb-0 fs-6 fw-bold"></i>Timeline & Deadline Terdekat</h5>
-            </div>
-            <div class="card-body pt-3">
-                <ul class="list-group list-group-flush">
-                    <?php foreach ($my_timeline as $item) : ?>
-                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-0 text-dark text-sm fw-bold"><?= esc($item['title']) ?></h6>
-                                <small class="text-muted"><i class="bi bi-calendar-event me-1"></i><?= $item['date'] ?></small>
-                            </div>
-                            <span class="badge timeline-status-badge bg-light-<?= $item['class'] ?> text-<?= $item['class'] ?>"><?= $item['badge'] ?></span>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-</div>
-
-<style>
-    [data-bs-theme="dark"] .timeline-status-badge.bg-light-danger {
-        background-color: #ffdede !important;
-        color: #dc3545 !important;
-    }
-
-    [data-bs-theme="dark"] .timeline-status-badge.bg-light-info {
-        background-color: #e6fdff !important;
-        color: #0dcaf0 !important;
-    }
-
-    [data-bs-theme="dark"] .timeline-status-badge.bg-light-success {
-        background-color: #d2ffe8 !important;
-        color: #198754 !important;
-    }
-
-    [data-bs-theme="dark"] .timeline-status-badge.bg-light-warning {
-        background-color: #fffdd8 !important;
-        color: #ffc107 !important;
-    }
-
-    [data-bs-theme="dark"] .team-stat-value.text-primary {
-        color: #435ebe !important;
-    }
-
-    [data-bs-theme="dark"] .team-stat-value.text-success {
-        color: #198754 !important;
-    }
-
-    [data-bs-theme="dark"] .team-stat-value.text-danger {
-        color: #dc3545 !important;
-    }
-
-    [data-bs-theme="dark"] .team-stat-value.text-info {
-        color: #0dcaf0 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
     }
 </style>
 
@@ -458,7 +477,7 @@ $priority_projects = array_filter($my_active_projects, function($p) {
             else if (statusClass.includes('warning')) color = '#ffc107';
             else if (statusClass.includes('info')) color = '#0dcaf0';
             else if (statusClass.includes('danger')) color = '#dc3545';
-            
+
             return {
                 x: String(p.name || '').length > 20 ? String(p.name || '').substring(0, 20) + '...' : String(p.name || ''),
                 y: [new Date(p.start).getTime(), new Date(p.end).getTime()],
@@ -472,7 +491,7 @@ $priority_projects = array_filter($my_active_projects, function($p) {
         var optionsSdlc = {
             chart: {
                 type: 'donut',
-                height: 300,
+                height: 240,
                 ...personalThemeOptions.chart
             },
             series: sdlcSeries.length > 0 ? sdlcSeries : [1],
@@ -498,8 +517,10 @@ $priority_projects = array_filter($my_active_projects, function($p) {
         var optionsTimeline = {
             chart: {
                 type: 'rangeBar',
-                height: 300,
-                toolbar: { show: false },
+                height: 240,
+                toolbar: {
+                    show: false
+                },
                 ...personalThemeOptions.chart
             },
             plotOptions: {
@@ -510,7 +531,10 @@ $priority_projects = array_filter($my_active_projects, function($p) {
             },
             series: [{
                 name: 'Timeline',
-                data: ganttData.length > 0 ? ganttData : [{x: 'No Active Projects', y: [new Date().getTime(), new Date().getTime()]}]
+                data: ganttData.length > 0 ? ganttData : [{
+                    x: 'No Active Projects',
+                    y: [new Date().getTime(), new Date().getTime()]
+                }]
             }],
             xaxis: {
                 type: 'datetime',
@@ -519,10 +543,14 @@ $priority_projects = array_filter($my_active_projects, function($p) {
             theme: personalThemeOptions.theme,
             tooltip: {
                 ...personalThemeOptions.tooltip,
-                x: { format: 'dd MMM yyyy' }
+                x: {
+                    format: 'dd MMM yyyy'
+                }
             },
             grid: personalThemeOptions.grid,
-            legend: { show: false },
+            legend: {
+                show: false
+            },
             dataLabels: {
                 enabled: false
             },
@@ -568,18 +596,53 @@ $priority_projects = array_filter($my_active_projects, function($p) {
 
             // Rebuild from fresh theme options so no stale palette remains after theme changes.
             const freshTheme = getChartThemeOptions();
-            optionsSdlc.chart = { type: 'donut', height: 300, ...freshTheme.chart };
+            optionsSdlc.chart = {
+                type: 'donut',
+                height: 300,
+                ...freshTheme.chart
+            };
             optionsSdlc.theme = freshTheme.theme;
             optionsSdlc.tooltip = freshTheme.tooltip;
-            optionsSdlc.legend = { position: 'bottom', ...freshTheme.legend };
-            optionsSdlc.dataLabels = { enabled: true, ...freshTheme.teamDataLabels };
+            optionsSdlc.legend = {
+                position: 'bottom',
+                ...freshTheme.legend
+            };
+            optionsSdlc.dataLabels = {
+                enabled: true,
+                ...freshTheme.teamDataLabels
+            };
             optionsSdlc.plotOptions = freshTheme.plotOptions;
-            optionsTimeline.chart = { type: 'rangeBar', height: 300, toolbar: { show: false }, ...freshTheme.chart };
+            optionsTimeline.chart = {
+                type: 'rangeBar',
+                height: 300,
+                toolbar: {
+                    show: false
+                },
+                ...freshTheme.chart
+            };
             optionsTimeline.theme = freshTheme.theme;
-            optionsTimeline.tooltip = { ...freshTheme.tooltip, x: { format: 'dd MMM yyyy' } };
+            optionsTimeline.tooltip = {
+                ...freshTheme.tooltip,
+                x: {
+                    format: 'dd MMM yyyy'
+                }
+            };
             optionsTimeline.grid = freshTheme.grid;
-            optionsTimeline.xaxis = { type: 'datetime', ...freshTheme.xaxis };
-            optionsTimeline.yaxis = { ...freshTheme.yaxis, labels: { ...freshTheme.yaxis.labels, style: { colors: freshTheme.yaxis.labels.style.colors, fontSize: '11px', fontWeight: 600 } } };
+            optionsTimeline.xaxis = {
+                type: 'datetime',
+                ...freshTheme.xaxis
+            };
+            optionsTimeline.yaxis = {
+                ...freshTheme.yaxis,
+                labels: {
+                    ...freshTheme.yaxis.labels,
+                    style: {
+                        colors: freshTheme.yaxis.labels.style.colors,
+                        fontSize: '11px',
+                        fontWeight: 600
+                    }
+                }
+            };
             chartSdlc = new ApexCharts(document.querySelector('#chart-personal-sdlc'), optionsSdlc);
             await chartSdlc.render();
 
