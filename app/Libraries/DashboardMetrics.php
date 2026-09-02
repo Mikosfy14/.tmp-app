@@ -53,9 +53,15 @@ class DashboardMetrics
     {
         $stats = ['active_projects' => 0, 'on_time_done' => 0, 'late_done' => 0, 'total_completed' => 0, 'overdue' => 0, 'risk_urgent' => 0];
         $overview = [];
-        $monthly = [];
         $sdlc_distribution = [];
         $workload_timeline = [];
+        
+        // Initialize rolling 6-month window (from 5 months ago to current month)
+        $monthly = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = date('Y-m', strtotime("-{$i} months"));
+            $monthly[$m] = ['on_time' => 0, 'late' => 0];
+        }
         
         foreach ($projects as $project) {
             $completed = $this->isCompleted($project);
@@ -64,11 +70,18 @@ class DashboardMetrics
             
             if ($completed) {
                 $stats['total_completed']++;
-                if (!empty($project['promote_date']) && !empty($project['end_date']) && $project['promote_date'] <= $project['end_date']) $stats['on_time_done']++; else $stats['late_done']++;
+                if (!empty($project['promote_date']) && !empty($project['end_date']) && $project['promote_date'] <= $project['end_date']) {
+                    $stats['on_time_done']++;
+                } else {
+                    $stats['late_done']++;
+                }
+                
                 if (!empty($project['promote_date'])) {
                     $month = date('Y-m', strtotime($project['promote_date']));
                     $type = !empty($project['end_date']) && $project['promote_date'] <= $project['end_date'] ? 'on_time' : 'late';
-                    $monthly[$month][$type] = ($monthly[$month][$type] ?? 0) + 1;
+                    if (isset($monthly[$month])) {
+                        $monthly[$month][$type]++;
+                    }
                 }
             } else {
                 $stats['active_projects']++;
@@ -95,10 +108,16 @@ class DashboardMetrics
             $overview[] = $project;
         }
         
-        krsort($monthly);
         $labels = array_keys($monthly);
-        $chart = ['months' => array_map(static fn ($month) => date('M Y', strtotime($month . '-01')), array_reverse($labels)), 'on_time' => [], 'late' => []];
-        foreach (array_reverse($labels) as $month) { $chart['on_time'][] = $monthly[$month]['on_time'] ?? 0; $chart['late'][] = $monthly[$month]['late'] ?? 0; }
+        $chart = [
+            'months' => array_map(static fn ($month) => date('M Y', strtotime($month . '-01')), $labels),
+            'on_time' => [],
+            'late' => []
+        ];
+        foreach ($labels as $month) {
+            $chart['on_time'][] = $monthly[$month]['on_time'];
+            $chart['late'][] = $monthly[$month]['late'];
+        }
         
         return [
             'stats' => $stats, 
