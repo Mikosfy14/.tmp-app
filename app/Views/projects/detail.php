@@ -22,6 +22,54 @@ $isCompleted = is_project_completed($project);
 $deadline = get_deadline_status($project['end_date'] ?? null, $isCompleted);
 $deadlineLabel = $deadline['label'];
 $deadlineBadge = $deadline['badge_class'];
+
+// Calculate relative deadline or completion timing
+$timingText = null;
+$timingClass = 'text-muted';
+
+if ($isCompleted) {
+    if (!empty($project['promote_date']) && !empty($project['end_date'])) {
+        try {
+            $endDateObj = new DateTimeImmutable(date('Y-m-d', strtotime($project['end_date'])));
+            $promoteDateObj = new DateTimeImmutable(date('Y-m-d', strtotime($project['promote_date'])));
+            $delayDays = (int) $endDateObj->diff($promoteDateObj)->format('%r%a');
+            
+            if ($delayDays > 0) {
+                $timingText = "Telat {$delayDays} hari";
+                $timingClass = "text-danger fw-semibold";
+            } elseif ($delayDays === 0) {
+                $timingText = "Selesai Tepat Waktu";
+                $timingClass = "text-success fw-semibold";
+            } else {
+                $earlyDays = abs($delayDays);
+                $timingText = "Lebih cepat {$earlyDays} hari";
+                $timingClass = "text-success fw-semibold";
+            }
+        } catch (\Exception $e) {
+            $timingText = null;
+        }
+    }
+} else {
+    if (!empty($project['end_date'])) {
+        try {
+            $today = new DateTimeImmutable(date('Y-m-d'));
+            $targetDate = new DateTimeImmutable(date('Y-m-d', strtotime($project['end_date'])));
+            $diff = (int) $today->diff($targetDate)->format('%r%a');
+            if ($diff < 0) {
+                $timingText = abs($diff) . ' hari terlambat';
+                $timingClass = 'text-danger fw-semibold';
+            } elseif ($diff === 0) {
+                $timingText = 'Tenggat hari ini';
+                $timingClass = 'text-danger fw-bold';
+            } else {
+                $timingText = 'Sisa ' . $diff . ' hari';
+                $timingClass = !empty($deadline['class']) ? 'text-' . esc($deadline['class']) . ' fw-semibold' : 'text-muted';
+            }
+        } catch (\Exception $e) {
+            $timingText = null;
+        }
+    }
+}
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -59,26 +107,34 @@ $deadlineBadge = $deadline['badge_class'];
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Ringkasan Project</h5>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <small class="text-muted d-block">Status SDLC</small>
-                        <span class="badge <?= $statusBadge ?>"><?= esc($project['status'] ?? '-') ?></span>
-                    </div>
-                    <div class="col-md-4">
-                        <small class="text-muted d-block">Start Date</small>
-                        <strong><?= $dateValue($project['start_date'] ?? null) ?></strong>
-                    </div>
-                    <div class="col-md-4">
-                        <small class="text-muted d-block">End Date</small>
-                        <strong><?= $dateValue($project['end_date'] ?? null) ?></strong>
-                    </div>
-                    <div class="col-md-4">
-                        <small class="text-muted d-block">Deadline Status</small>
-                        <span class="badge <?= $deadlineBadge ?>"><?= esc($deadlineLabel) ?></span>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Status SDLC</small>
+                            <span class="badge <?= $statusBadge ?>"><?= esc($project['status'] ?? '-') ?></span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Start Date</small>
+                            <strong><?= $dateValue($project['start_date'] ?? null) ?></strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">End Date</small>
+                            <strong><?= $dateValue($project['end_date'] ?? null) ?></strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Deadline Status</small>
+                            <span class="badge <?= $deadlineBadge ?>"><?= esc($deadlineLabel) ?></span>
+                        </div>
+                        <?php if ($timingText !== null) : ?>
+                            <div class="col-md-8">
+                                <small class="text-muted d-block"><?= $isCompleted ? 'Keterangan Waktu Rilis' : 'Sisa Waktu Pengerjaan' ?></small>
+                                <span class="<?= $timingClass ?>" style="font-size: 0.9rem;">
+                                    <i class="bi <?= $isCompleted ? ($timingClass === 'text-danger fw-semibold' ? 'bi-exclamation-circle-fill text-danger' : 'bi-check-circle-fill text-success') : 'bi-clock-history' ?> me-1"></i><?= esc($timingText) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
-        </div>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-header">

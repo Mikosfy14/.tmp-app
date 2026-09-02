@@ -27,7 +27,7 @@ class Dashboard extends BaseController
             ->join('criticality_recovery', 'criticality_recovery.id = applications.criticality_recovery_id', 'left')
             ->where('applications.assigned_user_id', $userId)
             ->orderBy('applications.updated_at', 'DESC')
-            ->findAll(3);
+            ->findAll();
 
         $myProjectIds = array_column($metrics['projects'], 'id');
         $recentFiles = [];

@@ -406,9 +406,26 @@ foreach ($users as $user) {
                     <label for="uatDate" class="form-label">UAT</label>
                     <input type="date" id="uatDate" name="uat_date" class="form-control" value="<?= esc($value('uat_date', $project['uat_date'] ?? '')) ?>">
                 </div>
+                <?php
+                $isCurrentDeployment = false;
+                foreach ($statusOptions as $st) {
+                    if ((int) $st['id'] === $currentStatusId) {
+                        $sName = strtolower((string) ($st['status_name'] ?? ''));
+                        if (str_contains($sName, 'deployment') || str_contains($sName, 'complete') || str_contains($sName, 'selesai') || str_contains($sName, 'done')) {
+                            $isCurrentDeployment = true;
+                        }
+                        break;
+                    }
+                }
+                ?>
                 <div class="col-sm-6 col-lg-3">
-                    <label for="promoteDate" class="form-label">Promote</label>
-                    <input type="date" id="promoteDate" name="promote_date" class="form-control" value="<?= esc($value('promote_date', $project['promote_date'] ?? '')) ?>">
+                    <label for="promoteDate" class="form-label">
+                        Promote <span id="promoteRequiredAsterisk" class="text-danger <?= $isCurrentDeployment ? '' : 'd-none' ?>">*</span>
+                    </label>
+                    <input type="date" id="promoteDate" name="promote_date" class="form-control" value="<?= esc($value('promote_date', $project['promote_date'] ?? '')) ?>" <?= $isCurrentDeployment ? 'required' : '' ?>>
+                    <div id="promoteHelpText" class="form-text text-danger <?= $isCurrentDeployment ? '' : 'd-none' ?>" style="font-size: 0.72rem;">
+                        Wajib diisi saat status Deployment.
+                    </div>
                 </div>
             </div>
         </section>
@@ -593,21 +610,44 @@ foreach ($users as $user) {
     (() => {
         const startDate = document.getElementById('startDate');
         const endDate = document.getElementById('endDate');
+        const statusSelect = document.getElementById('projectStatus');
+        const promoteInput = document.getElementById('promoteDate');
+        const promoteAsterisk = document.getElementById('promoteRequiredAsterisk');
+        const promoteHelpText = document.getElementById('promoteHelpText');
 
-        if (!startDate || !endDate) {
-            return;
+        if (startDate && endDate) {
+            const syncEndDateLimit = () => {
+                endDate.min = startDate.value;
+
+                if (startDate.value && endDate.value && endDate.value < startDate.value) {
+                    endDate.value = startDate.value;
+                }
+            };
+
+            startDate.addEventListener('change', syncEndDateLimit);
+            syncEndDateLimit();
         }
 
-        const syncEndDateLimit = () => {
-            endDate.min = startDate.value;
+        const syncPromoteRequirement = () => {
+            if (!statusSelect || !promoteInput) return;
+            const selectedText = (statusSelect.options[statusSelect.selectedIndex]?.text || '').toLowerCase();
+            const isDep = selectedText.includes('deployment') || selectedText.includes('complete') || selectedText.includes('selesai') || selectedText.includes('done');
 
-            if (startDate.value && endDate.value && endDate.value < startDate.value) {
-                endDate.value = startDate.value;
+            if (isDep) {
+                promoteInput.setAttribute('required', 'required');
+                if (promoteAsterisk) promoteAsterisk.classList.remove('d-none');
+                if (promoteHelpText) promoteHelpText.classList.remove('d-none');
+            } else {
+                promoteInput.removeAttribute('required');
+                if (promoteAsterisk) promoteAsterisk.classList.add('d-none');
+                if (promoteHelpText) promoteHelpText.classList.add('d-none');
             }
         };
 
-        startDate.addEventListener('change', syncEndDateLimit);
-        syncEndDateLimit();
+        if (statusSelect) {
+            statusSelect.addEventListener('change', syncPromoteRequirement);
+            syncPromoteRequirement();
+        }
     })();
 </script>
 

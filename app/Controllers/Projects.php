@@ -93,6 +93,12 @@ class Projects extends BaseController
             return redirect()->to('/projects/create')->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        $startDate = (string) $this->request->getPost('start_date');
+        $promoteDate = (string) $this->request->getPost('promote_date');
+        if (!empty($startDate) && !empty($promoteDate) && $promoteDate < $startDate) {
+            return redirect()->to('/projects/create')->withInput()->with('errors', ['promote_date' => 'Tanggal Promote tidak boleh lebih awal dari Start Date.']);
+        }
+
         $fileErrors = $this->validateUploadedFiles();
         if (!empty($fileErrors)) {
             return redirect()->to('/projects/create')->withInput()->with('errors', $fileErrors);
@@ -116,6 +122,12 @@ class Projects extends BaseController
 
         if (!$this->validate($rules)) {
             return redirect()->to('/projects/edit/' . $id)->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $startDate = (string) $this->request->getPost('start_date');
+        $promoteDate = (string) $this->request->getPost('promote_date');
+        if (!empty($startDate) && !empty($promoteDate) && $promoteDate < $startDate) {
+            return redirect()->to('/projects/edit/' . $id)->withInput()->with('errors', ['promote_date' => 'Tanggal Promote tidak boleh lebih awal dari Start Date.']);
         }
 
         $fileErrors = $this->validateUploadedFiles();
@@ -277,16 +289,60 @@ class Projects extends BaseController
             ? "required|max_length[50]|is_unique[projects.project_code,id,{$ignoreId}]"
             : 'required|max_length[50]|is_unique[projects.project_code]';
 
+        $statusId = (int) $this->request->getPost('project_status_id');
+        $isDeployment = false;
+        if ($statusId > 0) {
+            $statusRow = $this->projectStatusModel->find($statusId);
+            $statusName = strtolower((string) ($statusRow['status_name'] ?? ''));
+            $isDeployment = str_contains($statusName, 'deployment') || str_contains($statusName, 'complete') || str_contains($statusName, 'selesai') || str_contains($statusName, 'done');
+        }
+
+        $promoteDateRule = $isDeployment ? 'required|valid_date' : 'permit_empty|valid_date';
+
         return [
-            'project_code' => $projectCodeRule,
-            'name' => 'required|max_length[250]',
-            'project_status_id' => 'required|is_natural_no_zero',
-            'start_date' => 'required|valid_date',
-            'end_date' => 'required|valid_date',
+            'project_code' => [
+                'rules' => $projectCodeRule,
+                'errors' => [
+                    'required' => 'Project Code wajib diisi.',
+                    'is_unique' => 'Project Code sudah digunakan.',
+                ],
+            ],
+            'name' => [
+                'rules' => 'required|max_length[250]',
+                'errors' => [
+                    'required' => 'Nama Project wajib diisi.',
+                ],
+            ],
+            'project_status_id' => [
+                'rules' => 'required|is_natural_no_zero',
+                'errors' => [
+                    'required' => 'Status SDLC wajib dipilih.',
+                ],
+            ],
+            'start_date' => [
+                'rules' => 'required|valid_date',
+                'errors' => [
+                    'required' => 'Start Date wajib diisi.',
+                    'valid_date' => 'Format Start Date tidak valid.',
+                ],
+            ],
+            'end_date' => [
+                'rules' => 'required|valid_date',
+                'errors' => [
+                    'required' => 'End Date wajib diisi.',
+                    'valid_date' => 'Format End Date tidak valid.',
+                ],
+            ],
             'unit_testing_date' => 'permit_empty|valid_date',
             'sit_date' => 'permit_empty|valid_date',
             'uat_date' => 'permit_empty|valid_date',
-            'promote_date' => 'permit_empty|valid_date',
+            'promote_date' => [
+                'rules' => $promoteDateRule,
+                'errors' => [
+                    'required' => 'Tanggal Promote wajib diisi ketika status project adalah Deployment.',
+                    'valid_date' => 'Format Tanggal Promote tidak valid.',
+                ],
+            ],
         ];
     }
 

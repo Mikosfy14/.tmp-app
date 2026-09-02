@@ -113,6 +113,23 @@ $deadlineNotifications = get_user_deadline_notifications();
                             </li>
                             <?php if (!empty($deadlineNotifications)): ?>
                                 <?php foreach ($deadlineNotifications as $notif): ?>
+                                    <?php
+                                    $daysLeft = $notif['days_left'] ?? null;
+                                    $notifRelativeText = null;
+                                    $notifRelativeClass = 'text-muted';
+                                    if ($daysLeft !== null) {
+                                        if ($daysLeft < 0) {
+                                            $notifRelativeText = abs($daysLeft) . ' hari terlambat';
+                                            $notifRelativeClass = 'text-danger fw-semibold';
+                                        } elseif ($daysLeft === 0) {
+                                            $notifRelativeText = 'Tenggat hari ini';
+                                            $notifRelativeClass = 'text-danger fw-bold';
+                                        } else {
+                                            $notifRelativeText = 'Sisa ' . $daysLeft . ' hari';
+                                            $notifRelativeClass = !empty($notif['deadline_class']) ? 'text-' . esc($notif['deadline_class']) . ' fw-semibold' : 'text-muted';
+                                        }
+                                    }
+                                    ?>
                                     <li>
                                         <a class="dropdown-item p-3 border-bottom text-wrap" href="<?= base_url('/projects/detail/' . $notif['id']) ?>">
                                             <div class="d-flex justify-content-between align-items-start mb-1">
@@ -123,6 +140,11 @@ $deadlineNotifications = get_user_deadline_notifications();
                                                 <span><i class="bi bi-tag me-1"></i><?= esc($notif['project_code']) ?></span>
                                                 <span><i class="bi bi-calendar-event me-1"></i><?= !empty($notif['end_date']) ? date('d M Y', strtotime($notif['end_date'])) : '-' ?></span>
                                             </div>
+                                            <?php if ($notifRelativeText !== null): ?>
+                                                <div class="mt-1 small <?= $notifRelativeClass ?>">
+                                                    <i class="bi bi-clock-history me-1"></i><?= esc($notifRelativeText) ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </a>
                                     </li>
                                 <?php endforeach; ?>

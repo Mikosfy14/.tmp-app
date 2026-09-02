@@ -301,7 +301,30 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                                     $prj['name'] ?? '',
                                     implode(' ', $assignedNames),
                                 ])));
-                                $deadline = get_deadline_status($prj['end_date'] ?? null, is_project_completed($prj));
+                                $isCompletedPrj = is_project_completed($prj);
+                                $deadline = get_deadline_status($prj['end_date'] ?? null, $isCompletedPrj);
+
+                                $relativeDeadlineText = null;
+                                $relativeDeadlineClass = 'text-muted';
+                                if (!$isCompletedPrj && !empty($prj['end_date'])) {
+                                    try {
+                                        $today = new DateTimeImmutable(date('Y-m-d'));
+                                        $targetDate = new DateTimeImmutable(date('Y-m-d', strtotime($prj['end_date'])));
+                                        $diff = (int) $today->diff($targetDate)->format('%r%a');
+                                        if ($diff < 0) {
+                                            $relativeDeadlineText = abs($diff) . ' hari terlambat';
+                                            $relativeDeadlineClass = 'text-danger fw-semibold';
+                                        } elseif ($diff === 0) {
+                                            $relativeDeadlineText = 'Tenggat hari ini';
+                                            $relativeDeadlineClass = 'text-danger fw-bold';
+                                        } else {
+                                            $relativeDeadlineText = 'Sisa ' . $diff . ' hari';
+                                            $relativeDeadlineClass = !empty($deadline['class']) ? 'text-' . esc($deadline['class']) . ' fw-semibold' : 'text-muted';
+                                        }
+                                    } catch (\Exception $e) {
+                                        $relativeDeadlineText = null;
+                                    }
+                                }
                                 ?>
                                 <tr class="project-row"
                                     data-search="<?= esc($searchText) ?>"
@@ -332,6 +355,9 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                                     <td>
                                         <small class="d-block text-muted">Start: <span class="fw-bold text-dark"><?= !empty($prj['start_date']) ? date('d M Y', strtotime($prj['start_date'])) : '-' ?></span></small>
                                         <small class="d-block text-muted">End: <span class="fw-bold text-dark"><?= !empty($prj['end_date']) ? date('d M Y', strtotime($prj['end_date'])) : '-' ?></span></small>
+                                        <?php if ($relativeDeadlineText !== null) : ?>
+                                            <small class="d-block <?= $relativeDeadlineClass ?>" style="font-size: 0.72rem;"><?= esc($relativeDeadlineText) ?></small>
+                                        <?php endif; ?>
                                         <small class="d-block text-muted">Promote: <span class="fw-bold text-dark"><?= !empty($prj['promote_date']) ? date('d M Y', strtotime($prj['promote_date'])) : '-' ?></span></small>
                                     </td>
                                     <td class="text-center project-actions">

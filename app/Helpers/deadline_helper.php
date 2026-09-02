@@ -10,7 +10,16 @@ if (!function_exists('get_deadline_status')) {
      */
     function get_deadline_status(?string $endDate, bool $completed = false): array
     {
-        if ($completed || empty($endDate)) {
+        if ($completed) {
+            return [
+                'label'       => 'Completed',
+                'class'       => 'success',
+                'badge_class' => 'bg-success',
+                'days_left'   => null,
+            ];
+        }
+
+        if (empty($endDate)) {
             return [
                 'label'       => 'On Track',
                 'class'       => 'success',
@@ -80,18 +89,28 @@ if (!function_exists('get_deadline_status')) {
 if (!function_exists('is_project_completed')) {
     /**
      * Memeriksa apakah suatu project berstatus selesai.
+     * Project dianggap sah selesai jika:
+     * 1. promote_date sudah terisi, ATAU
+     * 2. statusnya Complete/Selesai/Done.
+     * Status Deployment tanpa promote_date TIDAK dianggap selesai (mencegah bypass deadline alert).
      *
      * @param array $project Data row project
      * @return bool
      */
     function is_project_completed(array $project): bool
     {
+        $hasPromoteDate = !empty($project['promote_date']);
         $status = strtolower((string) ($project['status'] ?? ''));
-        return !empty($project['promote_date'])
-            || str_contains($status, 'deployment')
-            || str_contains($status, 'complete')
-            || str_contains($status, 'selesai')
-            || str_contains($status, 'done');
+
+        if ($hasPromoteDate) {
+            return true;
+        }
+
+        if (str_contains($status, 'complete') || str_contains($status, 'selesai') || str_contains($status, 'done')) {
+            return true;
+        }
+
+        return false;
     }
 }
 
