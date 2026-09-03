@@ -23,6 +23,8 @@ $routes->group('profile', ['filter' => 'auth'], function($routes) {
 
 $routes->group('aplikasi', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Application::index');
+    $routes->get('export/excel', 'Application::exportExcel');
+    $routes->get('export/pdf', 'Application::exportPdf');
     $routes->get('create', 'Application::create');
     $routes->post('store', 'Application::store');
     $routes->get('detail/(:num)', 'Application::detail/$1');
@@ -33,6 +35,8 @@ $routes->group('aplikasi', ['filter' => 'auth'], function($routes) {
 
 $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->get('/', 'Projects::index');
+    $routes->get('export/excel', 'Projects::exportExcel');
+    $routes->get('export/pdf', 'Projects::exportPdf');
     $routes->get('user/(:num)', 'Projects::user/$1');
     $routes->get('create', 'Projects::create');
     $routes->get('detail/(:segment)', 'Projects::detail/$1');

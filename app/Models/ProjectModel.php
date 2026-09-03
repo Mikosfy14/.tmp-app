@@ -31,6 +31,21 @@ class ProjectModel extends Model
     /** Ambil project beserta user penanggung jawab dari kolom assigned_to. */
     public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
     {
+        $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+        $projects = $builder->orderBy('projects.id', 'DESC')->paginate(5, 'projects');
+        return $this->attachAssignees($projects);
+    }
+
+    /** Ambil seluruh project beserta user penanggung jawab tanpa paginasi (untuk export). */
+    public function getAllProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
+    {
+        $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+        $projects = $builder->orderBy('projects.id', 'DESC')->findAll();
+        return $this->attachAssignees($projects);
+    }
+
+    private function buildProjectsQuery($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null)
+    {
         $builder = $this->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
             ->join('project_status', 'project_status.id = projects.project_status_id', 'left');
 
@@ -38,11 +53,11 @@ class ProjectModel extends Model
             $this->whereAssignedToContains($builder, $userId);
         }
 
-        if(!empty($statusFilter)) {
+        if (!empty($statusFilter)) {
             $builder->where('projects.project_status_id', (int) $statusFilter);
         }
 
-        if(!empty($keyword)) {
+        if (!empty($keyword)) {
             $escapedKeyword = $this->db->escape('%' . $this->db->escapeLikeString((string) $keyword) . '%');
             $builder->groupStart()
                     ->like('projects.name', $keyword)
@@ -53,8 +68,7 @@ class ProjectModel extends Model
 
         $this->applyDateRangeFilter($builder, $dateRange);
 
-        $projects = $this->orderBy('projects.id', 'DESC')->paginate(5, 'projects');
-        return $this->attachAssignees($projects);
+        return $builder;
     }
 
     /** Return all accessible projects for dashboard aggregation without pagination. */

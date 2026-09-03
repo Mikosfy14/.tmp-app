@@ -81,14 +81,14 @@ $deadlineAlerts = get_user_deadline_notifications();
                                         </div>
                                     </div>
                                     <a href="<?= base_url('/projects/detail/' . $alertItem['id']) ?>" class="btn btn-sm btn-outline-primary text-nowrap align-self-start align-self-md-center">
-                                        <i class="bi bi-eye-fill me-1"></i> Buka Project
+                                        <i class="bi bi-eye-fill me-1"></i> Buka project
                                     </a>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
                     <div class="modal-footer bg-light d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Saya Mengerti</button>
+                        <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Saya mengerti</button>
                     </div>
                 </div>
             </div>
@@ -160,26 +160,29 @@ $deadlineAlerts = get_user_deadline_notifications();
     $managedAppsCount = count($my_managed_apps ?? []);
     if ($managedAppsCount === 0) {
         $appCriticalityText = "-";
-    } elseif ($managedAppsCount === 1) {
-        $critName = trim((string) ($my_managed_apps[0]['criticality_name'] ?? ''));
-        $appCriticalityText = $critName !== '' ? "Criticality: {$critName}" : "Tingkat Standar";
     } else {
-        $critGroups = [];
+        $romanMap = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V'];
+        $critCounts = [];
         foreach ($my_managed_apps as $app) {
-            $cName = trim((string) ($app['criticality_name'] ?? ''));
-            if ($cName !== '') {
-                $critGroups[$cName] = ($critGroups[$cName] ?? 0) + 1;
+            $rawName = trim((string) ($app['criticality_name'] ?? ''));
+            if (preg_match('/(\d+)/', $rawName, $m)) {
+                $num = (int) $m[1];
+            } else {
+                $num = 99;
             }
+            $roman = $romanMap[$num] ?? (string) $num;
+            $label = "C-{$roman}";
+            $critCounts[$num] = [
+                'count' => ($critCounts[$num]['count'] ?? 0) + 1,
+                'label' => $label,
+            ];
         }
-        if (!empty($critGroups)) {
-            $formattedGroups = [];
-            foreach ($critGroups as $cName => $cCount) {
-                $formattedGroups[] = "{$cCount} {$cName}";
-            }
-            $appCriticalityText = implode(' · ', $formattedGroups);
-        } else {
-            $appCriticalityText = "{$managedAppsCount} Aplikasi Aktif";
+        ksort($critCounts);
+        $formattedGroups = [];
+        foreach ($critCounts as $item) {
+            $formattedGroups[] = "{$item['count']} {$item['label']}";
         }
+        $appCriticalityText = !empty($formattedGroups) ? implode(' · ', $formattedGroups) : "{$managedAppsCount} Aplikasi Aktif";
     }
 
     // 3. Completion Rates Summary (Tepat Waktu vs Terlambat)

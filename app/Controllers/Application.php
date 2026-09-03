@@ -172,4 +172,168 @@ class Application extends BaseController
 
         return $payload;
     }
+
+    public function exportExcel()
+    {
+        $keyword = trim((string) $this->request->getGet('keyword'));
+        $criticality = $this->request->getGet('criticality_recovery_id');
+        $criticality = is_numeric($criticality) ? (int) $criticality : null;
+
+        $applications = $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Aplikasi');
+
+        // Header Title
+        $sheet->setCellValue('A1', 'MASTER DATA APLIKASI PENGELOLAAN');
+        $sheet->mergeCells('A1:T1');
+        $sheet->getStyle('A1')->getFont()->setSize(14)->setBold(true)->getColor()->setRGB('1E1E2D');
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Metadata
+        $critObj = !empty($criticality) ? $this->criticalityRecoveryModel->find($criticality) : null;
+        $critText = $critObj['criticality_name'] ?? 'Semua Tingkat Criticality';
+
+        $sheet->setCellValue('A2', 'Criticality: ' . $critText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'));
+        $sheet->mergeCells('A2:T2');
+        $sheet->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->getColor()->setRGB('6C757D');
+
+        $sheet->setCellValue('A3', 'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($applications) . ' Aplikasi');
+        $sheet->mergeCells('A3:T3');
+        $sheet->getStyle('A3')->getFont()->setSize(9)->getColor()->setRGB('6C757D');
+
+        // Column Headers
+        $headers = [
+            'A5' => 'No',
+            'B5' => 'Nama Aplikasi',
+            'C5' => 'Criticality Recovery',
+            'D5' => 'Tipe Aplikasi',
+            'E5' => 'Arsitektur',
+            'F5' => 'Platform',
+            'G5' => 'Tipe Akses',
+            'H5' => 'Autentikasi Login',
+            'I5' => 'Tipe Pengembangan',
+            'J5' => 'Tipe Deployment',
+            'K5' => 'Skema Lisensi',
+            'L5' => 'Vendor',
+            'M5' => 'Business Owner',
+            'N5' => 'System Owner',
+            'O5' => 'Assigned PIC',
+            'P5' => 'Source Code',
+            'Q5' => 'URL Production',
+            'R5' => 'URL Development',
+            'S5' => 'URL UAT',
+            'T5' => 'Deskripsi',
+        ];
+
+        foreach ($headers as $cell => $text) {
+            $sheet->setCellValue($cell, $text);
+        }
+
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '435EBE'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
+        $sheet->getStyle('A5:T5')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(5)->setRowHeight(26);
+
+        // Data Rows
+        $row = 6;
+        $no = 1;
+        foreach ($applications as $app) {
+            $sheet->setCellValue('A' . $row, $no++);
+            $sheet->setCellValue('B' . $row, $app['app_component'] ?? '-');
+            $sheet->setCellValue('C' . $row, $app['criticality_recovery'] ?? '-');
+            $sheet->setCellValue('D' . $row, $app['app_type'] ?? '-');
+            $sheet->setCellValue('E' . $row, $app['arch_type'] ?? '-');
+            $sheet->setCellValue('F' . $row, $app['platform'] ?? '-');
+            $sheet->setCellValue('G' . $row, $app['access_type'] ?? '-');
+            $sheet->setCellValue('H' . $row, $app['login_auth'] ?? '-');
+            $sheet->setCellValue('I' . $row, $app['development_type'] ?? '-');
+            $sheet->setCellValue('J' . $row, $app['deployment_type'] ?? '-');
+            $sheet->setCellValue('K' . $row, $app['license_scheme'] ?? '-');
+            $sheet->setCellValue('L' . $row, $app['vendor'] ?? '-');
+            $sheet->setCellValue('M' . $row, $app['business_owner'] ?? '-');
+            $sheet->setCellValue('N' . $row, $app['system_owner'] ?? '-');
+            $sheet->setCellValue('O' . $row, $app['assigned_user_name'] ?? '-');
+            $sheet->setCellValue('P' . $row, ((int) ($app['has_source_code'] ?? 0) === 1) ? 'Ada' : 'Tidak');
+            $sheet->setCellValue('Q' . $row, $app['url_prod'] ?? '-');
+            $sheet->setCellValue('R' . $row, $app['url_dev'] ?? '-');
+            $sheet->setCellValue('S' . $row, $app['url_uat'] ?? '-');
+            $sheet->setCellValue('T' . $row, $app['description'] ?? '-');
+
+            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C' . $row . ':K' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('P' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            $row++;
+        }
+
+        $lastRow = max(6, $row - 1);
+
+        $borderStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => 'DDE2E5'],
+                ],
+            ],
+        ];
+        $sheet->getStyle('A5:T' . $lastRow)->applyFromArray($borderStyle);
+
+        foreach (range('A', 'T') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'Laporan_Master_Aplikasi_Pengelolaan_' . date('Ymd_His') . '.xlsx';
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportPdf()
+    {
+        $keyword = trim((string) $this->request->getGet('keyword'));
+        $criticality = $this->request->getGet('criticality_recovery_id');
+        $criticality = is_numeric($criticality) ? (int) $criticality : null;
+
+        $applications = $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null);
+
+        $critObj = !empty($criticality) ? $this->criticalityRecoveryModel->find($criticality) : null;
+        $critText = $critObj['criticality_name'] ?? 'Semua Tingkat Criticality';
+
+        $html = view('application/export_pdf', [
+            'reportTitle' => 'Laporan Master Aplikasi Pengelolaan',
+            'applications' => $applications,
+            'filterCriticalityLabel' => $critText,
+            'keyword' => $keyword,
+        ]);
+
+        $options = new \Dompdf\Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        $filename = 'Laporan_Master_Aplikasi_Pengelolaan_' . date('Ymd_His') . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
 }
