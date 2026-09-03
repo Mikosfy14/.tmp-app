@@ -198,22 +198,45 @@ foreach ($users as $user) {
         padding-inline: 1.25rem;
     }
 
+    #assignedToChoices {
+        position: relative;
+        z-index: 40;
+    }
+
     #assignedToChoices .choices {
         margin-bottom: 0;
     }
 
     #assignedToChoices .choices__inner {
-        min-height: 46px;
-        padding: 6px 8px 2px;
-        background-color: #fff;
-        border-color: #dfe3eb;
-        border-radius: 6px;
+        min-height: 44px;
+        padding: .45rem .75rem;
+        border-color: var(--bs-border-color);
+        border-radius: .35rem;
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
     }
 
-    #assignedToChoices .choices__input {
-        min-width: 180px;
-        margin-bottom: 4px;
-        background-color: transparent;
+    #assignedToChoices .choices.is-focused .choices__inner,
+    #assignedToChoices .choices.is-open .choices__inner {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+    }
+
+    #assignedToChoices .choices__input,
+    #assignedToChoices .choices__list--dropdown {
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+
+    #assignedToChoices .choices__list--dropdown {
+        z-index: 50;
+        border-color: var(--bs-border-color);
+        max-height: 260px;
+        overflow-y: auto;
+    }
+
+    #assignedToChoices .choices__item--choice.is-highlighted {
+        background: var(--bs-tertiary-bg);
     }
 
     #selectedProjectFiles,
@@ -229,52 +252,72 @@ foreach ($users as $user) {
     }
 
     #assignedToChoices .choices__list--multiple .choices__item {
-        background-color: #435ebe;
-        border-color: #364da3;
-        color: #fff;
+        background-color: #e9ecef;
+        border-color: #ced4da;
+        color: #212529;
+        border-radius: .3rem;
+        font-weight: 500;
     }
 
     #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"] {
-        background-color: #4fbe87;
-        border-color: #3d996d;
+        background-color: #343a40;
+        border-color: #212529;
+        color: #ffffff;
         font-weight: 700;
     }
 
     #assignedToChoices .choices__list--multiple .choices__item.is-highlighted,
     #assignedToChoices .choices__list--multiple .choices__item:hover {
-        background-color: #364da3;
-        border-color: #2f428e;
+        background-color: #dee2e6;
+        border-color: #adb5bd;
+        color: #212529;
     }
 
     #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"]:hover,
     #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"].is-highlighted {
-        background-color: #3d996d;
-        border-color: #307a57;
+        background-color: #212529;
+        border-color: #1a1e21;
+        color: #ffffff;
     }
 
     #assignedToChoices .choices__list--multiple .choices__button {
-        border-left-color: rgba(255, 255, 255, .45);
+        border-left-color: #ced4da;
+        filter: invert(1) grayscale(100%) brightness(20%);
     }
 
     #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"] .choices__button {
         display: none;
     }
 
-    [data-bs-theme="dark"] #assignedToChoices .choices__inner {
-        background-color: #151521;
-        border-color: #2b2b40;
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__item {
+        background-color: #2b2b40;
+        border-color: #3f3f5a;
         color: #f5f7ff;
     }
 
-    [data-bs-theme="dark"] #assignedToChoices .choices__input,
-    [data-bs-theme="dark"] #assignedToChoices .choices__list--dropdown {
-        background-color: #151521;
-        border-color: #2b2b40;
-        color: #f5f7ff;
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"] {
+        background-color: #495057;
+        border-color: #6c757d;
+        color: #ffffff;
     }
 
-    [data-bs-theme="dark"] #assignedToChoices .choices__item--choice.is-highlighted {
-        background-color: #252539;
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__item.is-highlighted,
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__item:hover {
+        background-color: #383852;
+        border-color: #525275;
+        color: #ffffff;
+    }
+
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"]:hover,
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__item[data-value="<?= (int) $responsibleAssignedId ?>"].is-highlighted {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #ffffff;
+    }
+
+    [data-bs-theme="dark"] #assignedToChoices .choices__list--multiple .choices__button {
+        border-left-color: #3f3f5a;
+        filter: none;
     }
 
     [data-bs-theme="dark"] .project-form-card,
@@ -352,11 +395,10 @@ foreach ($users as $user) {
                 <div class="col-md-8">
                     <label for="assignedTo" class="form-label">Assigned To / PIC</label>
                     <div id="assignedToChoices" data-primary-id="<?= (int) $responsibleAssignedId ?>">
-                        <select id="assignedTo" name="assigned_to[]" class="form-select" multiple>
+                        <select id="assignedTo" name="assigned_to[]" class="form-select" multiple data-placeholder="Cari dan pilih PIC">
                             <?php foreach ($users as $user) : ?>
-                                <?php $isPrimary = (int) $user['id'] === $responsibleAssignedId; ?>
-                                <option value="<?= esc($user['id']) ?>" <?= $isSelected((int) $user['id']) ? 'selected' : '' ?>>
-                                    <?= esc($user['name']) ?><?= !empty($user['job_title']) ? ' - ' . esc($user['job_title']) : '' ?><?= (int) ($user['is_active'] ?? 0) === 0 ? ' (Nonaktif)' : '' ?><?= $isPrimary ? ' (Penanggung Jawab)' : '' ?>
+                                <option value="<?= (int) $user['id'] ?>" <?= $isSelected((int) $user['id']) ? 'selected' : '' ?>>
+                                    <?= esc((string) ($user['name'] ?? '')) ?><?= !empty($user['job_title']) ? ' - ' . esc((string) $user['job_title']) : '' ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -664,13 +706,16 @@ foreach ($users as $user) {
             removeItemButton: true,
             searchEnabled: true,
             searchChoices: true,
+            searchFields: ['label'],
+            searchFloor: 1,
+            searchResultLimit: 100,
             shouldSort: false,
             itemSelectText: 'Pilih',
             noResultsText: 'PIC tidak ditemukan',
             noChoicesText: 'Tidak ada PIC tersedia',
-            searchPlaceholderValue: 'Ketik nama PIC untuk mencari...',
+            searchPlaceholderValue: 'Ketik nama atau jabatan PIC...',
             placeholder: true,
-            placeholderValue: 'Pilih satu atau beberapa PIC',
+            placeholderValue: 'Cari dan pilih PIC...',
         });
 
         const primaryId = document.getElementById('assignedToChoices').dataset.primaryId;
