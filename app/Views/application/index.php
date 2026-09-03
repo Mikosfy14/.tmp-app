@@ -62,11 +62,48 @@ $criticalityClass = static fn(?string $name) => match ($name) {
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="page-heading d-flex flex-wrap justify-content-between align-items-center mb-3">
+<div class="page-heading d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
         <h3 class="mb-1">Aplikasi Pengelolaan</h3>
         <p class="text-muted mb-0">Katalog aplikasi dan service yang dikelola tim.</p>
-    </div><a href="<?= base_url('/aplikasi/create') ?>" class="btn btn-primary"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Tambah Aplikasi</a>
+    </div>
+    <?php
+    $exportParams = [];
+    if (!empty($selectedCriticality)) $exportParams['criticality_recovery_id'] = $selectedCriticality;
+    if (!empty($keyword)) $exportParams['keyword'] = $keyword;
+    $exportQueryString = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
+    ?>
+    <div class="d-flex align-items-center gap-2">
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary text-body d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-file-export text-body"></i>
+                <span>Ekspor Data</span>
+                <i class="fas fa-chevron-down text-body" style="font-size: 0.7rem; line-height: 1;"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= base_url('/aplikasi/export/excel' . $exportQueryString) ?>">
+                        <i class="fas fa-file-excel text-success fs-5"></i>
+                        <div>
+                            <strong class="d-block text-dark">Download Excel (.xlsx)</strong>
+                        </div>
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= base_url('/aplikasi/export/pdf' . $exportQueryString) ?>" target="_blank">
+                        <i class="fas fa-file-pdf text-danger fs-5"></i>
+                        <div>
+                            <strong class="d-block text-dark">Download PDF (.pdf)</strong>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <a href="<?= base_url('/aplikasi/create') ?>" class="btn btn-primary d-flex align-items-center gap-1">
+            <i class="fas fa-plus-square me-1"></i> Tambah Aplikasi
+        </a>
+    </div>
 </div>
 <?php foreach (['success' => 'success', 'error' => 'danger'] as $key => $class): ?><?php if ($message = session()->getFlashdata($key)): ?><div class="alert alert-<?= $class ?> alert-dismissible fade show"><?= esc(is_scalar($message) ? (string) $message : '') ?><button class="btn-close" data-bs-dismiss="alert"></button></div><?php endif ?><?php endforeach ?>
 <div class="card shadow-sm mb-4">

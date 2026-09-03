@@ -491,6 +491,197 @@ class Projects extends BaseController
         return strtolower((string) session()->get('role_name')) === 'kepala departemen';
     }
 
+    public function exportExcel()
+    {
+        $statusFilter = $this->request->getGet('status');
+        $keyword = $this->request->getGet('keyword');
+        $selectedStartDate = trim((string) $this->request->getGet('filter_start'));
+        $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
+        $targetUserId = $this->request->getGet('user_id');
+        $targetUserId = is_numeric($targetUserId) ? (int) $targetUserId : null;
+
+        $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
+        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
+        $userId = $targetUserId ?? (int) session()->get('user_id');
+
+        $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+
+        helper('deadline');
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Project');
+
+        // Header Title
+        $sheet->setCellValue('A1', 'LAPORAN PORTOFOLIO PROJECT TRACKER');
+        $sheet->mergeCells('A1:M1');
+        $sheet->getStyle('A1')->getFont()->setSize(14)->setBold(true)->getColor()->setRGB('1E1E2D');
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Metadata
+        $statusObj = !empty($statusFilter) ? $this->projectStatusModel->find((int) $statusFilter) : null;
+        $statusText = $statusObj['status_name'] ?? 'Semua Status';
+        $periodText = (!empty($dateRange['start_date']) && !empty($dateRange['end_date']))
+            ? date('d/m/Y', strtotime($dateRange['start_date'])) . ' s/d ' . date('d/m/Y', strtotime($dateRange['end_date']))
+            : 'Semua Periode';
+
+        $sheet->setCellValue('A2', 'Status SDLC: ' . $statusText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'));
+        $sheet->mergeCells('A2:M2');
+        $sheet->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->getColor()->setRGB('6C757D');
+
+        $sheet->setCellValue('A3', 'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project');
+        $sheet->mergeCells('A3:M3');
+        $sheet->getStyle('A3')->getFont()->setSize(9)->getColor()->setRGB('6C757D');
+
+        // Column Headers
+        $headers = [
+            'A5' => 'No',
+            'B5' => 'Kode Project',
+            'C5' => 'Nama Project',
+            'D5' => 'Status SDLC',
+            'E5' => 'Deadline Status',
+            'F5' => 'Assigned PIC',
+            'G5' => 'Start Date',
+            'H5' => 'End Date',
+            'I5' => 'Unit Testing',
+            'J5' => 'SIT',
+            'K5' => 'UAT',
+            'L5' => 'Promote Date',
+            'M5' => 'Notes',
+        ];
+
+        foreach ($headers as $cell => $text) {
+            $sheet->setCellValue($cell, $text);
+        }
+
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '435EBE'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
+        $sheet->getStyle('A5:M5')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(5)->setRowHeight(26);
+
+        // Data Rows
+        $row = 6;
+        $no = 1;
+        foreach ($projects as $prj) {
+            $isCompleted = is_project_completed($prj);
+            $deadline = get_deadline_status($prj['end_date'] ?? null, $isCompleted);
+
+            $assignedNames = [];
+            if (!empty($prj['assigned_users'])) {
+                foreach ($prj['assigned_users'] as $u) {
+                    $assignedNames[] = $u['name'] ?? '';
+                }
+            }
+
+            $sheet->setCellValue('A' . $row, $no++);
+            $sheet->setCellValue('B' . $row, $prj['project_code'] ?? '-');
+            $sheet->setCellValue('C' . $row, $prj['name'] ?? '-');
+            $sheet->setCellValue('D' . $row, $prj['status'] ?? '-');
+            $sheet->setCellValue('E' . $row, $deadline['label'] ?? '-');
+            $sheet->setCellValue('F' . $row, !empty($assignedNames) ? implode(', ', $assignedNames) : '-');
+            $sheet->setCellValue('G' . $row, !empty($prj['start_date']) ? date('d/m/Y', strtotime($prj['start_date'])) : '-');
+            $sheet->setCellValue('H' . $row, !empty($prj['end_date']) ? date('d/m/Y', strtotime($prj['end_date'])) : '-');
+            $sheet->setCellValue('I' . $row, !empty($prj['unit_testing_date']) ? date('d/m/Y', strtotime($prj['unit_testing_date'])) : '-');
+            $sheet->setCellValue('J' . $row, !empty($prj['sit_date']) ? date('d/m/Y', strtotime($prj['sit_date'])) : '-');
+            $sheet->setCellValue('K' . $row, !empty($prj['uat_date']) ? date('d/m/Y', strtotime($prj['uat_date'])) : '-');
+            $sheet->setCellValue('L' . $row, !empty($prj['promote_date']) ? date('d/m/Y', strtotime($prj['promote_date'])) : '-');
+            $sheet->setCellValue('M' . $row, $prj['notes'] ?? '-');
+
+            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('B' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('G' . $row . ':L' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            $row++;
+        }
+
+        $lastRow = max(6, $row - 1);
+
+        $borderStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => 'DDE2E5'],
+                ],
+            ],
+        ];
+        $sheet->getStyle('A5:M' . $lastRow)->applyFromArray($borderStyle);
+
+        foreach (range('A', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.xlsx';
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportPdf()
+    {
+        $statusFilter = $this->request->getGet('status');
+        $keyword = $this->request->getGet('keyword');
+        $selectedStartDate = trim((string) $this->request->getGet('filter_start'));
+        $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
+        $targetUserId = $this->request->getGet('user_id');
+        $targetUserId = is_numeric($targetUserId) ? (int) $targetUserId : null;
+
+        $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
+        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
+        $userId = $targetUserId ?? (int) session()->get('user_id');
+
+        $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+
+        helper('deadline');
+
+        $statusObj = !empty($statusFilter) ? $this->projectStatusModel->find((int) $statusFilter) : null;
+        $statusText = $statusObj['status_name'] ?? 'Semua Status';
+        $periodText = (!empty($dateRange['start_date']) && !empty($dateRange['end_date']))
+            ? date('d/m/Y', strtotime($dateRange['start_date'])) . ' s/d ' . date('d/m/Y', strtotime($dateRange['end_date']))
+            : 'Semua Periode';
+
+        $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
+        $scopeText = $targetUser ? 'Proyek User: ' . ($targetUser['name'] ?? '') : ($includeAll ? 'Seluruh Proyek Departemen' : 'Proyek Ditugaskan');
+
+        $html = view('projects/export_pdf', [
+            'reportTitle' => 'Laporan Project Tracker',
+            'projects' => $projects,
+            'filterStatusLabel' => $statusText,
+            'filterPeriodLabel' => $periodText,
+            'userScopeLabel' => $scopeText,
+            'keyword' => $keyword,
+        ]);
+
+        $options = new \Dompdf\Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+
     private function canAccessProject(int $projectId): bool
     {
         return $this->projectModel->getProjectDetail($projectId, (int) session()->get('user_id'), $this->isKepalaDepartemen()) !== null;

@@ -59,7 +59,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
             gap: .85rem;
         }
 
-        .project-page-heading > a {
+        .project-page-heading>a {
             align-self: flex-start;
         }
     }
@@ -190,7 +190,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
     }
 </style>
 
-<div class="page-heading project-page-heading d-flex justify-content-between align-items-center mb-3">
+<div class="page-heading project-page-heading d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
     <div>
         <h3>Project Tracker</h3>
         <p class="text-subtitle text-muted mb-0">
@@ -203,9 +203,48 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
             <?php endif; ?>
         </p>
     </div>
-    <a href="<?= base_url('/projects/create') ?>" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i> Tambah Project
-    </a>
+    <?php
+    $exportParams = [];
+    if (!empty($selectedStatus)) $exportParams['status'] = $selectedStatus;
+    if (!empty($keyword)) $exportParams['keyword'] = $keyword;
+    if (!empty($selectedStartDate)) $exportParams['filter_start'] = $selectedStartDate;
+    if (!empty($selectedEndDate)) $exportParams['filter_end'] = $selectedEndDate;
+    if (!empty($isFilteredUser) && !empty($targetUser)) $exportParams['user_id'] = $targetUser['id'];
+    $exportQueryString = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
+    ?>
+    <div class="d-flex align-items-center gap-2">
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary text-body d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-file-export text-body"></i>
+                <span>Ekspor Data</span>
+                <i class="fas fa-chevron-down text-body" style="font-size: 0.7rem; transform: translateY(1px);"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= base_url('/projects/export/excel' . $exportQueryString) ?>">
+                        <i class="fas fa-file-excel text-success fs-5"></i>
+                        <div>
+                            <strong class="d-block text-dark">Download Excel (.xlsx)</strong>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <hr class="dropdown-divider my-1">
+                </li>
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= base_url('/projects/export/pdf' . $exportQueryString) ?>" target="_blank">
+                        <i class="fas fa-file-pdf text-danger fs-5"></i>
+                        <div>
+                            <strong class="d-block text-dark">Download PDF (.pdf)</strong>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <a href="<?= base_url('/projects/create') ?>" class="btn btn-primary d-flex align-items-center gap-1">
+            <i class="fas fa-plus-square me-1"></i> Tambah Project
+        </a>
+    </div>
 </div>
 
 <?php if (session()->getFlashdata('success')) : ?>

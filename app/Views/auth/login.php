@@ -47,7 +47,6 @@
         <div class="card card-login mx-auto p-4 p-md-5">
             <div class="text-center mb-4">
                 <h4 class="fw-bold text-dark mb-1">.tmp Project Management</h4>
-                <p class="text-muted small">Login untuk mengakses dashboard project anda</p>
             </div>
 
             <?php if (session()->getFlashdata('error')) : ?>
@@ -99,7 +98,7 @@
                     </div>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
-                        <input type="password" name="password" id="password" class="form-control bg-light border-start-0 border-end-0" placeholder="••••••••" required>
+                        <input type="password" name="password" id="password" class="form-control bg-light border-start-0 border-end-0" placeholder="Masukkan password" required>
                         <button class="btn btn-outline-secondary bg-light border-start-0 text-muted" type="button" id="togglePassword">
                             <i class="fa-solid fa-eye" id="eyeIcon"></i>
                         </button>
