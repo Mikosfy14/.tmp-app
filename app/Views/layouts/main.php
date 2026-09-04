@@ -17,7 +17,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Favicon / Title Bar Icon -->
-    <link rel="shortcut icon" href="<?= base_url('assets/images/logo/tmp_logo.jpg') ?>" type="image/jpeg">
+    <link rel="shortcut icon" href="<?= base_url('assets/images/logo/tmp_logo.png') ?>" type="image/png">
+    <link rel="icon" href="<?= base_url('assets/images/logo/tmp_logo.png') ?>" type="image/png">
     <title><?= esc($title ?? 'Dashboard') ?> - .tmp Project Manager</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,6 +59,13 @@
             align-items: center !important;
             justify-content: center !important;
             margin-right: 0.75rem !important;
+        }
+
+        .sidebar-wrapper .sidebar-header .logo img {
+            height: 62px !important;
+            width: auto !important;
+            max-width: 400px !important;
+            object-fit: contain !important;
         }
 
         #sidebar {
