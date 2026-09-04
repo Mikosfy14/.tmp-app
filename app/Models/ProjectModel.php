@@ -124,8 +124,46 @@ class ProjectModel extends Model
 
     private function attachAssignees(array $projects): array
     {
-        foreach ($projects as &$project) {
-            $project['assigned_users'] = $this->getUsersFromAssignedTo($project['assigned_to'] ?? '');
+        if (empty($projects)) {
+            return [];
+        }
+
+        $allUserIds = [];
+        $projectUserMap = [];
+        foreach ($projects as $index => $project) {
+            $userIds = $this->parseAssignedTo($project['assigned_to'] ?? '');
+            $projectUserMap[$index] = $userIds;
+            foreach ($userIds as $uid) {
+                $allUserIds[$uid] = true;
+            }
+        }
+
+        if (empty($allUserIds)) {
+            foreach ($projects as &$project) {
+                $project['assigned_users'] = [];
+            }
+            return $projects;
+        }
+
+        $users = $this->db->table('users')
+            ->select('id as user_id, name, email, job_title')
+            ->whereIn('id', array_keys($allUserIds))
+            ->get()
+            ->getResultArray();
+
+        $usersById = [];
+        foreach ($users as $user) {
+            $usersById[(int) $user['user_id']] = $user;
+        }
+
+        foreach ($projects as $index => &$project) {
+            $assigned = [];
+            foreach ($projectUserMap[$index] as $uid) {
+                if (isset($usersById[$uid])) {
+                    $assigned[] = $usersById[$uid];
+                }
+            }
+            $project['assigned_users'] = $assigned;
         }
 
         return $projects;

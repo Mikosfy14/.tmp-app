@@ -33,19 +33,78 @@ class DashboardMetrics
     public function team(?array $dateRange = null): array
     {
         $projects = $this->projectModel->getDashboardProjects(null, true, $dateRange);
-        $metrics = $this->buildMetrics($projects);
         $users = $this->userModel->getActiveTeamMembers();
+
+        $userStats = [];
+        foreach ($users as $user) {
+            $uid = (int) $user['id'];
+            $userStats[$uid] = [
+                'active_tasks' => 0,
+                'completed'    => 0,
+                'late'         => 0,
+                'overdue'      => 0,
+                'total'        => 0,
+            ];
+        }
+
+        foreach ($projects as $project) {
+            $completed = $this->isCompleted($project);
+            $deadline = $this->deadline($project['end_date'] ?? null, $completed);
+
+            $isLate = false;
+            $isOverdue = false;
+            if ($completed) {
+                if (empty($project['promote_date']) || (!empty($project['end_date']) && $project['promote_date'] > $project['end_date'])) {
+                    $isLate = true;
+                }
+            } else {
+                if ($deadline['class'] === 'danger' && $deadline['label'] === 'Overdue') {
+                    $isOverdue = true;
+                }
+            }
+
+            $assignedIds = array_filter(array_map('intval', explode(',', (string) ($project['assigned_to'] ?? ''))));
+            foreach ($assignedIds as $uid) {
+                if (!isset($userStats[$uid])) {
+                    continue;
+                }
+                $userStats[$uid]['total']++;
+                if ($completed) {
+                    $userStats[$uid]['completed']++;
+                    if ($isLate) {
+                        $userStats[$uid]['late']++;
+                    }
+                } else {
+                    $userStats[$uid]['active_tasks']++;
+                    if ($isOverdue) {
+                        $userStats[$uid]['overdue']++;
+                    }
+                }
+            }
+        }
+
         $members = [];
         foreach ($users as $user) {
-            $memberProjects = array_values(array_filter($projects, static function (array $project) use ($user): bool {
-                return in_array((int) $user['id'], array_map('intval', explode(',', (string) ($project['assigned_to'] ?? ''))), true);
-            }));
-            $memberMetrics = $this->buildMetrics($memberProjects);
-            $memberTotal = count($memberProjects);
-            $memberCompleted = $memberMetrics['stats']['total_completed'];
-            $members[] = ['id' => (int) $user['id'], 'name' => $user['name'], 'role' => $user['role_name'] ?? '-', 'job' => $user['job_title'] ?? '-', 'active_tasks' => $memberMetrics['stats']['active_projects'], 'completed' => $memberCompleted, 'late' => $memberMetrics['stats']['late_done'], 'overdue' => $memberMetrics['stats']['overdue'], 'completion_rate' => $memberTotal > 0 ? round(($memberCompleted / $memberTotal) * 100, 1) : 0];
+            $uid = (int) $user['id'];
+            $st = $userStats[$uid] ?? ['active_tasks' => 0, 'completed' => 0, 'late' => 0, 'overdue' => 0, 'total' => 0];
+            $memberTotal = $st['total'];
+            $memberCompleted = $st['completed'];
+            $members[] = [
+                'id'              => $uid,
+                'name'            => $user['name'],
+                'role'            => $user['role_name'] ?? '-',
+                'job'             => $user['job_title'] ?? '-',
+                'active_tasks'    => $st['active_tasks'],
+                'completed'       => $memberCompleted,
+                'late'            => $st['late'],
+                'overdue'         => $st['overdue'],
+                'completion_rate' => $memberTotal > 0 ? round(($memberCompleted / $memberTotal) * 100, 1) : 0,
+            ];
         }
+
+        $metrics = $this->buildMetrics($projects);
         $metrics['members'] = $members;
+
         return $metrics;
     }
 

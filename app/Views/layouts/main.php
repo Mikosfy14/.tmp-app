@@ -16,6 +16,8 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon / Title Bar Icon -->
+    <link rel="shortcut icon" href="<?= base_url('assets/images/logo/tmp_logo.jpg') ?>" type="image/jpeg">
     <title><?= esc($title ?? 'Dashboard') ?> - .tmp Project Manager</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -287,7 +289,9 @@
                     lastServerSync = now;
                     fetch(activityUrl, {
                         method: 'POST',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
                         credentials: 'same-origin',
                         keepalive: true,
                     }).then((response) => {
@@ -301,7 +305,9 @@
             };
 
             ['click', 'keydown', 'pointerdown', 'scroll', 'touchstart'].forEach((eventName) => {
-                document.addEventListener(eventName, registerActivity, { passive: true });
+                document.addEventListener(eventName, registerActivity, {
+                    passive: true
+                });
             });
 
             window.addEventListener('storage', (event) => {

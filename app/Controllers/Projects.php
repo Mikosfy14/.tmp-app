@@ -6,6 +6,7 @@ use App\Models\ProjectModel;
 use App\Models\ProjectFileModel;
 use App\Models\ProjectStatusModel;
 use App\Models\UserModel;
+use App\Services\ReportExportService;
 
 class Projects extends BaseController
 {
@@ -13,14 +14,16 @@ class Projects extends BaseController
     protected ProjectFileModel $projectFileModel;
     protected ProjectStatusModel $projectStatusModel;
     protected UserModel $userModel;
+    protected ReportExportService $exportService;
 
     public function __construct()
     {
-        helper(['form']);
+        helper(['form', 'deadline', 'project_filter']);
         $this->projectModel = new ProjectModel();
         $this->projectFileModel = new ProjectFileModel();
         $this->projectStatusModel = new ProjectStatusModel();
         $this->userModel = new UserModel();
+        $this->exportService = new ReportExportService();
     }
 
     public function index()
@@ -233,40 +236,7 @@ class Projects extends BaseController
      */
     private function resolveProjectDateRange(string $startDate, string $endDate): ?array
     {
-        $startDate = $this->isValidFilterDate($startDate) ? $startDate : '';
-        $endDate = $this->isValidFilterDate($endDate) ? $endDate : '';
-
-        if ($startDate === '' && $endDate === '') {
-            return null;
-        }
-
-        if ($startDate === '') {
-            $startDate = $endDate;
-            $endDate = $this->getNextFilterDate($startDate);
-        } elseif ($endDate === '') {
-            $endDate = $this->getNextFilterDate($startDate);
-        }
-
-        if ($startDate > $endDate) {
-            [$startDate, $endDate] = [$endDate, $startDate];
-        }
-
-        return [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ];
-    }
-
-    private function isValidFilterDate(string $date): bool
-    {
-        $parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-
-        return $parsedDate !== false && $parsedDate->format('Y-m-d') === $date;
-    }
-
-    private function getNextFilterDate(string $date): string
-    {
-        return (new \DateTimeImmutable($date))->modify('+1 day')->format('Y-m-d');
+        return resolve_project_date_range($startDate, $endDate);
     }
 
     private function getFormViewData(array $context): array
@@ -506,70 +476,34 @@ class Projects extends BaseController
 
         $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange);
 
-        helper('deadline');
-
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Data Project');
-
-        // Header Title
-        $sheet->setCellValue('A1', 'LAPORAN PORTOFOLIO PROJECT TRACKER');
-        $sheet->mergeCells('A1:M1');
-        $sheet->getStyle('A1')->getFont()->setSize(14)->setBold(true)->getColor()->setRGB('1E1E2D');
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-
-        // Metadata
         $statusObj = !empty($statusFilter) ? $this->projectStatusModel->find((int) $statusFilter) : null;
         $statusText = $statusObj['status_name'] ?? 'Semua Status';
         $periodText = (!empty($dateRange['start_date']) && !empty($dateRange['end_date']))
             ? date('d/m/Y', strtotime($dateRange['start_date'])) . ' s/d ' . date('d/m/Y', strtotime($dateRange['end_date']))
             : 'Semua Periode';
 
-        $sheet->setCellValue('A2', 'Status SDLC: ' . $statusText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'));
-        $sheet->mergeCells('A2:M2');
-        $sheet->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->getColor()->setRGB('6C757D');
+        $metadataLines = [
+            'Status SDLC: ' . $statusText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
+            'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project',
+        ];
 
-        $sheet->setCellValue('A3', 'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project');
-        $sheet->mergeCells('A3:M3');
-        $sheet->getStyle('A3')->getFont()->setSize(9)->getColor()->setRGB('6C757D');
-
-        // Column Headers
         $headers = [
-            'A5' => 'No',
-            'B5' => 'Kode Project',
-            'C5' => 'Nama Project',
-            'D5' => 'Status SDLC',
-            'E5' => 'Deadline Status',
-            'F5' => 'Assigned PIC',
-            'G5' => 'Start Date',
-            'H5' => 'End Date',
-            'I5' => 'Unit Testing',
-            'J5' => 'SIT',
-            'K5' => 'UAT',
-            'L5' => 'Promote Date',
-            'M5' => 'Notes',
+            'A' => 'No',
+            'B' => 'Kode Project',
+            'C' => 'Nama Project',
+            'D' => 'Status SDLC',
+            'E' => 'Deadline Status',
+            'F' => 'Assigned PIC',
+            'G' => 'Start Date',
+            'H' => 'End Date',
+            'I' => 'Unit Testing',
+            'J' => 'SIT',
+            'K' => 'UAT',
+            'L' => 'Promote Date',
+            'M' => 'Notes',
         ];
 
-        foreach ($headers as $cell => $text) {
-            $sheet->setCellValue($cell, $text);
-        }
-
-        $headerStyle = [
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '435EBE'],
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-            ],
-        ];
-        $sheet->getStyle('A5:M5')->applyFromArray($headerStyle);
-        $sheet->getRowDimension(5)->setRowHeight(26);
-
-        // Data Rows
-        $row = 6;
+        $rows = [];
         $no = 1;
         foreach ($projects as $prj) {
             $isCompleted = is_project_completed($prj);
@@ -582,55 +516,35 @@ class Projects extends BaseController
                 }
             }
 
-            $sheet->setCellValue('A' . $row, $no++);
-            $sheet->setCellValue('B' . $row, $prj['project_code'] ?? '-');
-            $sheet->setCellValue('C' . $row, $prj['name'] ?? '-');
-            $sheet->setCellValue('D' . $row, $prj['status'] ?? '-');
-            $sheet->setCellValue('E' . $row, $deadline['label'] ?? '-');
-            $sheet->setCellValue('F' . $row, !empty($assignedNames) ? implode(', ', $assignedNames) : '-');
-            $sheet->setCellValue('G' . $row, !empty($prj['start_date']) ? date('d/m/Y', strtotime($prj['start_date'])) : '-');
-            $sheet->setCellValue('H' . $row, !empty($prj['end_date']) ? date('d/m/Y', strtotime($prj['end_date'])) : '-');
-            $sheet->setCellValue('I' . $row, !empty($prj['unit_testing_date']) ? date('d/m/Y', strtotime($prj['unit_testing_date'])) : '-');
-            $sheet->setCellValue('J' . $row, !empty($prj['sit_date']) ? date('d/m/Y', strtotime($prj['sit_date'])) : '-');
-            $sheet->setCellValue('K' . $row, !empty($prj['uat_date']) ? date('d/m/Y', strtotime($prj['uat_date'])) : '-');
-            $sheet->setCellValue('L' . $row, !empty($prj['promote_date']) ? date('d/m/Y', strtotime($prj['promote_date'])) : '-');
-            $sheet->setCellValue('M' . $row, $prj['notes'] ?? '-');
-
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('B' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('G' . $row . ':L' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-            $row++;
+            $rows[] = [
+                'A' => $no++,
+                'B' => $prj['project_code'] ?? '-',
+                'C' => $prj['name'] ?? '-',
+                'D' => $prj['status'] ?? '-',
+                'E' => $deadline['label'] ?? '-',
+                'F' => !empty($assignedNames) ? implode(', ', $assignedNames) : '-',
+                'G' => !empty($prj['start_date']) ? date('d/m/Y', strtotime($prj['start_date'])) : '-',
+                'H' => !empty($prj['end_date']) ? date('d/m/Y', strtotime($prj['end_date'])) : '-',
+                'I' => !empty($prj['unit_testing_date']) ? date('d/m/Y', strtotime($prj['unit_testing_date'])) : '-',
+                'J' => !empty($prj['sit_date']) ? date('d/m/Y', strtotime($prj['sit_date'])) : '-',
+                'K' => !empty($prj['uat_date']) ? date('d/m/Y', strtotime($prj['uat_date'])) : '-',
+                'L' => !empty($prj['promote_date']) ? date('d/m/Y', strtotime($prj['promote_date'])) : '-',
+                'M' => $prj['notes'] ?? '-',
+            ];
         }
 
-        $lastRow = max(6, $row - 1);
-
-        $borderStyle = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => 'DDE2E5'],
-                ],
-            ],
-        ];
-        $sheet->getStyle('A5:M' . $lastRow)->applyFromArray($borderStyle);
-
-        foreach (range('A', 'M') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
+        $centerColumns = ['A', 'B', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L'];
         $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.xlsx';
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-
-        $writer->save('php://output');
-        exit;
+        $this->exportService->exportExcel(
+            $filename,
+            'Data Project',
+            'LAPORAN PORTOFOLIO PROJECT TRACKER',
+            $metadataLines,
+            $headers,
+            $rows,
+            $centerColumns
+        );
     }
 
     public function exportPdf()
@@ -648,8 +562,6 @@ class Projects extends BaseController
 
         $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange);
 
-        helper('deadline');
-
         $statusObj = !empty($statusFilter) ? $this->projectStatusModel->find((int) $statusFilter) : null;
         $statusText = $statusObj['status_name'] ?? 'Semua Status';
         $periodText = (!empty($dateRange['start_date']) && !empty($dateRange['end_date']))
@@ -659,7 +571,9 @@ class Projects extends BaseController
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
         $scopeText = $targetUser ? 'Proyek User: ' . ($targetUser['name'] ?? '') : ($includeAll ? 'Seluruh Proyek Departemen' : 'Proyek Ditugaskan');
 
-        $html = view('projects/export_pdf', [
+        $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.pdf';
+
+        $this->exportService->exportPdf($filename, 'projects/export_pdf', [
             'reportTitle' => 'Laporan Project Tracker',
             'projects' => $projects,
             'filterStatusLabel' => $statusText,
@@ -667,19 +581,6 @@ class Projects extends BaseController
             'userScopeLabel' => $scopeText,
             'keyword' => $keyword,
         ]);
-
-        $options = new \Dompdf\Options();
-        $options->set('isHtml5ParserEnabled', true);
-        $options->set('isRemoteEnabled', true);
-
-        $dompdf = new \Dompdf\Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
-
-        $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.pdf';
-        $dompdf->stream($filename, ['Attachment' => true]);
-        exit;
     }
 
     private function canAccessProject(int $projectId): bool
