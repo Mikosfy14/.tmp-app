@@ -29,22 +29,22 @@ class ProjectModel extends Model
     ];
 
     /** Ambil project beserta user penanggung jawab dari kolom assigned_to. */
-    public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
+    public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null, ?string $isCompletedFilter = null): array
     {
-        $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+        $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
         $projects = $builder->orderBy('projects.id', 'DESC')->paginate(5, 'projects');
         return $this->attachAssignees($projects);
     }
 
     /** Ambil seluruh project beserta user penanggung jawab tanpa paginasi (untuk export). */
-    public function getAllProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
+    public function getAllProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null, ?string $isCompletedFilter = null): array
     {
-        $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+        $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
         $projects = $builder->orderBy('projects.id', 'DESC')->findAll();
         return $this->attachAssignees($projects);
     }
 
-    private function buildProjectsQuery($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null)
+    private function buildProjectsQuery($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null, ?string $isCompletedFilter = null)
     {
         $builder = $this->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
             ->join('project_status', 'project_status.id = projects.project_status_id', 'left');
@@ -67,6 +67,23 @@ class ProjectModel extends Model
         }
 
         $this->applyDateRangeFilter($builder, $dateRange);
+
+        if ($isCompletedFilter !== null && $isCompletedFilter !== '') {
+            if ($isCompletedFilter === '1' || $isCompletedFilter === 'completed') {
+                $builder->groupStart()
+                    ->where('projects.promote_date IS NOT NULL', null, false)
+                    ->orWhere("LOWER(project_status.status_name) LIKE '%complete%'", null, false)
+                    ->orWhere("LOWER(project_status.status_name) LIKE '%selesai%'", null, false)
+                    ->orWhere("LOWER(project_status.status_name) LIKE '%done%'", null, false)
+                    ->groupEnd();
+            } elseif ($isCompletedFilter === '0' || $isCompletedFilter === 'not_completed') {
+                $builder->where('projects.promote_date IS NULL', null, false)
+                    ->groupStart()
+                    ->where('project_status.status_name IS NULL', null, false)
+                    ->orWhere("(LOWER(project_status.status_name) NOT LIKE '%complete%' AND LOWER(project_status.status_name) NOT LIKE '%selesai%' AND LOWER(project_status.status_name) NOT LIKE '%done%')", null, false)
+                    ->groupEnd();
+            }
+        }
 
         return $builder;
     }

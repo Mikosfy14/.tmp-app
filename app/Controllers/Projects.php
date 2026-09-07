@@ -201,6 +201,7 @@ class Projects extends BaseController
     {
         $statusFilter = $this->request->getGet('status');
         $keyword = $this->request->getGet('keyword');
+        $isCompletedFilter = $this->request->getGet('is_completed');
         $selectedStartDate = trim((string) $this->request->getGet('filter_start'));
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
@@ -216,10 +217,11 @@ class Projects extends BaseController
 
         $data = [
             'title' => 'Project Tracker',
-            'projects' => $this->projectModel->getProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange),
+            'projects' => $this->projectModel->getProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter),
             'pager' => $this->projectModel->pager,
             'users' => $this->userModel->where('is_active', 1)->findAll(),
             'selectedStatus' => $statusFilter,
+            'selectedIsCompleted' => $isCompletedFilter,
             'keyword' => $keyword,
             'selectedStartDate' => $selectedStartDate,
             'selectedEndDate' => $selectedEndDate,
@@ -464,6 +466,7 @@ class Projects extends BaseController
     public function exportExcel()
     {
         $statusFilter = $this->request->getGet('status');
+        $isCompletedFilter = $this->request->getGet('is_completed');
         $keyword = $this->request->getGet('keyword');
         $selectedStartDate = trim((string) $this->request->getGet('filter_start'));
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
@@ -474,16 +477,21 @@ class Projects extends BaseController
         $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
         $userId = $targetUserId ?? (int) session()->get('user_id');
 
-        $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+        $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
 
         $statusObj = !empty($statusFilter) ? $this->projectStatusModel->find((int) $statusFilter) : null;
         $statusText = $statusObj['status_name'] ?? 'Semua Status';
         $periodText = (!empty($dateRange['start_date']) && !empty($dateRange['end_date']))
             ? date('d/m/Y', strtotime($dateRange['start_date'])) . ' s/d ' . date('d/m/Y', strtotime($dateRange['end_date']))
             : 'Semua Periode';
+        $completionText = match ($isCompletedFilter) {
+            '1', 'completed' => 'Completed',
+            '0', 'not_completed' => 'Not Completed',
+            default => 'Semua',
+        };
 
         $metadataLines = [
-            'Status SDLC: ' . $statusText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
+            'Status SDLC: ' . $statusText . ' | Penyelesaian: ' . $completionText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
             'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project',
         ];
 
@@ -550,6 +558,7 @@ class Projects extends BaseController
     public function exportPdf()
     {
         $statusFilter = $this->request->getGet('status');
+        $isCompletedFilter = $this->request->getGet('is_completed');
         $keyword = $this->request->getGet('keyword');
         $selectedStartDate = trim((string) $this->request->getGet('filter_start'));
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
@@ -560,13 +569,18 @@ class Projects extends BaseController
         $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
         $userId = $targetUserId ?? (int) session()->get('user_id');
 
-        $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange);
+        $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
 
         $statusObj = !empty($statusFilter) ? $this->projectStatusModel->find((int) $statusFilter) : null;
         $statusText = $statusObj['status_name'] ?? 'Semua Status';
         $periodText = (!empty($dateRange['start_date']) && !empty($dateRange['end_date']))
             ? date('d/m/Y', strtotime($dateRange['start_date'])) . ' s/d ' . date('d/m/Y', strtotime($dateRange['end_date']))
             : 'Semua Periode';
+        $completionText = match ($isCompletedFilter) {
+            '1', 'completed' => 'Completed',
+            '0', 'not_completed' => 'Not Completed',
+            default => 'Semua',
+        };
 
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
         $scopeText = $targetUser ? 'Proyek User: ' . ($targetUser['name'] ?? '') : ($includeAll ? 'Seluruh Proyek Departemen' : 'Proyek Ditugaskan');
@@ -578,6 +592,7 @@ class Projects extends BaseController
             'projects' => $projects,
             'filterStatusLabel' => $statusText,
             'filterPeriodLabel' => $periodText,
+            'filterCompletionLabel' => $completionText,
             'userScopeLabel' => $scopeText,
             'keyword' => $keyword,
         ]);

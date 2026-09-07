@@ -4,6 +4,7 @@
  * @var array $statusOptions
  * @var array $projects
  * @var string|null $selectedStatus
+ * @var string|null $selectedIsCompleted
  * @var string|null $selectedStartDate
  * @var string|null $selectedEndDate
  * @var bool $isFilteredUser
@@ -16,6 +17,7 @@ helper('deadline');
 $displayProjects = $projects ?? [];
 $selectedStartDate = (string) ($selectedStartDate ?? '');
 $selectedEndDate = (string) ($selectedEndDate ?? '');
+$selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -103,7 +105,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
     [data-bs-theme="dark"] .flatpickr-current-month .flatpickr-monthDropdown-months,
     [data-bs-theme="dark"] .flatpickr-current-month input.cur-year,
     [data-bs-theme="dark"] .flatpickr-day {
-        color: #f5f7ff;
+        color: #e6eaee;
     }
 
     [data-bs-theme="dark"] .flatpickr-day:hover,
@@ -111,92 +113,123 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
         background: #2b2b40;
         border-color: #2b2b40;
     }
-</style>
-<?= $this->endSection() ?>
 
-<?= $this->section('content') ?>
+    [data-bs-theme="dark"] .flatpickr-day.flatpickr-disabled,
+    [data-bs-theme="dark"] .flatpickr-day.prevMonthDay,
+    [data-bs-theme="dark"] .flatpickr-day.nextMonthDay {
+        color: #607080;
+    }
 
-<style>
     .project-actions {
-        min-width: 13.5rem;
+        width: 1%;
         white-space: nowrap;
     }
 
     .project-action-group {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: .375rem;
+        justify-content: flex-end;
+        gap: .35rem;
         flex-wrap: nowrap;
     }
 
     .project-action-group .btn {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
         gap: .25rem;
-        min-width: 4.25rem;
+        white-space: nowrap;
     }
 
-    .project-pagination .pagination,
-    .user-pagination .pagination {
-        margin: 0;
-        gap: .35rem;
+    .project-action-group .btn-outline-danger {
+        color: #dc3545;
+        border-color: #dc3545;
     }
 
-    .project-pagination .page-item .page-link,
-    .user-pagination .page-item .page-link {
-        border: 0;
-        border-radius: .55rem;
-        min-width: 2.25rem;
-        text-align: center;
-        color: #52606d;
-        font-weight: 600;
-    }
-
-    .project-pagination .page-item.active .page-link,
-    .user-pagination .page-item.active .page-link {
-        background: #435ebe;
+    .project-action-group .btn-outline-danger:hover {
         color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
     }
 
-    .project-pagination .page-item:not(.active),
-    .user-pagination .page-item:not(.active) .page-link {
-        color: #435ebe;
+    .project-delete-form {
+        display: inline-flex;
+        margin: 0;
     }
 
-    .project-pagination .page-item.disabled .page-link,
-    .user-pagination .page-item.disabled .page-link {
-        color: #adb5bd;
-        background: #f1f3f5;
-        opacity: .80;
+    .project-delete-btn-cell {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .project-delete-btn-cell .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        white-space: nowrap;
+        color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .project-delete-btn-cell .btn:hover {
+        color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .project-delete-btn-cell .btn:disabled {
+        opacity: .45;
         cursor: not-allowed;
     }
 
-    @media (max-width: 575.98px) {
-        .project-actions {
-            min-width: 11.5rem;
-        }
+    .project-row {
+        transition: background-color .15s ease-in-out;
+    }
 
-        .project-action-group {
-            gap: .25rem;
-        }
+    .project-row.table-active {
+        background-color: rgba(67, 94, 190, .08) !important;
+    }
 
-        .project-action-group .btn {
-            min-width: auto;
-            padding-right: .5rem;
-            padding-left: .5rem;
-        }
+    .project-progress-preview {
+        min-width: 140px;
+    }
+
+    .project-progress-track {
+        height: 6px;
+        border-radius: 999px;
+        background-color: rgba(108, 117, 125, .18);
+        overflow: hidden;
+    }
+
+    .project-progress-bar {
+        height: 100%;
+        border-radius: 999px;
+        transition: width .2s ease;
+    }
+
+    .project-progress-label {
+        font-size: .72rem;
+        line-height: 1;
+        margin-top: .25rem;
     }
 </style>
+<?= $this->endSection() ?>
 
-<div class="page-heading project-page-heading d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
+<?= $this->section('content') ?>
+
+<div class="d-flex justify-content-between align-items-center mb-4 project-page-heading">
     <div>
-        <h3>Project Tracker</h3>
-        <p class="text-subtitle text-muted mb-0">
+        <h3 class="mb-1">
             <?php if (!empty($isFilteredUser) && !empty($targetUser)) : ?>
-                Menampilkan project milik <?= esc($targetUser['name']) ?>.
-            <?php elseif (session()->get('role_name') === 'Kepala Departemen') : ?>
+                Project Tracker - <?= esc($targetUser['name']) ?>
+            <?php else : ?>
+                Project Tracker
+            <?php endif; ?>
+        </h3>
+        <p class="text-muted mb-0">
+            <?php if (!empty($isFilteredUser) && !empty($targetUser)) : ?>
+                Menampilkan seluruh project yang ditugaskan kepada <strong><?= esc($targetUser['name']) ?></strong> (<?= esc($targetUser['job_title'] ?: 'Staff') ?>).
+                <a href="<?= base_url('/projects') ?>" class="ms-2 text-primary fw-semibold"><i class="bi bi-arrow-left me-1"></i>Kembali ke Semua Project</a>
+            <?php elseif (strtolower((string) session()->get('role_name')) === 'kepala departemen') : ?>
                 Kelola dan pantau seluruh proyek departemen secara real-time.
             <?php else : ?>
                 Kelola dan pantau project yang ditugaskan kepada Anda.
@@ -206,6 +239,7 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
     <?php
     $exportParams = [];
     if (!empty($selectedStatus)) $exportParams['status'] = $selectedStatus;
+    if (!empty($selectedIsCompleted)) $exportParams['is_completed'] = $selectedIsCompleted;
     if (!empty($keyword)) $exportParams['keyword'] = $keyword;
     if (!empty($selectedStartDate)) $exportParams['filter_start'] = $selectedStartDate;
     if (!empty($selectedEndDate)) $exportParams['filter_end'] = $selectedEndDate;
@@ -266,18 +300,25 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
         <div class="card-body p-3">
             <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="row g-2 align-items-center">
                 <input type="hidden" name="page_projects" value="1">
-                <div class="col-12 col-lg-5">
+                <div class="col-12 col-lg-3">
                     <div class="input-group">
-                        <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama project, atau PIC..." value="<?= esc($keyword ?? '') ?>">
+                        <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama, atau PIC..." value="<?= esc($keyword ?? '') ?>">
                         <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-6 col-lg-2">
                     <select name="status" class="form-select">
-                        <option value="">Semua Status</option>
+                        <option value="">Semua Status SDLC</option>
                         <?php foreach ($statusOptions as $st) : ?>
                             <option value="<?= esc($st['id']) ?>" <?= (string) ($selectedStatus ?? '') === (string) $st['id'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
                         <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <select name="is_completed" class="form-select">
+                        <option value="">Semua Penyelesaian (All)</option>
+                        <option value="completed" <?= $selectedIsCompleted === 'completed' || $selectedIsCompleted === '1' ? 'selected' : '' ?>>Completed</option>
+                        <option value="not_completed" <?= $selectedIsCompleted === 'not_completed' || $selectedIsCompleted === '0' ? 'selected' : '' ?>>Not Completed</option>
                     </select>
                 </div>
                 <div class="col-12 col-md-6 col-lg-3">
@@ -289,12 +330,12 @@ $selectedEndDate = (string) ($selectedEndDate ?? '');
                     <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">
                     <input type="hidden" name="filter_end" id="filter_end" value="<?= esc($selectedEndDate) ?>">
                 </div>
-                <div class="col-12 col-md-6 col-lg-1 d-flex">
+                <div class="col-6 col-md-3 col-lg-1 d-flex">
                     <button type="submit" class="btn btn-primary filter-submit-button w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
                         <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span>
                     </button>
                 </div>
-                <div class="col-12 col-md-6 col-lg-1 d-flex justify-content-lg-end">
+                <div class="col-6 col-md-3 col-lg-1 d-flex justify-content-lg-end">
                     <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary filter-reset-button" title="Reset filter" aria-label="Reset filter">
                         <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span>
                     </a>
