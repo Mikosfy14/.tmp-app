@@ -36,6 +36,7 @@ class DashboardMetrics
         $users = $this->userModel->getActiveTeamMembers();
 
         $userStats = [];
+        $userCategoryMap = [];
         foreach ($users as $user) {
             $uid = (int) $user['id'];
             $userStats[$uid] = [
@@ -45,7 +46,11 @@ class DashboardMetrics
                 'overdue'      => 0,
                 'total'        => 0,
             ];
+            $userCategoryMap[$uid] = $user['category'] ?? 'Organik';
         }
+
+        $organicActive = 0;
+        $nonOrganicActive = 0;
 
         foreach ($projects as $project) {
             $completed = $this->isCompleted($project);
@@ -79,31 +84,59 @@ class DashboardMetrics
                     if ($isOverdue) {
                         $userStats[$uid]['overdue']++;
                     }
+
+                    if (($userCategoryMap[$uid] ?? '') === 'NonOrganik') {
+                        $nonOrganicActive++;
+                    } else {
+                        $organicActive++;
+                    }
                 }
             }
         }
 
         $members = [];
+        $totalActiveTasksAcrossAll = 0;
         foreach ($users as $user) {
             $uid = (int) $user['id'];
             $st = $userStats[$uid] ?? ['active_tasks' => 0, 'completed' => 0, 'late' => 0, 'overdue' => 0, 'total' => 0];
             $memberTotal = $st['total'];
             $memberCompleted = $st['completed'];
+            $activeCount = $st['active_tasks'];
+            $totalActiveTasksAcrossAll += $activeCount;
+
+            $workloadStatus = match (true) {
+                $activeCount >= 8 => ['label' => 'Overloaded', 'class' => 'danger'],
+                $activeCount >= 5 => ['label' => 'Tinggi', 'class' => 'warning'],
+                $activeCount >= 2 => ['label' => 'Optimal', 'class' => 'success'],
+                default           => ['label' => 'Rendah', 'class' => 'secondary'],
+            };
+
             $members[] = [
                 'id'              => $uid,
                 'name'            => $user['name'],
                 'role'            => $user['role_name'] ?? '-',
+                'category'        => $user['category'] ?? 'Organik',
                 'job'             => $user['job_title'] ?? '-',
-                'active_tasks'    => $st['active_tasks'],
+                'active_tasks'    => $activeCount,
                 'completed'       => $memberCompleted,
                 'late'            => $st['late'],
                 'overdue'         => $st['overdue'],
                 'completion_rate' => $memberTotal > 0 ? round(($memberCompleted / $memberTotal) * 100, 1) : 0,
+                'workload_status' => $workloadStatus,
             ];
         }
 
+        $totalMembers = count($users);
         $metrics = $this->buildMetrics($projects);
         $metrics['members'] = $members;
+        $metrics['capacity'] = [
+            'total_members'             => $totalMembers,
+            'organic_count'             => count(array_filter($users, fn ($u) => ($u['category'] ?? '') === 'Organik')),
+            'non_organic_count'         => count(array_filter($users, fn ($u) => ($u['category'] ?? '') === 'NonOrganik')),
+            'organic_active_tasks'      => $organicActive,
+            'non_organic_active_tasks'  => $nonOrganicActive,
+            'avg_active_per_member'     => $totalMembers > 0 ? round($totalActiveTasksAcrossAll / $totalMembers, 1) : 0,
+        ];
 
         return $metrics;
     }
