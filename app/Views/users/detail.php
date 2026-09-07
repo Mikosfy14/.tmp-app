@@ -2,9 +2,15 @@
 /**
  * @var array $user
  * @var array $assignedProjects
+ * @var array $stats
+ * @var array $sdlc_distribution
+ * @var array $completion_chart
  */
 
 $assignedProjects = $assignedProjects ?? [];
+$stats = $stats ?? [];
+$sdlc_distribution = $sdlc_distribution ?? [];
+$completion_chart = $completion_chart ?? [];
 
 $roleClass = static function (?string $roleName): string {
     return match ($roleName) {
@@ -39,17 +45,53 @@ $dateValue = static fn ($value): string => !empty($value) ? date('d M Y', strtot
 $valueOrDash = static fn ($value): string => $value !== null && $value !== '' ? esc($value) : '-';
 $isActive = (int) ($user['is_active'] ?? 0) === 1;
 $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
+
+// KPI Calculations
+$totalCompleted = (int) ($stats['total_completed'] ?? 0);
+$onTimeDone = (int) ($stats['on_time_done'] ?? 0);
+$lateDone = (int) ($stats['late_done'] ?? 0);
+$activeProjects = (int) ($stats['active_projects'] ?? 0);
+$overdue = (int) ($stats['overdue'] ?? 0);
+$riskUrgent = (int) ($stats['risk_urgent'] ?? 0);
+$totalApps = (int) ($stats['total_apps_managed'] ?? 0);
+
+$totalAll = $totalCompleted + $activeProjects;
+$completionRate = $totalAll > 0 ? round(($totalCompleted / $totalAll) * 100, 1) : 0;
+$onTimeRate = $totalCompleted > 0 ? round(($onTimeDone / $totalCompleted) * 100, 1) : 0;
+
+// Separate active vs completed projects for tabs
+$activeProjectsList = [];
+$completedProjectsList = [];
+foreach ($assignedProjects as $p) {
+    if (is_project_completed($p)) {
+        $completedProjectsList[] = $p;
+    } else {
+        $activeProjectsList[] = $p;
+    }
+}
 ?>
 
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
 
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 <style>
     .user-detail-avatar {
         width: 72px;
         height: 72px;
         border-radius: 50%;
+    }
+
+    .kpi-card .kpi-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .kpi-card .kpi-sub {
+        font-size: 0.74rem;
     }
 
     .user-project-actions {
@@ -99,7 +141,9 @@ $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
 <?php endif; ?>
 
 <div class="page-content">
-    <div class="row g-4">
+    <!-- Row 1: Profile Card + KPI Cards -->
+    <div class="row g-3 mb-3">
+        <!-- Profile Info Card -->
         <div class="col-12 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
@@ -148,50 +192,255 @@ $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
             </div>
         </div>
 
+        <!-- KPI Cards -->
         <div class="col-12 col-xl-8">
+            <div class="row g-3 h-100">
+                <!-- Completion Rate -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm h-100 kpi-card">
+                        <div class="card-body p-3 d-flex flex-column justify-content-center">
+                            <small class="text-muted d-block mb-1">Completion Rate</small>
+                            <span class="kpi-value <?= $completionRate >= 70 ? 'text-success' : ($completionRate >= 40 ? 'text-warning' : 'text-danger') ?>">
+                                <?= $completionRate ?>%
+                            </span>
+                            <small class="text-muted kpi-sub mt-1">
+                                <?= $totalCompleted ?> / <?= $totalAll ?> project
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- On-Time Rate -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm h-100 kpi-card">
+                        <div class="card-body p-3 d-flex flex-column justify-content-center">
+                            <small class="text-muted d-block mb-1">On-Time Rate</small>
+                            <span class="kpi-value <?= $onTimeRate >= 70 ? 'text-success' : ($onTimeRate >= 40 ? 'text-warning' : 'text-danger') ?>">
+                                <?= $onTimeRate ?>%
+                            </span>
+                            <small class="text-muted kpi-sub mt-1">
+                                <?= $onTimeDone ?> tepat waktu, <?= $lateDone ?> terlambat
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Projects -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm h-100 kpi-card">
+                        <div class="card-body p-3 d-flex flex-column justify-content-center">
+                            <small class="text-muted d-block mb-1">Project Aktif</small>
+                            <span class="kpi-value text-info"><?= $activeProjects ?></span>
+                            <small class="text-muted kpi-sub mt-1">
+                                <?php if ($overdue > 0) : ?>
+                                    <span class="text-danger fw-semibold"><?= $overdue ?> overdue</span><?= $riskUrgent > 0 ? " · {$riskUrgent} berisiko" : '' ?>
+                                <?php elseif ($riskUrgent > 0) : ?>
+                                    <span class="text-warning fw-semibold"><?= $riskUrgent ?> berisiko</span>
+                                <?php else : ?>
+                                    Semua sesuai jadwal
+                                <?php endif; ?>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apps Managed -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm h-100 kpi-card">
+                        <div class="card-body p-3 d-flex flex-column justify-content-center">
+                            <small class="text-muted d-block mb-1">Aplikasi Dikelola</small>
+                            <span class="kpi-value text-primary"><?= $totalApps ?></span>
+                            <small class="text-muted kpi-sub mt-1">
+                                Sebagai PIC aplikasi
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SDLC Distribution + Completion Trend -->
+                <div class="col-12">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Analisis Kinerja</h6>
+                            <select id="userChartToggle" class="form-select form-select-sm w-auto py-1">
+                                <option value="sdlc" selected>Distribusi Fase SDLC</option>
+                                <option value="trend">Tren Penyelesaian Bulanan</option>
+                            </select>
+                        </div>
+                        <div class="card-body p-3">
+                            <!-- SDLC Distribution View -->
+                            <div id="view-user-sdlc">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-12 col-md-6">
+                                        <div id="chart-user-sdlc"></div>
+                                    </div>
+                                    <div class="col-12 col-md-6 border-start-md">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem;">Rincian Fase Aktif</small>
+                                            <span class="badge bg-light-info text-info border border-info-subtle" style="font-size: 0.7rem;">
+                                                <?= $activeProjects ?> Proyek Aktif
+                                            </span>
+                                        </div>
+                                        <?php if (!empty($sdlc_distribution)) : ?>
+                                            <div class="d-flex flex-column gap-2" style="max-height: 160px; overflow-y: auto;">
+                                                <?php
+                                                $totalActive = max(1, $activeProjects);
+                                                foreach ($sdlc_distribution as $phaseName => $count) :
+                                                    $pct = round(($count / $totalActive) * 100, 1);
+                                                ?>
+                                                    <div>
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span class="fw-semibold text-dark" style="font-size: 0.8rem;"><?= esc($phaseName) ?></span>
+                                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                                <strong class="text-primary"><?= (int) $count ?></strong> (<?= $pct ?>%)
+                                                            </small>
+                                                        </div>
+                                                        <div class="progress" style="height: 4px;">
+                                                            <div class="progress-bar bg-primary" role="progressbar" style="width: <?= $pct ?>%;" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else : ?>
+                                            <div class="text-center py-4 text-muted">
+                                                <small>Tidak ada proyek aktif saat ini.</small>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Monthly Trend View -->
+                            <div id="view-user-trend" class="d-none">
+                                <div class="text-center mb-1">
+                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem;">Tren Penyelesaian 6 Bulan Terakhir</small>
+                                </div>
+                                <div id="chart-user-trend"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Assigned Projects (Tabbed: Active / Completed) -->
+    <div class="row g-3">
+        <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header">
+                <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-kanban me-2 text-primary"></i>Assigned Projects</h5>
+                    <ul class="nav nav-pills nav-sm gap-1 mb-0" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-1 px-2" id="tab-active-btn" data-bs-toggle="pill" data-bs-target="#tab-active-projects" type="button" role="tab" style="font-size: 0.78rem;">
+                                Aktif <span class="badge bg-info ms-1"><?= count($activeProjectsList) ?></span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-1 px-2" id="tab-completed-btn" data-bs-toggle="pill" data-bs-target="#tab-completed-projects" type="button" role="tab" style="font-size: 0.78rem;">
+                                Selesai <span class="badge bg-success ms-1"><?= count($completedProjectsList) ?></span>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4">Nama Proyek</th>
-                                    <th>Status SDLC</th>
-                                    <th>Deadline</th>
-                                    <th class="text-center user-project-actions pe-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($assignedProjects)) : ?>
-                                    <?php foreach ($assignedProjects as $project) : ?>
+                    <div class="tab-content">
+                        <!-- Active Projects Tab -->
+                        <div class="tab-pane fade show active" id="tab-active-projects" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
                                         <tr>
-                                            <td class="ps-4">
-                                                <strong class="text-dark d-block"><?= esc($project['name'] ?? '-') ?></strong>
-                                                <span class="badge bg-light-secondary text-muted"><?= esc($project['project_code'] ?? '-') ?></span>
-                                            </td>
-                                            <td>
-                                                <span class="badge <?= $statusBadge($project['status'] ?? null) ?>"><?= esc($project['status'] ?? '-') ?></span>
-                                            </td>
-                                            <td>
-                                                <strong class="text-dark"><?= $dateValue($project['end_date'] ?? null) ?></strong>
-                                            </td>
-                                            <td class="text-center pe-4">
-                                                <a href="<?= base_url('/projects/detail/' . (int) $project['id']) ?>" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye-fill me-1"></i> Detail
-                                                </a>
-                                            </td>
+                                            <th class="ps-4">Nama Proyek</th>
+                                            <th>Status SDLC</th>
+                                            <th>Deadline</th>
+                                            <th class="text-center user-project-actions pe-4">Aksi</th>
                                         </tr>
-                                    <?php endforeach; ?>
-                                <?php else : ?>
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">Belum ada project yang ditugaskan ke user ini.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (!empty($activeProjectsList)) : ?>
+                                            <?php foreach ($activeProjectsList as $project) : ?>
+                                                <tr>
+                                                    <td class="ps-4">
+                                                        <strong class="text-dark d-block"><?= esc($project['name'] ?? '-') ?></strong>
+                                                        <span class="badge bg-light-secondary text-muted"><?= esc($project['project_code'] ?? '-') ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge <?= $statusBadge($project['status'] ?? null) ?>"><?= esc($project['status'] ?? '-') ?></span>
+                                                        <?php if (!empty($project['deadline_label'])) : ?>
+                                                            <span class="badge bg-light-<?= esc($project['deadline_class'] ?? 'secondary') ?> text-<?= esc($project['deadline_class'] ?? 'secondary') ?> d-block mt-1" style="width: fit-content; font-size: 0.72rem;">
+                                                                <?= esc($project['deadline_label']) ?>
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <strong class="text-dark"><?= $dateValue($project['end_date'] ?? null) ?></strong>
+                                                    </td>
+                                                    <td class="text-center pe-4">
+                                                        <a href="<?= base_url('/projects/detail/' . (int) $project['id']) ?>" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-eye-fill me-1"></i> Detail
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else : ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted">Tidak ada project aktif yang ditugaskan.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Completed Projects Tab -->
+                        <div class="tab-pane fade" id="tab-completed-projects" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Nama Proyek</th>
+                                            <th>Status</th>
+                                            <th>Tanggal Selesai</th>
+                                            <th class="text-center user-project-actions pe-4">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (!empty($completedProjectsList)) : ?>
+                                            <?php foreach ($completedProjectsList as $project) : ?>
+                                                <?php
+                                                $isOnTime = !empty($project['promote_date']) && !empty($project['end_date']) && $project['promote_date'] <= $project['end_date'];
+                                                ?>
+                                                <tr>
+                                                    <td class="ps-4">
+                                                        <strong class="text-dark d-block"><?= esc($project['name'] ?? '-') ?></strong>
+                                                        <span class="badge bg-light-secondary text-muted"><?= esc($project['project_code'] ?? '-') ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-success">Selesai</span>
+                                                        <span class="badge <?= $isOnTime ? 'bg-light-success text-success' : 'bg-light-danger text-danger' ?> d-block mt-1" style="width: fit-content; font-size: 0.72rem;">
+                                                            <?= $isOnTime ? 'Tepat Waktu' : 'Terlambat' ?>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <strong class="text-dark"><?= $dateValue($project['promote_date'] ?? null) ?></strong>
+                                                    </td>
+                                                    <td class="text-center pe-4">
+                                                        <a href="<?= base_url('/projects/detail/' . (int) $project['id']) ?>" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-eye-fill me-1"></i> Detail
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else : ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted">Belum ada project yang diselesaikan.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,6 +448,7 @@ $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
     </div>
 </div>
 
+<!-- Modals -->
 <div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -261,5 +511,74 @@ $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getChartThemeOptions() {
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const textColor = isDark ? '#f5f7ff' : '#25396f';
+        const mutedColor = isDark ? '#a6a8b8' : '#607080';
+        const gridColor = isDark ? '#2b2b40' : '#e6eaee';
+        return {
+            chart: { foreColor: textColor },
+            theme: { mode: isDark ? 'dark' : 'light' },
+            tooltip: { theme: isDark ? 'dark' : 'light' },
+            legend: { labels: { colors: textColor } },
+            grid: { borderColor: gridColor },
+            xaxis: { labels: { style: { colors: mutedColor } }, axisBorder: { color: gridColor }, axisTicks: { color: gridColor } },
+            yaxis: { labels: { style: { colors: mutedColor } } }
+        };
+    }
+
+    const themeOpts = getChartThemeOptions();
+
+    // SDLC Distribution Donut
+    const sdlcData = <?= json_encode($sdlc_distribution) ?>;
+    const sdlcLabels = Object.keys(sdlcData);
+    const sdlcSeries = Object.values(sdlcData);
+
+    var chartSdlc = new ApexCharts(document.querySelector("#chart-user-sdlc"), {
+        chart: { type: 'donut', height: 220, ...themeOpts.chart },
+        series: sdlcSeries.length > 0 ? sdlcSeries : [1],
+        labels: sdlcSeries.length > 0 ? sdlcLabels : ['No Active Projects'],
+        colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
+        theme: themeOpts.theme,
+        tooltip: themeOpts.tooltip,
+        legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
+        dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
+        plotOptions: { pie: { donut: { labels: { show: false } } } }
+    });
+    chartSdlc.render();
+
+    // Monthly Completion Trend (Stacked Bar)
+    const trendMonths = <?= json_encode($completion_chart['months'] ?? []) ?>;
+    const trendOnTime = <?= json_encode($completion_chart['on_time'] ?? []) ?>;
+    const trendLate = <?= json_encode($completion_chart['late'] ?? []) ?>;
+
+    var chartTrend = new ApexCharts(document.querySelector("#chart-user-trend"), {
+        chart: { type: 'bar', height: 220, stacked: true, toolbar: { show: false }, ...themeOpts.chart },
+        series: [
+            { name: 'Tepat Waktu', data: trendOnTime },
+            { name: 'Terlambat', data: trendLate }
+        ],
+        colors: ['#198754', '#dc3545'],
+        plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 3 } },
+        xaxis: { categories: trendMonths, ...themeOpts.xaxis },
+        yaxis: { ...themeOpts.yaxis, labels: { ...themeOpts.yaxis.labels, formatter: function(val) { return Math.floor(val); } } },
+        grid: themeOpts.grid,
+        legend: { position: 'top', fontSize: '11px', ...themeOpts.legend },
+        tooltip: { ...themeOpts.tooltip, y: { formatter: function(val) { return val + ' project'; } } },
+        dataLabels: { enabled: false },
+        theme: themeOpts.theme
+    });
+    chartTrend.render();
+
+    // Chart Toggle
+    document.getElementById('userChartToggle').addEventListener('change', function() {
+        document.getElementById('view-user-sdlc').classList.toggle('d-none', this.value !== 'sdlc');
+        document.getElementById('view-user-trend').classList.toggle('d-none', this.value !== 'trend');
+    });
+});
+</script>
 
 <?= $this->endSection() ?>
