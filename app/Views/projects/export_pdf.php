@@ -223,18 +223,18 @@ $keyword = $keyword ?? '';
             <tr>
                 <td class="meta-label">Status SDLC:</td>
                 <td><?= esc($filterStatusLabel ?? 'Semua Status') ?></td>
-                <td class="meta-label">Rentang Waktu:</td>
-                <td><?= esc($filterPeriodLabel ?? 'Semua Periode') ?></td>
+                <td class="meta-label">Penyelesaian:</td>
+                <td><?= esc($filterCompletionLabel ?? 'Semua') ?></td>
                 <td class="meta-label">Total Data:</td>
                 <td><strong><?= count($projects) ?> Project</strong></td>
             </tr>
             <tr>
+                <td class="meta-label">Rentang Waktu:</td>
+                <td><?= esc($filterPeriodLabel ?? 'Semua Periode') ?></td>
                 <td class="meta-label">Pencarian:</td>
                 <td><?= esc(!empty($keyword) ? $keyword : '-') ?></td>
                 <td class="meta-label">Cakupan Akses:</td>
                 <td><?= esc($userScopeLabel ?? 'Semua Project Terkait') ?></td>
-                <td></td>
-                <td></td>
             </tr>
         </table>
     </div>

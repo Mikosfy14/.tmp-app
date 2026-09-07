@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\DashboardMetrics;
 use App\Models\UserModel;
 
 class Users extends BaseController
@@ -12,7 +13,7 @@ class Users extends BaseController
 
     public function __construct()
     {
-        helper(['form']);
+        helper(['form', 'deadline']);
         $this->userModel = new UserModel();
     }
 
@@ -78,10 +79,15 @@ class Users extends BaseController
             return redirect()->to('/users')->with('error', 'User tidak ditemukan.');
         }
 
+        $metrics = (new DashboardMetrics())->personal($id);
+
         return view('users/detail', [
-            'title' => 'Detail User - ' . $user['name'],
-            'user' => $user,
-            'assignedProjects' => $this->getAssignedProjects($id),
+            'title'            => 'Detail User - ' . $user['name'],
+            'user'             => $user,
+            'assignedProjects' => $metrics['projects'],
+            'stats'            => $metrics['stats'],
+            'sdlc_distribution' => $metrics['sdlc_distribution'],
+            'completion_chart' => $metrics['chart'],
         ]);
     }
 

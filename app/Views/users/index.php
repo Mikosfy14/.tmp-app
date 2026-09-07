@@ -311,11 +311,11 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                                                 </a>
                                                 <?php if ($isActive) : ?>
                                                     <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" title="Nonaktifkan User">
-                                                        <i class="bi bi-person-dash-fill"></i> Nonaktif
+                                                        <i class="bi bi-person-dash-fill"></i> Nonaktifkan
                                                     </button>
                                                 <?php else : ?>
                                                     <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" title="Aktifkan User">
-                                                        <i class="bi bi-person-check-fill"></i> Aktif
+                                                        <i class="bi bi-person-check-fill"></i> Aktifkan
                                                     </button>
                                                 <?php endif; ?>
                                             <?php endif; ?>
