@@ -132,7 +132,7 @@ $deadlineAlerts = get_user_deadline_notifications();
     $picMainCount = 0;
     $teamMemberCount = 0;
     foreach ($my_active_projects as $p) {
-        if (strtolower($p['status'] ?? '') === 'completed') {
+        if (is_project_completed($p)) {
             continue;
         }
         $assignedIds = array_values(array_filter(array_map('intval', explode(',', (string) ($p['assigned_to'] ?? '')))));
@@ -191,9 +191,9 @@ $deadlineAlerts = get_user_deadline_notifications();
     $lateDone = max(0, $totalCompleted - $onTimeDone);
     $completionSummaryText = "{$onTimeDone} Tepat Waktu · {$lateDone} Terlambat";
 
-    // Priority Projects
+    // Priority Projects: active projects with Risk, Urgent, Critical, Overdue
     $priority_projects = array_filter($my_active_projects, function ($p) {
-        return in_array($p['deadline_label'] ?? '', ['Risk', 'Urgent', 'Critical', 'Overdue']);
+        return !is_project_completed($p) && in_array($p['deadline_label'] ?? '', ['Risk', 'Urgent', 'Critical', 'Overdue']);
     });
     $has_priority = !empty($priority_projects);
     if ($has_priority) {
@@ -201,7 +201,7 @@ $deadlineAlerts = get_user_deadline_notifications();
         $is_priority_fallback = false;
     } else {
         $active_only = array_filter($my_active_projects, function ($p) {
-            return strtolower($p['status'] ?? '') !== 'completed';
+            return !is_project_completed($p);
         });
         usort($active_only, function ($a, $b) {
             $tA = !empty($a['end_date']) ? strtotime($a['end_date']) : PHP_INT_MAX;
@@ -290,7 +290,17 @@ $deadlineAlerts = get_user_deadline_notifications();
                                         <?php
                                         $relativeDeadlineText = '-';
                                         $relativeDeadlineClass = 'text-muted';
-                                        if (!empty($prj['end_date'])) {
+                                        $isCompletedPrj = is_project_completed($prj);
+                                        if ($isCompletedPrj) {
+                                            if (!empty($prj['promote_date']) && !empty($prj['end_date'])) {
+                                                $isOnTime = $prj['promote_date'] <= $prj['end_date'];
+                                                $relativeDeadlineText = $isOnTime ? 'Selesai Tepat Waktu' : 'Selesai Terlambat';
+                                                $relativeDeadlineClass = $isOnTime ? 'text-success fw-semibold' : 'text-danger fw-semibold';
+                                            } else {
+                                                $relativeDeadlineText = 'Selesai';
+                                                $relativeDeadlineClass = 'text-success fw-semibold';
+                                            }
+                                        } elseif (!empty($prj['end_date'])) {
                                             $today = new DateTimeImmutable(date('Y-m-d'));
                                             $targetDate = new DateTimeImmutable(date('Y-m-d', strtotime($prj['end_date'])));
                                             $diff = (int) $today->diff($targetDate)->format('%r%a');
