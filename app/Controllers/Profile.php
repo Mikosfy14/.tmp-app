@@ -40,8 +40,19 @@ class Profile extends BaseController
         }
 
         $rules = [
-            'name' => 'required|max_length[150]',
-            'email' => 'permit_empty|valid_email|max_length[150]',
+            'name' => [
+                'rules' => 'required|max_length[150]',
+                'errors' => [
+                    'required' => 'Nama lengkap wajib diisi.',
+                ],
+            ],
+            'email' => [
+                'rules' => "permit_empty|valid_email|max_length[150]|is_unique[users.email,id,{$userId}]",
+                'errors' => [
+                    'valid_email' => 'Format email tidak valid.',
+                    'is_unique' => 'Email sudah digunakan oleh user lain.',
+                ],
+            ],
             'phone_number' => 'permit_empty|max_length[50]',
             'job_title' => 'permit_empty|max_length[150]',
         ];
@@ -50,13 +61,19 @@ class Profile extends BaseController
             return redirect()->to('/profile/edit')->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        db_connect()->table('users')->where('id', $userId)->update([
-            'name' => trim((string) $this->request->getPost('name')),
-            'email' => $this->nullablePost('email'),
-            'phone_number' => $this->nullablePost('phone_number'),
-            'job_title' => $this->nullablePost('job_title'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
+        try {
+            db_connect()->table('users')->where('id', $userId)->update([
+                'name' => trim((string) $this->request->getPost('name')),
+                'email' => $this->nullablePost('email'),
+                'phone_number' => $this->nullablePost('phone_number'),
+                'job_title' => $this->nullablePost('job_title'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal memperbarui profil: ' . $e->getMessage());
+
+            return redirect()->to('/profile/edit')->withInput()->with('errors', ['Gagal memperbarui profil. Pastikan data valid dan belum digunakan.']);
+        }
 
         $this->syncSession($userId);
 

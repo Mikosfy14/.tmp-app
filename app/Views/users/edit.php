@@ -25,6 +25,13 @@
     </div>
 </div>
 
+<?php if ($error = session()->getFlashdata('error')) : ?>
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i><?= esc(is_scalar($error) ? (string) $error : '') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <?php if (session()->getFlashdata('errors')) : ?>
     <div class="alert alert-danger alert-dismissible fade show mb-4">
         <strong>Validasi gagal.</strong>

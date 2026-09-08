@@ -171,7 +171,6 @@ $deadlineNotifications = get_user_deadline_notifications();
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="<?= base_url('/profile') ?>"><i class="bi bi-person-vcard me-2"></i>Profil Saya</a></li>
-                            <li><a class="dropdown-item" href="<?= base_url('/profile/edit') ?>"><i class="bi bi-pencil-square me-2"></i>Edit Profil</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="<?= base_url('/logout') ?>"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
                         </ul>

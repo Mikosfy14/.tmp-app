@@ -120,9 +120,15 @@ class Users extends BaseController
             return redirect()->to('/users/create')->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $this->userModel->insert($this->buildUserPayload([
-            'password_hash' => self::DEFAULT_PASSWORD,
-        ]));
+        try {
+            $this->userModel->insert($this->buildUserPayload([
+                'password_hash' => self::DEFAULT_PASSWORD,
+            ]));
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal menambahkan user: ' . $e->getMessage());
+
+            return redirect()->to('/users/create')->withInput()->with('errors', ['Gagal menambahkan user. Pastikan data yang dimasukkan valid dan belum digunakan.']);
+        }
 
         return redirect()->to('/users')->with('success', 'User berhasil ditambahkan dengan password default ' . self::DEFAULT_PASSWORD . '.');
     }
@@ -165,7 +171,14 @@ class Users extends BaseController
             return redirect()->to('/users/edit/' . $id)->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $this->userModel->update($id, $this->buildUserPayload());
+        try {
+            $this->userModel->update($id, $this->buildUserPayload());
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal memperbarui user: ' . $e->getMessage());
+
+            return redirect()->to('/users/edit/' . $id)->withInput()->with('errors', ['Gagal memperbarui user. Pastikan data yang dimasukkan valid dan belum digunakan.']);
+        }
+
         $this->syncCurrentUserSession($id);
 
         return redirect()->to('/users/detail/' . $id)->with('success', 'User berhasil diperbarui.');
@@ -221,13 +234,40 @@ class Users extends BaseController
             ? "required|max_length[100]|is_unique[users.username,id,{$ignoreId}]"
             : 'required|max_length[100]|is_unique[users.username]';
 
+        $emailRule = $ignoreId
+            ? "permit_empty|valid_email|max_length[150]|is_unique[users.email,id,{$ignoreId}]"
+            : 'permit_empty|valid_email|max_length[150]|is_unique[users.email]';
+
         return [
-            'name' => 'required|max_length[150]',
-            'username' => $usernameRule,
-            'email' => 'permit_empty|valid_email|max_length[150]',
+            'name' => [
+                'rules' => 'required|max_length[150]',
+                'errors' => [
+                    'required' => 'Nama lengkap wajib diisi.',
+                ],
+            ],
+            'username' => [
+                'rules' => $usernameRule,
+                'errors' => [
+                    'required' => 'Username wajib diisi.',
+                    'is_unique' => 'Username sudah digunakan.',
+                ],
+            ],
+            'email' => [
+                'rules' => $emailRule,
+                'errors' => [
+                    'valid_email' => 'Format email tidak valid.',
+                    'is_unique' => 'Email sudah digunakan.',
+                ],
+            ],
             'phone_number' => 'permit_empty|max_length[50]',
             'job_title' => 'permit_empty|max_length[150]',
-            'role_id' => 'required|is_natural_no_zero',
+            'role_id' => [
+                'rules' => 'required|is_natural_no_zero',
+                'errors' => [
+                    'required' => 'Role wajib dipilih.',
+                    'is_natural_no_zero' => 'Role tidak valid.',
+                ],
+            ],
             'is_active' => 'required|in_list[0,1]',
         ];
     }
