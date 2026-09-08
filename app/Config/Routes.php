@@ -60,3 +60,11 @@ $routes->group('users', ['filter' => 'auth'], function($routes) {
     $routes->post('activate/(:num)', 'Users::activate/$1');
     $routes->post('deactivate/(:num)', 'Users::deactivate/$1');
 });
+
+// Direct Testing Routes for Custom Error Pages (403, 404, 500)
+$routes->group('test-error', function($routes) {
+    $routes->get('403', 'ErrorTest::error403');
+    $routes->get('404', 'ErrorTest::error404');
+    $routes->get('500', 'ErrorTest::error500');
+});
+

@@ -308,7 +308,7 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
                 </div>
                 <div class="col-12 col-md-6 col-lg-2">
                     <select name="status" class="form-select">
-                        <option value="">Semua Status SDLC</option>
+                        <option value="">All SDLC Status</option>
                         <?php foreach ($statusOptions as $st) : ?>
                             <option value="<?= esc($st['id']) ?>" <?= (string) ($selectedStatus ?? '') === (string) $st['id'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
                         <?php endforeach; ?>
@@ -316,7 +316,7 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
                 </div>
                 <div class="col-12 col-md-6 col-lg-2">
                     <select name="is_completed" class="form-select">
-                        <option value="">Semua Penyelesaian (All)</option>
+                        <option value="">All</option>
                         <option value="completed" <?= $selectedIsCompleted === 'completed' || $selectedIsCompleted === '1' ? 'selected' : '' ?>>Completed</option>
                         <option value="not_completed" <?= $selectedIsCompleted === 'not_completed' || $selectedIsCompleted === '0' ? 'selected' : '' ?>>Not Completed</option>
                     </select>
@@ -324,7 +324,7 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
                 <div class="col-12 col-md-6 col-lg-3">
                     <label for="period_picker" class="visually-hidden">Filter tanggal</label>
                     <div class="input-group period-filter-group">
-                        <input type="text" id="period_picker" class="form-control" placeholder="Filter Tanggal" readonly>
+                        <input type="text" id="period_picker" class="form-control" placeholder="Date Range" readonly>
                         <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-calendar3 lh-1"></i></span>
                     </div>
                     <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">

@@ -14,7 +14,7 @@ class TeamPerformance extends BaseController
     public function index()
     {
         if (session()->get('role_name') !== 'Kepala Departemen') {
-            return redirect()->to('/dashboard')->with('error', 'Akses hanya tersedia untuk Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         $startDate = trim((string) $this->request->getGet('filter_start'));

@@ -42,4 +42,16 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
     }
+
+    /**
+     * Render 403 Forbidden error response with custom or default message.
+     */
+    protected function render403(?string $message = null): ResponseInterface
+    {
+        return $this->response
+            ->setStatusCode(403)
+            ->setBody(view('errors/html/error_403', [
+                'message' => $message ?? 'Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya',
+            ]));
+    }
 }

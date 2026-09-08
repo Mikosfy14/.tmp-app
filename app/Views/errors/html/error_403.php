@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="<?= base_url('assets/images/logo/tmp_logo.png') ?>" type="image/png">
-    <title>404 - Halaman Tidak Ditemukan | .tmp Project Management</title>
+    <title>403 - Akses Ditolak | .tmp Project Management</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,8 +59,8 @@
             font-weight: 700;
             padding: 4px 14px;
             border-radius: 50px;
-            background-color: #eff6ff;
-            color: #2563eb;
+            background-color: #fef2f2;
+            color: #dc2626;
             margin-bottom: 1rem;
             letter-spacing: 0.5px;
         }
@@ -94,6 +94,7 @@
             transition: all 0.2s ease-in-out;
             box-shadow: 0 4px 12px rgba(67, 94, 190, 0.25);
             border: none;
+            cursor: pointer;
         }
 
         .btn-cta:hover {
@@ -113,23 +114,30 @@
 
 <body>
     <div class="error-card">
-        <img src="<?= base_url('assets/images/error/image_error404.png') ?>" alt="Error 404 - Not Found" class="img-error">
-        
-        <h1 class="error-title">Halaman Tidak Ditemukan</h1>
+        <img src="<?= base_url('assets/images/error/image_error403.png') ?>" alt="Error 403 - Forbidden" class="img-error">
+    
+        <h1 class="error-title">Akses Ditolak</h1>
         
         <p class="error-message">
-            Periksa kembali alamat URL atau kembali ke dashboard.
+            <?= esc($message ?? 'Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya') ?>
         </p>
         
-        <?php
-            $targetUrl = (function_exists('session') && session()->get('isLoggedIn')) ? base_url('/dashboard') : base_url('/login');
-        ?>
-        <a href="<?= $targetUrl ?>" class="btn-cta">
-            <i class="fa-solid fa-house"></i>
-            <span>Kembali ke dashboard</span>
-        </a>
+        <button type="button" onclick="handleGoBack()" class="btn-cta">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Kembali ke halaman sebelumnya</span>
+        </button>
 
     </div>
+
+    <script>
+        function handleGoBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = "<?= base_url('/dashboard') ?>";
+            }
+        }
+    </script>
 </body>
 
 </html>
