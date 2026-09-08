@@ -20,7 +20,7 @@ class Users extends BaseController
     public function index()
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         $keyword = trim((string) $this->request->getGet('keyword'));
@@ -71,7 +71,7 @@ class Users extends BaseController
     public function detail(int $id)
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         $user = $this->getUserWithRole($id);
@@ -94,7 +94,7 @@ class Users extends BaseController
     public function create()
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         return view('users/create', [
@@ -113,7 +113,7 @@ class Users extends BaseController
     public function store()
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         if (!$this->validate($this->userRules())) {
@@ -130,7 +130,7 @@ class Users extends BaseController
     public function edit(int $id)
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         $user = $this->getUserWithRole($id);
@@ -154,7 +154,7 @@ class Users extends BaseController
     public function update(int $id)
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         if (!$this->getUserWithRole($id)) {
@@ -174,7 +174,7 @@ class Users extends BaseController
     public function resetPassword(int $id)
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         if (!$this->getUserWithRole($id)) {
@@ -203,7 +203,7 @@ class Users extends BaseController
     private function setAccountStatus(int $id, int $status)
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. User Management hanya dapat diakses oleh Kepala Departemen.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         if (!$this->getUserWithRole($id)) {

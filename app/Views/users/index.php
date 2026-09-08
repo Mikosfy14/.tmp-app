@@ -207,7 +207,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                 </div>
                 <div class="col-12 col-md-4 col-lg-2">
                     <select name="role" class="form-select">
-                        <option value="">Semua Role</option>
+                        <option value="">All Roles</option>
                         <?php foreach ($roles as $role) : ?>
                             <option value="<?= esc($role['id']) ?>" <?= (string) ($selectedRole ?? '') === (string) $role['id'] ? 'selected' : '' ?>><?= esc($role['role_name']) ?></option>
                         <?php endforeach; ?>
@@ -215,7 +215,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                 </div>
                 <div class="col-12 col-md-4 col-lg-3">
                     <select name="status" class="form-select">
-                        <option value="">Semua Status</option>
+                        <option value="">All Status</option>
                         <option value="1" <?= ($selectedStatus ?? '') === '1' ? 'selected' : '' ?>>Aktif</option>
                         <option value="0" <?= ($selectedStatus ?? '') === '0' ? 'selected' : '' ?>>Nonaktif</option>
                     </select>

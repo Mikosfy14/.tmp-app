@@ -34,7 +34,7 @@ class Projects extends BaseController
     public function user($userId)
     {
         if (!$this->isKepalaDepartemen()) {
-            return redirect()->to('/projects')->with('error', 'Akses ditolak. Hanya Kepala Departemen yang bisa melihat project user lain.');
+            return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
         return $this->renderProjectList((int) $userId);

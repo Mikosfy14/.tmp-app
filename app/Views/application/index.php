@@ -116,7 +116,7 @@ $criticalityClass = static fn(?string $name) => match ($name) {
                 </div>
             </div>
             <div class="col-md-7 col-lg-4"><select name="criticality_recovery_id" class="form-select">
-                    <option value="">Semua Criticality</option><?php foreach ($criticalityOptions as $item): ?><option value="<?= (int) ($item['id'] ?? 0) ?>" <?= (int)$selectedCriticality === (int)($item['id'] ?? 0) ? 'selected' : '' ?>><?= esc((string) ($item['criticality_name'] ?? '')) ?></option><?php endforeach ?>
+                    <option value="">All Criticality</option><?php foreach ($criticalityOptions as $item): ?><option value="<?= (int) ($item['id'] ?? 0) ?>" <?= (int)$selectedCriticality === (int)($item['id'] ?? 0) ? 'selected' : '' ?>><?= esc((string) ($item['criticality_name'] ?? '')) ?></option><?php endforeach ?>
                 </select></div>
             <div class="col-12 col-md-6 col-lg-1 d-flex"><button class="btn btn-primary application-filter-action w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter"><i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span></button></div>
             <div class="col-12 col-md-6 col-lg-1 d-flex justify-content-lg-end"><a href="<?= base_url('/aplikasi') ?>" class="btn btn-outline-secondary application-filter-action application-filter-reset" title="Reset filter" aria-label="Reset filter"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span></a></div>
