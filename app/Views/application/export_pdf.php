@@ -3,6 +3,7 @@ $applications = $applications ?? [];
 $reportTitle = $reportTitle ?? 'Laporan Master Aplikasi Pengelolaan';
 $filterCriticalityLabel = $filterCriticalityLabel ?? 'Semua Tingkat Criticality';
 $keyword = $keyword ?? '';
+$managedByMe = !empty($managedByMe);
 ?>
 
 <!DOCTYPE html>
@@ -191,6 +192,8 @@ $keyword = $keyword ?? '';
                 <td><?= esc($filterCriticalityLabel ?? 'Semua Tingkat Criticality') ?></td>
                 <td class="meta-label">Pencarian:</td>
                 <td><?= esc(!empty($keyword) ? $keyword : '-') ?></td>
+                <td class="meta-label">PIC Filter:</td>
+                <td><?= $managedByMe ? esc('Dikelola Oleh Saya (' . (session()->get('name') ?? 'User') . ')') : 'Semua PIC' ?></td>
                 <td class="meta-label">Total Data:</td>
                 <td><strong><?= count($applications) ?> Aplikasi</strong></td>
             </tr>

@@ -4,11 +4,13 @@
 /** @var array<int, array<string, mixed>> $criticalityOptions */
 /** @var string $keyword */
 /** @var int|null $selectedCriticality */
+/** @var bool $managedByMe */
 
 $applications = $applications ?? [];
 $criticalityOptions = $criticalityOptions ?? [];
 $keyword = $keyword ?? '';
 $selectedCriticality = $selectedCriticality ?? null;
+$managedByMe = !empty($managedByMe);
 $criticalityClass = static fn(?string $name) => match ($name) {
     'Criticality 1' => 'danger',
     'Criticality 2' => 'warning',
@@ -71,6 +73,7 @@ $criticalityClass = static fn(?string $name) => match ($name) {
     $exportParams = [];
     if (!empty($selectedCriticality)) $exportParams['criticality_recovery_id'] = $selectedCriticality;
     if (!empty($keyword)) $exportParams['keyword'] = $keyword;
+    if ($managedByMe) $exportParams['managed_by_me'] = 1;
     $exportQueryString = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
     ?>
     <div class="d-flex align-items-center gap-2">
@@ -109,17 +112,42 @@ $criticalityClass = static fn(?string $name) => match ($name) {
 <div class="card shadow-sm mb-4">
     <div class="card-body p-3">
         <form method="get" action="<?= base_url('/aplikasi') ?>" class="row g-2 align-items-center">
-            <div class="col-lg-6"><label class="visually-hidden" for="keyword">Pencarian</label>
+            <div class="col-12 col-md-5 col-lg-5">
+                <label class="visually-hidden" for="keyword">Pencarian</label>
                 <div class="input-group">
                     <input id="keyword" name="keyword" class="form-control" value="<?= esc($keyword) ?>" placeholder="Cari nama, deskripsi, owner, PIC, atau URL">
                     <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
                 </div>
             </div>
-            <div class="col-md-7 col-lg-4"><select name="criticality_recovery_id" class="form-select">
-                    <option value="">All Criticality</option><?php foreach ($criticalityOptions as $item): ?><option value="<?= (int) ($item['id'] ?? 0) ?>" <?= (int)$selectedCriticality === (int)($item['id'] ?? 0) ? 'selected' : '' ?>><?= esc((string) ($item['criticality_name'] ?? '')) ?></option><?php endforeach ?>
-                </select></div>
-            <div class="col-12 col-md-6 col-lg-1 d-flex"><button class="btn btn-primary application-filter-action w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter"><i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span></button></div>
-            <div class="col-12 col-md-6 col-lg-1 d-flex justify-content-lg-end"><a href="<?= base_url('/aplikasi') ?>" class="btn btn-outline-secondary application-filter-action application-filter-reset" title="Reset filter" aria-label="Reset filter"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span></a></div>
+            <div class="col-12 col-md-4 col-lg-3">
+                <label class="visually-hidden" for="criticalitySelect">Tingkat Criticality</label>
+                <select id="criticalitySelect" name="criticality_recovery_id" class="form-select">
+                    <option value="">All Criticality</option>
+                    <?php foreach ($criticalityOptions as $item): ?>
+                        <option value="<?= (int) ($item['id'] ?? 0) ?>" <?= (int)$selectedCriticality === (int)($item['id'] ?? 0) ? 'selected' : '' ?>>
+                            <?= esc((string) ($item['criticality_name'] ?? '')) ?>
+                        </option>
+                    <?php endforeach ?>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 col-lg-2">
+                <div class="form-check form-switch mb-0 d-flex align-items-center gap-2" style="min-height: 38px;">
+                    <input class="form-check-input mt-0" type="checkbox" role="switch" name="managed_by_me" value="1" id="managedByMe" <?= $managedByMe ? 'checked' : '' ?> onchange="this.form.submit()">
+                    <label class="form-check-label text-nowrap fw-semibold small" for="managedByMe">Dikelola oleh saya</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-6 col-lg-1 d-flex">
+                <button class="btn btn-primary application-filter-action w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span class="d-inline d-lg-none ms-1">Cari</span>
+                </button>
+            </div>
+            <div class="col-6 col-md-6 col-lg-1 d-flex justify-content-lg-end">
+                <a href="<?= base_url('/aplikasi') ?>" class="btn btn-outline-secondary application-filter-action application-filter-reset" title="Reset filter" aria-label="Reset filter">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <span class="d-inline d-lg-none ms-1">Reset</span>
+                </a>
+            </div>
         </form>
     </div>
 </div>

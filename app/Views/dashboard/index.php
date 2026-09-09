@@ -253,10 +253,6 @@ $deadlineAlerts = get_user_deadline_notifications();
                         <span class="badge bg-light-danger text-danger border border-danger-subtle py-1 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalWindowedDeadlineAlert" role="button" style="cursor: pointer;" title="Klik untuk membuka jendela peringatan deadline">
                             <i class="bi bi-bell-fill me-1"></i><?= count($priority_projects) ?> Perlu Tindakan
                         </span>
-                    <?php else : ?>
-                        <span class="badge bg-light-success text-success border border-success-subtle py-1 px-2 fw-semibold">
-                            On Track
-                        </span>
                     <?php endif; ?>
                 </div>
                 <div class="card-body p-0">

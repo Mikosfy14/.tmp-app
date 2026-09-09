@@ -36,7 +36,7 @@ class ApplicationModel extends Model
         'assigned_user_id',
     ];
 
-    public function getApplicationsWithDetails(?int $criticalityFilter = null, ?string $keyword = null): array
+    public function getApplicationsWithDetails(?int $criticalityFilter = null, ?string $keyword = null, ?int $assignedUserId = null): array
     {
         $builder = $this->builder();
         $builder->select(
@@ -54,6 +54,10 @@ class ApplicationModel extends Model
 
         if (!empty($criticalityFilter)) {
             $builder->where('applications.criticality_recovery_id', $criticalityFilter);
+        }
+
+        if (!empty($assignedUserId)) {
+            $builder->where('applications.assigned_user_id', $assignedUserId);
         }
 
         if (!empty($keyword)) {

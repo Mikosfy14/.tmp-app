@@ -35,9 +35,41 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
 
 <?= $this->section('content') ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 <style>
+    .flatpickr-input[readonly] {
+        background-color: var(--bs-body-bg);
+        cursor: pointer;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-calendar,
+    [data-bs-theme="dark"] .flatpickr-months .flatpickr-month,
+    [data-bs-theme="dark"] .flatpickr-weekdays,
+    [data-bs-theme="dark"] span.flatpickr-weekday {
+        background: #1e1e2d;
+        color: #f5f7ff;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-current-month .flatpickr-monthDropdown-months,
+    [data-bs-theme="dark"] .flatpickr-current-month input.cur-year,
+    [data-bs-theme="dark"] .flatpickr-day {
+        color: #e6eaee;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-day:hover,
+    [data-bs-theme="dark"] .flatpickr-day:focus {
+        background: #2b2b40;
+        border-color: #2b2b40;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-day.selected {
+        background: #435ebe;
+        border-color: #435ebe;
+        color: #ffffff;
+    }
+
     .kpi-macro-card .kpi-value {
         font-size: 1.75rem;
         font-weight: 700;
@@ -84,11 +116,11 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
         <form method="get" id="filterForm" class="row g-2 align-items-end">
             <div class="col-12 col-md-4 col-lg-3">
                 <label class="form-label small fw-semibold text-muted mb-1">Tanggal Mulai</label>
-                <input type="date" name="filter_start" id="filterStart" class="form-control form-control-sm" value="<?= esc($selectedStartDate ?? '') ?>">
+                <input type="text" name="filter_start" id="filterStart" class="form-control form-control-sm" placeholder="Pilih tanggal..." value="<?= esc($selectedStartDate ?? '') ?>">
             </div>
             <div class="col-12 col-md-4 col-lg-3">
                 <label class="form-label small fw-semibold text-muted mb-1">Tanggal Selesai</label>
-                <input type="date" name="filter_end" id="filterEnd" class="form-control form-control-sm" value="<?= esc($selectedEndDate ?? '') ?>">
+                <input type="text" name="filter_end" id="filterEnd" class="form-control form-control-sm" placeholder="Pilih tanggal..." value="<?= esc($selectedEndDate ?? '') ?>">
             </div>
             <div class="col-12 col-md-4 col-lg-3">
                 <label class="form-label small fw-semibold text-muted mb-1">Pintasan Kuartal (<?= date('Y') ?>)</label>
@@ -191,7 +223,13 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
             <div class="card-body p-3">
                 <div class="row g-3 align-items-center">
                     <div class="col-12 col-md-6">
-                        <div id="teamSdlcChart"></div>
+                        <?php if (!empty($sdlcDistribution)) : ?>
+                            <div id="teamSdlcChart"></div>
+                        <?php else : ?>
+                            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 border rounded bg-light-subtle h-100" style="min-height: 220px;">
+                                <small class="text-muted" style="font-size: 0.75rem;">Tidak ada proyek aktif pada periode filter ini.</small>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div class="col-12 col-md-6 border-start-md">
                         <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.72rem;">
@@ -258,7 +296,15 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                             Beban Tugas Aktif: Organik vs Non-Organik (Manmonth)
                         </small>
                     </div>
-                    <div id="teamCapacityChart"></div>
+                    <?php if (($organicActiveTasks + $nonOrganicActiveTasks) > 0) : ?>
+                        <div id="teamCapacityChart"></div>
+                    <?php else : ?>
+                        <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 border rounded bg-light-subtle my-2" style="min-height: 190px;">
+                            <i class="bi bi-people text-muted fs-3 mb-1"></i>
+                            <div class="fw-semibold text-muted" style="font-size: 0.85rem;">Belum Ada Tugas Aktif</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Tidak ada alokasi tugas aktif pada periode ini.</small>
+                        </div>
+                    <?php endif; ?>
                     <div class="row g-2 mt-2 pt-2 border-top text-center">
                         <div class="col-6">
                             <small class="text-muted d-block text-xs">Organik</small>
@@ -388,6 +434,8 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function getChartThemeOptions() {
@@ -409,22 +457,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const themeOpts = getChartThemeOptions();
 
     // 1. SDLC Donut Chart
-    const sdlcData = <?= json_encode($sdlcDistribution) ?>;
+    const sdlcData = <?= json_encode($sdlcDistribution ?? []) ?>;
     const sdlcLabels = Object.keys(sdlcData);
-    const sdlcSeries = Object.values(sdlcData);
+    const sdlcSeries = Object.values(sdlcData).map(Number);
+    const hasActiveSdlcData = sdlcSeries.some(val => val > 0);
+    const sdlcChartEl = document.querySelector("#teamSdlcChart");
 
-    var chartSdlc = new ApexCharts(document.querySelector("#teamSdlcChart"), {
-        chart: { type: 'donut', height: 230, ...themeOpts.chart },
-        series: sdlcSeries.length > 0 ? sdlcSeries : [1],
-        labels: sdlcSeries.length > 0 ? sdlcLabels : ['Tidak Ada Proyek Aktif'],
-        colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107', '#6c757d'],
-        theme: themeOpts.theme,
-        tooltip: themeOpts.tooltip,
-        legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
-        dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
-        plotOptions: { pie: { donut: { labels: { show: false } } } }
-    });
-    chartSdlc.render();
+    let chartSdlc = null;
+    if (hasActiveSdlcData && sdlcChartEl) {
+        chartSdlc = new ApexCharts(sdlcChartEl, {
+            chart: { type: 'donut', height: 230, ...themeOpts.chart },
+            series: sdlcSeries,
+            labels: sdlcLabels,
+            colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107', '#6c757d'],
+            theme: themeOpts.theme,
+            tooltip: themeOpts.tooltip,
+            legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
+            dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
+            plotOptions: { pie: { donut: { labels: { show: false } } } }
+        });
+        chartSdlc.render();
+    }
 
     // 2. Monthly Trend Stacked Bar Chart
     const trendMonths = <?= json_encode($completionChart['months'] ?? []) ?>;
@@ -452,19 +505,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. Capacity Allocation Donut Chart
     const organicActive = <?= $organicActiveTasks ?>;
     const nonOrganicActive = <?= $nonOrganicActiveTasks ?>;
+    const capacityChartEl = document.querySelector("#teamCapacityChart");
 
-    var chartCapacity = new ApexCharts(document.querySelector("#teamCapacityChart"), {
-        chart: { type: 'donut', height: 200, ...themeOpts.chart },
-        series: (organicActive + nonOrganicActive > 0) ? [organicActive, nonOrganicActive] : [1],
-        labels: (organicActive + nonOrganicActive > 0) ? ['Organik', 'Manmonth'] : ['Belum Ada Tugas'],
-        colors: ['#435ebe', '#57caeb'],
-        theme: themeOpts.theme,
-        tooltip: themeOpts.tooltip,
-        legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
-        dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
-        plotOptions: { pie: { donut: { labels: { show: false } } } }
-    });
-    chartCapacity.render();
+    let chartCapacity = null;
+    if ((organicActive + nonOrganicActive) > 0 && capacityChartEl) {
+        chartCapacity = new ApexCharts(capacityChartEl, {
+            chart: { type: 'donut', height: 200, ...themeOpts.chart },
+            series: [organicActive, nonOrganicActive],
+            labels: ['Organik', 'Manmonth'],
+            colors: ['#435ebe', '#57caeb'],
+            theme: themeOpts.theme,
+            tooltip: themeOpts.tooltip,
+            legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
+            dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
+            plotOptions: { pie: { donut: { labels: { show: false } } } }
+        });
+        chartCapacity.render();
+    }
 
     // Chart Toggle between Monthly Trend and Capacity
     document.getElementById('macroChartToggle').addEventListener('change', function() {
@@ -472,6 +529,44 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('view-macro-trend').classList.toggle('d-none', !isTrend);
         document.getElementById('view-macro-capacity').classList.toggle('d-none', isTrend);
     });
+
+    // Flatpickr Range Initialization for Indonesian d/m/Y format
+    let fpStart = null;
+    let fpEnd = null;
+
+    if (typeof flatpickr !== 'undefined') {
+        const fpConfig = {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: false,
+            locale: (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : 'default',
+        };
+
+        const startEl = document.getElementById('filterStart');
+        const endEl = document.getElementById('filterEnd');
+
+        if (startEl) {
+            fpStart = flatpickr(startEl, {
+                ...fpConfig,
+                onChange: function(selectedDates) {
+                    if (fpEnd && selectedDates[0]) {
+                        fpEnd.set('minDate', selectedDates[0]);
+                        if (fpEnd.selectedDates[0] && fpEnd.selectedDates[0] < selectedDates[0]) {
+                            fpEnd.setDate(selectedDates[0]);
+                        }
+                    }
+                }
+            });
+        }
+
+        if (endEl) {
+            fpEnd = flatpickr(endEl, {
+                ...fpConfig,
+                minDate: startEl && startEl.value ? startEl.value : null,
+            });
+        }
+    }
 
     // Quarterly Filter Shortcuts
     const currentYear = new Date().getFullYear();
@@ -486,8 +581,14 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const q = this.getAttribute('data-quarter');
             if (quarters[q]) {
-                document.getElementById('filterStart').value = quarters[q].start;
-                document.getElementById('filterEnd').value = quarters[q].end;
+                if (fpStart && fpEnd) {
+                    fpStart.setDate(quarters[q].start, false);
+                    fpEnd.set('minDate', quarters[q].start);
+                    fpEnd.setDate(quarters[q].end, false);
+                } else {
+                    document.getElementById('filterStart').value = quarters[q].start;
+                    document.getElementById('filterEnd').value = quarters[q].end;
+                }
                 document.getElementById('filterForm').submit();
             }
         });

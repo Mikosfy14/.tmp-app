@@ -26,13 +26,16 @@ class Application extends BaseController
         $keyword = trim((string) $this->request->getGet('keyword'));
         $criticality = $this->request->getGet('criticality_recovery_id');
         $criticality = is_numeric($criticality) ? (int) $criticality : null;
+        $managedByMe = (int) $this->request->getGet('managed_by_me') === 1;
+        $assignedUserId = $managedByMe ? (int) session()->get('user_id') : null;
 
         return view('application/index', [
             'title' => 'Aplikasi Pengelolaan',
-            'applications' => $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null),
+            'applications' => $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null, $assignedUserId),
             'criticalityOptions' => $this->criticalityRecoveryModel->getActiveOptions(),
             'keyword' => $keyword,
             'selectedCriticality' => $criticality,
+            'managedByMe' => $managedByMe,
         ]);
     }
 
@@ -178,8 +181,10 @@ class Application extends BaseController
         $keyword = trim((string) $this->request->getGet('keyword'));
         $criticality = $this->request->getGet('criticality_recovery_id');
         $criticality = is_numeric($criticality) ? (int) $criticality : null;
+        $managedByMe = (int) $this->request->getGet('managed_by_me') === 1;
+        $assignedUserId = $managedByMe ? (int) session()->get('user_id') : null;
 
-        $applications = $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null);
+        $applications = $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null, $assignedUserId);
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -194,8 +199,12 @@ class Application extends BaseController
         // Metadata
         $critObj = !empty($criticality) ? $this->criticalityRecoveryModel->find($criticality) : null;
         $critText = $critObj['criticality_name'] ?? 'Semua Tingkat Criticality';
+        $filterMeta = 'Criticality: ' . $critText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-');
+        if ($managedByMe) {
+            $filterMeta .= ' | Filter: Dikelola Oleh Saya (' . (session()->get('name') ?? 'User') . ')';
+        }
 
-        $sheet->setCellValue('A2', 'Criticality: ' . $critText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'));
+        $sheet->setCellValue('A2', $filterMeta);
         $sheet->mergeCells('A2:T2');
         $sheet->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->getColor()->setRGB('6C757D');
 
@@ -310,8 +319,10 @@ class Application extends BaseController
         $keyword = trim((string) $this->request->getGet('keyword'));
         $criticality = $this->request->getGet('criticality_recovery_id');
         $criticality = is_numeric($criticality) ? (int) $criticality : null;
+        $managedByMe = (int) $this->request->getGet('managed_by_me') === 1;
+        $assignedUserId = $managedByMe ? (int) session()->get('user_id') : null;
 
-        $applications = $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null);
+        $applications = $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null, $assignedUserId);
 
         $critObj = !empty($criticality) ? $this->criticalityRecoveryModel->find($criticality) : null;
         $critText = $critObj['criticality_name'] ?? 'Semua Tingkat Criticality';
@@ -321,6 +332,7 @@ class Application extends BaseController
             'applications' => $applications,
             'filterCriticalityLabel' => $critText,
             'keyword' => $keyword,
+            'managedByMe' => $managedByMe,
         ]);
 
         $options = new \Dompdf\Options();

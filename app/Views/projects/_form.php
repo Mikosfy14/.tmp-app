@@ -48,6 +48,7 @@ foreach ($users as $user) {
 }
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="<?= base_url('assets/vendors/choices.js/choices.css') ?>">
 <style>
     .project-form-card {
@@ -320,6 +321,37 @@ foreach ($users as $user) {
         filter: none;
     }
 
+    .flatpickr-input[readonly] {
+        background-color: var(--bs-body-bg);
+        cursor: pointer;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-calendar,
+    [data-bs-theme="dark"] .flatpickr-months .flatpickr-month,
+    [data-bs-theme="dark"] .flatpickr-weekdays,
+    [data-bs-theme="dark"] span.flatpickr-weekday {
+        background: #1e1e2d;
+        color: #f5f7ff;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-current-month .flatpickr-monthDropdown-months,
+    [data-bs-theme="dark"] .flatpickr-current-month input.cur-year,
+    [data-bs-theme="dark"] .flatpickr-day {
+        color: #e6eaee;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-day:hover,
+    [data-bs-theme="dark"] .flatpickr-day:focus {
+        background: #2b2b40;
+        border-color: #2b2b40;
+    }
+
+    [data-bs-theme="dark"] .flatpickr-day.selected {
+        background: #435ebe;
+        border-color: #435ebe;
+        color: #ffffff;
+    }
+
     [data-bs-theme="dark"] .project-form-card,
     [data-bs-theme="dark"] .project-form-actions,
     [data-bs-theme="dark"] .project-form-section {
@@ -427,26 +459,26 @@ foreach ($users as $user) {
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
-                    <input type="date" id="startDate" name="start_date" class="form-control" value="<?= esc($value('start_date', $project['start_date'] ?? '')) ?>" required>
+                    <input type="text" id="startDate" name="start_date" class="form-control bg-white" placeholder="Pilih tanggal mulai..." value="<?= esc($value('start_date', $project['start_date'] ?? '')) ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label for="endDate" class="form-label">End Date <span class="text-danger">*</span></label>
-                    <input type="date" id="endDate" name="end_date" class="form-control" value="<?= esc($value('end_date', $project['end_date'] ?? '')) ?>" required>
+                    <input type="text" id="endDate" name="end_date" class="form-control bg-white" placeholder="Pilih tanggal selesai..." value="<?= esc($value('end_date', $project['end_date'] ?? '')) ?>" required>
                 </div>
                 <div class="col-12 mt-4">
                     <div class="small fw-bold text-muted text-uppercase">Target Milestone</div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label for="unitTestingDate" class="form-label">Unit Testing</label>
-                    <input type="date" id="unitTestingDate" name="unit_testing_date" class="form-control" value="<?= esc($value('unit_testing_date', $project['unit_testing_date'] ?? '')) ?>">
+                    <input type="text" id="unitTestingDate" name="unit_testing_date" class="form-control bg-white" placeholder="Pilih tanggal..." value="<?= esc($value('unit_testing_date', $project['unit_testing_date'] ?? '')) ?>">
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label for="sitDate" class="form-label">SIT</label>
-                    <input type="date" id="sitDate" name="sit_date" class="form-control" value="<?= esc($value('sit_date', $project['sit_date'] ?? '')) ?>">
+                    <input type="text" id="sitDate" name="sit_date" class="form-control bg-white" placeholder="Pilih tanggal..." value="<?= esc($value('sit_date', $project['sit_date'] ?? '')) ?>">
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label for="uatDate" class="form-label">UAT</label>
-                    <input type="date" id="uatDate" name="uat_date" class="form-control" value="<?= esc($value('uat_date', $project['uat_date'] ?? '')) ?>">
+                    <input type="text" id="uatDate" name="uat_date" class="form-control bg-white" placeholder="Pilih tanggal..." value="<?= esc($value('uat_date', $project['uat_date'] ?? '')) ?>">
                 </div>
                 <?php
                 $isCurrentDeployment = false;
@@ -464,7 +496,7 @@ foreach ($users as $user) {
                     <label for="promoteDate" class="form-label">
                         Promote <span id="promoteRequiredAsterisk" class="text-danger <?= $isCurrentDeployment ? '' : 'd-none' ?>">*</span>
                     </label>
-                    <input type="date" id="promoteDate" name="promote_date" class="form-control" value="<?= esc($value('promote_date', $project['promote_date'] ?? '')) ?>" <?= $isCurrentDeployment ? 'required' : '' ?>>
+                    <input type="text" id="promoteDate" name="promote_date" class="form-control bg-white" placeholder="Pilih tanggal..." value="<?= esc($value('promote_date', $project['promote_date'] ?? '')) ?>" <?= $isCurrentDeployment ? 'required' : '' ?>>
                     <div id="promoteHelpText" class="form-text text-danger <?= $isCurrentDeployment ? '' : 'd-none' ?>" style="font-size: 0.72rem;">
                         Wajib diisi saat status Deployment.
                     </div>
@@ -648,6 +680,8 @@ foreach ($users as $user) {
     })();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script>
     (() => {
         const startDate = document.getElementById('startDate');
@@ -657,17 +691,45 @@ foreach ($users as $user) {
         const promoteAsterisk = document.getElementById('promoteRequiredAsterisk');
         const promoteHelpText = document.getElementById('promoteHelpText');
 
-        if (startDate && endDate) {
-            const syncEndDateLimit = () => {
-                endDate.min = startDate.value;
+        const fpCommonConfig = {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: false,
+            locale: (typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : 'default',
+        };
 
-                if (startDate.value && endDate.value && endDate.value < startDate.value) {
-                    endDate.value = startDate.value;
+        let fpStart = null;
+        let fpEnd = null;
+
+        if (typeof flatpickr !== 'undefined') {
+            if (startDate) {
+                fpStart = flatpickr(startDate, {
+                    ...fpCommonConfig,
+                    onChange: function(selectedDates, dateStr) {
+                        if (fpEnd && selectedDates[0]) {
+                            fpEnd.set('minDate', selectedDates[0]);
+                            if (fpEnd.selectedDates[0] && fpEnd.selectedDates[0] < selectedDates[0]) {
+                                fpEnd.setDate(selectedDates[0]);
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (endDate) {
+                fpEnd = flatpickr(endDate, {
+                    ...fpCommonConfig,
+                    minDate: startDate && startDate.value ? startDate.value : null,
+                });
+            }
+
+            ['unitTestingDate', 'sitDate', 'uatDate', 'promoteDate'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    flatpickr(el, fpCommonConfig);
                 }
-            };
-
-            startDate.addEventListener('change', syncEndDateLimit);
-            syncEndDateLimit();
+            });
         }
 
         const syncPromoteRequirement = () => {
