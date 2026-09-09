@@ -11,17 +11,22 @@ $deadlineNotifications = get_user_deadline_notifications();
         z-index: 1030;
     }
 
-    .navbar-profile-trigger {
+    .navbar-action-trigger {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 42px;
         height: 42px;
         padding: 0;
+        border-radius: 50%;
+        transition: all .2s ease;
+        position: relative;
+    }
+
+    .navbar-profile-trigger {
         color: #fff;
         background: #435ebe;
         border: 2px solid #fff;
-        border-radius: 50%;
         box-shadow: 0 2px 10px rgba(31, 45, 61, .18);
         font-weight: 800;
     }
@@ -35,17 +40,27 @@ $deadlineNotifications = get_user_deadline_notifications();
     }
 
     .navbar-bell-trigger {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        padding: 0;
         color: #607080;
         background: #f2f4f8;
         border: 0;
-        border-radius: 50%;
-        transition: all .2s ease;
+    }
+
+    .navbar-bell-trigger i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+
+    .navbar-bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        transform: translate(20%, -20%);
+        font-size: 0.65rem;
+        padding: 0.25em 0.5em;
+        line-height: 1;
     }
 
     .navbar-bell-trigger:hover,
@@ -95,10 +110,10 @@ $deadlineNotifications = get_user_deadline_notifications();
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <!-- Notification Bell Dropdown -->
                     <div class="dropdown">
-                        <button id="notificationDropdown" class="navbar-bell-trigger position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi Deadline Project" title="Notifikasi Deadline">
-                            <i class="bi bi-bell-fill fs-5"></i>
+                        <button id="notificationDropdown" class="navbar-action-trigger navbar-bell-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi Deadline Project" title="Notifikasi Deadline">
+                            <i class="bi bi-bell-fill" aria-hidden="true"></i>
                             <?php if (!empty($deadlineNotifications)): ?>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style="font-size: 0.65rem; padding: 0.25em 0.55em;">
+                                <span class="navbar-bell-badge badge rounded-pill bg-danger border border-light">
                                     <?= count($deadlineNotifications) > 99 ? '99+' : count($deadlineNotifications) ?>
                                     <span class="visually-hidden">notifikasi deadline</span>
                                 </span>
@@ -150,8 +165,7 @@ $deadlineNotifications = get_user_deadline_notifications();
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <li class="p-4 text-center text-muted small">
-                                    <i class="bi bi-check-circle text-success fs-2 d-block mb-2"></i>
-                                    Semua deadline project berjalan aman (On Track).
+                                    Tidak ada deadline project on alert
                                 </li>
                             <?php endif; ?>
                         </ul>
@@ -159,7 +173,7 @@ $deadlineNotifications = get_user_deadline_notifications();
 
                     <!-- User Profile Dropdown -->
                     <div class="user-menu dropdown ms-1">
-                        <button id="profileDropdown" class="navbar-profile-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Buka menu profil" title="Profil Saya">
+                        <button id="profileDropdown" class="navbar-action-trigger navbar-profile-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Buka menu profil" title="Profil Saya">
                             <?= esc($profileInitial) ?>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end navbar-profile-menu shadow-sm" aria-labelledby="profileDropdown">

@@ -453,13 +453,8 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
                                 </tr>
                             <?php endforeach; ?>
                         <?php else : ?>
-                            <tr id="projectsEmptyRow">
-                                <td colspan="5" class="text-center py-4 text-muted">Data project tidak ditemukan.</td>
-                            </tr>
-                        <?php endif; ?>
-                        <?php if (!empty($displayProjects)) : ?>
-                            <tr id="projectsEmptyRow" class="d-none">
-                                <td colspan="5" class="text-center py-4 text-muted">Data project tidak ditemukan.</td>
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Data project tidak tersedia</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
