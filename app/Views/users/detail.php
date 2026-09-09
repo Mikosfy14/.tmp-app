@@ -272,7 +272,13 @@ foreach ($assignedProjects as $p) {
                             <div id="view-user-sdlc">
                                 <div class="row g-3 align-items-center">
                                     <div class="col-12 col-md-6">
-                                        <div id="chart-user-sdlc"></div>
+                                        <?php if (!empty($sdlc_distribution)) : ?>
+                                            <div id="chart-user-sdlc"></div>
+                                        <?php else : ?>
+                                            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 border rounded bg-light-subtle h-100" style="min-height: 180px;">
+                                                <div class="fw-semibold text-muted" style="font-size: 0.85rem;">Tidak Ada Project Aktif</div>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="col-12 col-md-6 border-start-md">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -303,7 +309,7 @@ foreach ($assignedProjects as $p) {
                                             </div>
                                         <?php else : ?>
                                             <div class="text-center py-4 text-muted">
-                                                <small>Tidak ada proyek aktif saat ini.</small>
+                                                <small>Tidak ada project aktif saat ini.</small>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -537,18 +543,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const sdlcLabels = Object.keys(sdlcData);
     const sdlcSeries = Object.values(sdlcData);
 
-    var chartSdlc = new ApexCharts(document.querySelector("#chart-user-sdlc"), {
-        chart: { type: 'donut', height: 220, ...themeOpts.chart },
-        series: sdlcSeries.length > 0 ? sdlcSeries : [1],
-        labels: sdlcSeries.length > 0 ? sdlcLabels : ['No Active Projects'],
-        colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
-        theme: themeOpts.theme,
-        tooltip: themeOpts.tooltip,
-        legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
-        dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
-        plotOptions: { pie: { donut: { labels: { show: false } } } }
-    });
-    chartSdlc.render();
+    var chartSdlc = null;
+    if (sdlcSeries.length > 0 && document.querySelector("#chart-user-sdlc")) {
+        chartSdlc = new ApexCharts(document.querySelector("#chart-user-sdlc"), {
+            chart: { type: 'donut', height: 220, ...themeOpts.chart },
+            series: sdlcSeries,
+            labels: sdlcLabels,
+            colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
+            theme: themeOpts.theme,
+            tooltip: themeOpts.tooltip,
+            legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
+            dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
+            plotOptions: { pie: { donut: { labels: { show: false } } } }
+        });
+        chartSdlc.render();
+    }
 
     // Monthly Completion Trend (Stacked Bar)
     const trendMonths = <?= json_encode($completion_chart['months'] ?? []) ?>;

@@ -192,25 +192,11 @@ $deadlineAlerts = get_user_deadline_notifications();
     $completionSummaryText = "{$onTimeDone} Tepat Waktu · {$lateDone} Terlambat";
 
     // Priority Projects: active projects with Risk, Urgent, Critical, Overdue
-    $priority_projects = array_filter($my_active_projects, function ($p) {
+    $priority_projects = array_values(array_filter($my_active_projects, function ($p) {
         return !is_project_completed($p) && in_array($p['deadline_label'] ?? '', ['Risk', 'Urgent', 'Critical', 'Overdue']);
-    });
+    }));
     $has_priority = !empty($priority_projects);
-    if ($has_priority) {
-        $display_priority_projects = $priority_projects;
-        $is_priority_fallback = false;
-    } else {
-        $active_only = array_filter($my_active_projects, function ($p) {
-            return !is_project_completed($p);
-        });
-        usort($active_only, function ($a, $b) {
-            $tA = !empty($a['end_date']) ? strtotime($a['end_date']) : PHP_INT_MAX;
-            $tB = !empty($b['end_date']) ? strtotime($b['end_date']) : PHP_INT_MAX;
-            return $tA <=> $tB;
-        });
-        $display_priority_projects = array_slice($active_only, 0, 5);
-        $is_priority_fallback = true;
-    }
+    $display_priority_projects = $priority_projects;
     ?>
 
     <!-- 3 KPI Counters -->
@@ -261,15 +247,15 @@ $deadlineAlerts = get_user_deadline_notifications();
                 <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Priority Tasks</h5>
-                        <small class="text-muted d-none d-sm-inline">| Proyek Mendekati Tenggat / Overdue</small>
+                        <small class="text-muted d-none d-sm-inline">| Project Mendekati Tenggat / Overdue</small>
                     </div>
                     <?php if ($has_priority) : ?>
                         <span class="badge bg-light-danger text-danger border border-danger-subtle py-1 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalWindowedDeadlineAlert" role="button" style="cursor: pointer;" title="Klik untuk membuka jendela peringatan deadline">
-                            <i class="bi bi-bell-fill me-1"></i><?= count($priority_projects) ?> Perlu Perhatian
+                            <i class="bi bi-bell-fill me-1"></i><?= count($priority_projects) ?> Perlu Tindakan
                         </span>
                     <?php else : ?>
                         <span class="badge bg-light-success text-success border border-success-subtle py-1 px-2 fw-semibold">
-                            Semua Aman
+                            On Track
                         </span>
                     <?php endif; ?>
                 </div>
@@ -346,8 +332,8 @@ $deadlineAlerts = get_user_deadline_notifications();
                                     <?php endforeach; ?>
                                 <?php else : ?>
                                     <tr>
-                                        <td colspan="4" class="text-center py-3 text-muted">
-                                            Belum ada project aktif saat ini.
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            Tidak ada proyek mendekati tenggat atau overdue saat ini.
                                         </td>
                                     </tr>
                                 <?php endif; ?>
@@ -374,7 +360,13 @@ $deadlineAlerts = get_user_deadline_notifications();
                     <div id="view-sdlc">
                         <div class="row g-3 align-items-center">
                             <div class="col-12 col-md-6">
-                                <div id="chart-personal-sdlc"></div>
+                                <?php if (!empty($sdlc_distribution)) : ?>
+                                    <div id="chart-personal-sdlc"></div>
+                                <?php else : ?>
+                                    <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 border rounded bg-light-subtle h-100" style="min-height: 200px;">
+                                        <div class="fw-semibold text-muted" style="font-size: 0.85rem;">Tidak Ada Project Aktif</div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <div class="col-12 col-md-6 border-start-md">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -405,7 +397,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                                     </div>
                                 <?php else : ?>
                                     <div class="text-center py-4 text-muted">
-                                        <small>Tidak ada proyek aktif saat ini.</small>
+                                        <small>Tidak ada project aktif</small>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -448,7 +440,6 @@ $deadlineAlerts = get_user_deadline_notifications();
                 <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Aplikasi yang Dikelola</h5>
-                        <small class="text-muted d-none d-sm-inline">| Penugasan Sebagai PIC</small>
                     </div>
                     <span class="badge bg-light-primary text-primary border border-primary-subtle py-1 px-2 fw-semibold">
                         <?= count($my_managed_apps ?? []) ?> Aplikasi
@@ -505,7 +496,6 @@ $deadlineAlerts = get_user_deadline_notifications();
                 <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Pusat Aksi & Berkas Project</h5>
-                        <small class="text-muted d-none d-sm-inline">| Pintasan & Repositori</small>
                     </div>
                 </div>
                 <div class="card-body p-3">
@@ -565,7 +555,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                             </div>
                         <?php else : ?>
                             <div class="text-center py-3 text-muted small">
-                                Belum ada berkas terunggah pada project Anda.
+                                Belum ada berkas terunggah
                             </div>
                         <?php endif; ?>
                     </div>
@@ -667,30 +657,34 @@ $deadlineAlerts = get_user_deadline_notifications();
         var personalThemeOptions = getChartThemeOptions();
 
         // 1. SDLC Chart (Donut)
-        var optionsSdlc = {
-            chart: {
-                type: 'donut',
-                height: 240,
-                ...personalThemeOptions.chart
-            },
-            series: sdlcSeries.length > 0 ? sdlcSeries : [1],
-            labels: sdlcSeries.length > 0 ? sdlcLabels : ['No Active Projects'],
-            colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
-            theme: personalThemeOptions.theme,
-            tooltip: personalThemeOptions.tooltip,
-            legend: {
-                position: 'bottom',
-                fontSize: '11px',
-                ...personalThemeOptions.legend
-            },
-            dataLabels: {
-                enabled: true,
-                ...personalThemeOptions.teamDataLabels
-            },
-            plotOptions: personalThemeOptions.plotOptions
-        };
-        var chartSdlc = new ApexCharts(document.querySelector("#chart-personal-sdlc"), optionsSdlc);
-        chartSdlc.render();
+        var chartSdlc = null;
+        var optionsSdlc = null;
+        if (sdlcSeries.length > 0 && document.querySelector("#chart-personal-sdlc")) {
+            optionsSdlc = {
+                chart: {
+                    type: 'donut',
+                    height: 240,
+                    ...personalThemeOptions.chart
+                },
+                series: sdlcSeries,
+                labels: sdlcLabels,
+                colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
+                theme: personalThemeOptions.theme,
+                tooltip: personalThemeOptions.tooltip,
+                legend: {
+                    position: 'bottom',
+                    fontSize: '11px',
+                    ...personalThemeOptions.legend
+                },
+                dataLabels: {
+                    enabled: true,
+                    ...personalThemeOptions.teamDataLabels
+                },
+                plotOptions: personalThemeOptions.plotOptions
+            };
+            chartSdlc = new ApexCharts(document.querySelector("#chart-personal-sdlc"), optionsSdlc);
+            chartSdlc.render();
+        }
 
         // 2. Completion Rate Chart (RadialBar Gauge)
         var optionsCompletion = {
@@ -866,87 +860,40 @@ $deadlineAlerts = get_user_deadline_notifications();
                 chartTrend.destroy();
                 chartTrend = null;
             }
-            document.querySelector('#chart-personal-sdlc').innerHTML = '';
-            document.querySelector('#chart-personal-completion').innerHTML = '';
-            document.querySelector('#chart-personal-ontime').innerHTML = '';
-            document.querySelector('#chart-personal-trend').innerHTML = '';
+            const elSdlc = document.querySelector('#chart-personal-sdlc');
+            if (elSdlc) elSdlc.innerHTML = '';
+            const elCompletion = document.querySelector('#chart-personal-completion');
+            if (elCompletion) elCompletion.innerHTML = '';
+            const elOntime = document.querySelector('#chart-personal-ontime');
+            if (elOntime) elOntime.innerHTML = '';
+            const elTrend = document.querySelector('#chart-personal-trend');
+            if (elTrend) elTrend.innerHTML = '';
 
             const freshTheme = getChartThemeOptions();
 
             // 1. SDLC Rebuild
-            optionsSdlc.chart = {
-                type: 'donut',
-                height: 240,
-                ...freshTheme.chart
-            };
-            optionsSdlc.theme = freshTheme.theme;
-            optionsSdlc.tooltip = freshTheme.tooltip;
-            optionsSdlc.legend = {
-                position: 'bottom',
-                fontSize: '11px',
-                ...freshTheme.legend
-            };
-            optionsSdlc.dataLabels = {
-                enabled: true,
-                ...freshTheme.teamDataLabels
-            };
-            optionsSdlc.plotOptions = freshTheme.plotOptions;
+            if (optionsSdlc && document.querySelector('#chart-personal-sdlc')) {
+                optionsSdlc.chart = {
+                    type: 'donut',
+                    height: 240,
+                    ...freshTheme.chart
+                };
+                optionsSdlc.theme = freshTheme.theme;
+                optionsSdlc.tooltip = freshTheme.tooltip;
+                optionsSdlc.legend = {
+                    position: 'bottom',
+                    fontSize: '11px',
+                    ...freshTheme.legend
+                };
+                optionsSdlc.dataLabels = {
+                    enabled: true,
+                    ...freshTheme.teamDataLabels
+                };
+                optionsSdlc.plotOptions = freshTheme.plotOptions;
 
-            // 2. Completion Rebuild
-            optionsCompletion.chart = {
-                type: 'radialBar',
-                height: 220,
-                ...freshTheme.chart
-            };
-            optionsCompletion.theme = freshTheme.theme;
-            optionsCompletion.plotOptions.radialBar.track.background = freshTheme.grid.borderColor;
-            optionsCompletion.plotOptions.radialBar.dataLabels.value.color = freshTheme.chart.foreColor;
-            optionsCompletion.plotOptions.radialBar.dataLabels.name.color = freshTheme.theme.mode === 'dark' ? '#a6a8b8' : '#607080';
-
-            // 3. On-Time Rebuild
-            optionsOntime.chart = {
-                type: 'radialBar',
-                height: 220,
-                ...freshTheme.chart
-            };
-            optionsOntime.theme = freshTheme.theme;
-            optionsOntime.plotOptions.radialBar.track.background = freshTheme.grid.borderColor;
-            optionsOntime.plotOptions.radialBar.dataLabels.value.color = freshTheme.chart.foreColor;
-            optionsOntime.plotOptions.radialBar.dataLabels.name.color = freshTheme.theme.mode === 'dark' ? '#a6a8b8' : '#607080';
-
-            // 4. Trend Rebuild
-            optionsTrend.chart = {
-                type: 'bar',
-                height: 250,
-                stacked: true,
-                toolbar: {
-                    show: false
-                },
-                ...freshTheme.chart
-            };
-            optionsTrend.theme = freshTheme.theme;
-            optionsTrend.tooltip = freshTheme.tooltip;
-            optionsTrend.grid = freshTheme.grid;
-            optionsTrend.xaxis = {
-                categories: trendMonths.length > 0 ? trendMonths : ['-'],
-                ...freshTheme.xaxis
-            };
-            optionsTrend.yaxis = {
-                ...freshTheme.yaxis,
-                labels: {
-                    ...freshTheme.yaxis.labels,
-                    formatter: function(val) {
-                        return Math.round(val);
-                    }
-                }
-            };
-            optionsTrend.legend = {
-                position: 'top',
-                ...freshTheme.legend
-            };
-
-            chartSdlc = new ApexCharts(document.querySelector('#chart-personal-sdlc'), optionsSdlc);
-            await chartSdlc.render();
+                chartSdlc = new ApexCharts(document.querySelector('#chart-personal-sdlc'), optionsSdlc);
+                await chartSdlc.render();
+            }
 
             chartCompletion = new ApexCharts(document.querySelector('#chart-personal-completion'), optionsCompletion);
             await chartCompletion.render();

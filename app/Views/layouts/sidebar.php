@@ -35,7 +35,7 @@
 
         <div class="sidebar-menu">
             <ul class="menu">
-                <li class="sidebar-title">Menu</li>
+                <li class="sidebar-title">Primary Menu</li>
 
                 <li class="sidebar-item <?= is_active('dashboard') ?>">
                     <a href="<?= base_url('/dashboard') ?>" class='sidebar-link d-flex align-items-center'>
