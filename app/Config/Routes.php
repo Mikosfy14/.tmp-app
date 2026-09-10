@@ -45,6 +45,8 @@ $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->post('update/(:segment)', 'Projects::update/$1');
     $routes->post('update-progress/(:segment)', 'Projects::updateProgress/$1');
     $routes->post('delete/(:segment)', 'Projects::delete/$1');
+    $routes->post('files/bulk-download', 'Projects::bulkDownloadFiles');
+    $routes->post('files/bulk-delete', 'Projects::bulkDeleteFiles');
     $routes->get('files/(:segment)/download', 'Projects::downloadFile/$1');
     $routes->post('files/delete/(:segment)', 'Projects::deleteFile/$1');
 });

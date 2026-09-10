@@ -19,6 +19,8 @@ $responsibleAssignedId = $project
     ? (int) (explode(',', (string) ($project['assigned_to'] ?? ''))[0] ?? 0)
     : (int) session()->get('user_id');
 $responsibleAssignedId = $responsibleAssignedId > 0 ? $responsibleAssignedId : (int) session()->get('user_id');
+$isKadept = strtolower((string) session()->get('role_name')) === 'kepala departemen' || (int) session()->get('role_id') === 1;
+$canManageAssignees = empty($project) || ((int) session()->get('user_id') === (int) $responsibleAssignedId) || $isKadept;
 $oldAssigned = old('assigned_to');
 if (is_array($oldAssigned)) {
     $selectedAssignedIds = array_values(array_filter(array_map('intval', $oldAssigned)));
@@ -240,11 +242,41 @@ foreach ($users as $user) {
         background: var(--bs-tertiary-bg);
     }
 
+    .project-pic-readonly {
+        min-height: 44px;
+        padding: .5rem .85rem;
+        background: #f5f6fa;
+        border: 1px solid #e2e5ed;
+        border-radius: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+    }
+
     #selectedProjectFiles,
     .project-existing-files {
-        max-height: 240px;
+        max-height: 280px;
         overflow-y: auto;
         padding-right: .25rem;
+    }
+
+    .project-file-item {
+        transition: background-color .15s ease-in-out;
+    }
+
+    .project-file-item:hover {
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    .project-file-item.is-selected {
+        background-color: rgba(67, 94, 190, .06);
+        border-color: rgba(67, 94, 190, .25);
+    }
+
+    [data-bs-theme="dark"] .project-file-item.is-selected {
+        background-color: rgba(67, 94, 190, .18);
+        border-color: rgba(67, 94, 190, .45);
     }
 
     #selectedProjectFiles:empty,
@@ -359,8 +391,13 @@ foreach ($users as $user) {
     }
 
     [data-bs-theme="dark"] .project-form-actions,
-    [data-bs-theme="dark"] .project-form-upload {
+    [data-bs-theme="dark"] .project-form-upload,
+    [data-bs-theme="dark"] .project-pic-readonly {
         background: #252539;
+    }
+
+    [data-bs-theme="dark"] .project-pic-readonly {
+        border-color: #36364f;
     }
 
     [data-bs-theme="dark"] .project-form-card .form-label {
@@ -426,20 +463,55 @@ foreach ($users as $user) {
                 </div>
                 <div class="col-md-8">
                     <label for="assignedTo" class="form-label">Assigned To / PIC</label>
-                    <div id="assignedToChoices" data-primary-id="<?= (int) $responsibleAssignedId ?>">
-                        <select id="assignedTo" name="assigned_to[]" class="form-select" multiple data-placeholder="Cari dan pilih PIC">
-                            <?php foreach ($users as $user) : ?>
-                                <option value="<?= (int) $user['id'] ?>" <?= $isSelected((int) $user['id']) ? 'selected' : '' ?>>
-                                    <?= esc((string) ($user['name'] ?? '')) ?><?= !empty($user['job_title']) ? ' - ' . esc((string) $user['job_title']) : '' ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <?php if ($canManageAssignees) : ?>
+                        <div id="assignedToChoices" data-primary-id="<?= (int) $responsibleAssignedId ?>">
+                            <select id="assignedTo" name="assigned_to[]" class="form-select" multiple data-placeholder="Cari dan pilih PIC">
+                                <?php foreach ($users as $user) : ?>
+                                    <option value="<?= (int) $user['id'] ?>" <?= $isSelected((int) $user['id']) ? 'selected' : '' ?>>
+                                        <?= esc((string) ($user['name'] ?? '')) ?><?= !empty($user['job_title']) ? ' - ' . esc((string) $user['job_title']) : '' ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else : ?>
+                        <div class="project-pic-readonly">
+                            <?php
+                            $assignedUserList = [];
+                            foreach ($users as $u) {
+                                if ($isSelected((int) $u['id'])) {
+                                    $assignedUserList[] = $u;
+                                }
+                            }
+                            usort($assignedUserList, static function ($a, $b) use ($responsibleAssignedId) {
+                                if ((int) $a['id'] === $responsibleAssignedId) return -1;
+                                if ((int) $b['id'] === $responsibleAssignedId) return 1;
+                                return 0;
+                            });
+                            ?>
+                            <?php if (!empty($assignedUserList)) : ?>
+                                <?php foreach ($assignedUserList as $assignee) : ?>
+                                    <?php $isPrimary = ((int) $assignee['id'] === $responsibleAssignedId); ?>
+                                    <span class="badge <?= $isPrimary ? 'bg-light-success text-success border border-success-subtle' : 'bg-light-secondary text-secondary border border-secondary-subtle' ?> py-1 px-2.5 d-inline-flex align-items-center gap-1" style="font-size: 0.8rem; font-weight: 500;">
+                                        <?php if ($isPrimary) : ?>
+                                            <i class="bi bi-star-fill text-success" aria-hidden="true"></i>
+                                        <?php else : ?>
+                                            <i class="bi bi-person text-secondary" aria-hidden="true"></i>
+                                        <?php endif; ?>
+                                        <span><?= esc((string) ($assignee['name'] ?? '')) ?><?= !empty($assignee['job_title']) ? ' (' . esc((string) $assignee['job_title']) . ')' : '' ?></span>
+                                        <?php if ($isPrimary) : ?>
+                                            <span class="badge bg-success text-white ms-1 py-0 px-1" style="font-size: 0.65rem;">Penanggung Jawab</span>
+                                        <?php endif; ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <span class="text-muted small">Tidak ada PIC yang ditugaskan.</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                     <?php if ($primaryAssignedUser) : ?>
                         <div class="form-text">
                             <i class="bi bi-person-check-fill me-1 text-success" aria-hidden="true"></i>
-                            <strong><?= esc($primaryAssignedUser['name']) ?></strong> adalah PIC penanggung jawab.
-                            <?= $project ? 'PIC utama dipertahankan saat project diedit.' : 'Pembuat project otomatis menjadi PIC utama.' ?>
+                            <?= $project ? ($canManageAssignees ? 'PIC utama dipertahankan saat project diedit.' : 'Hanya PIC penanggung jawab yang berhak mengubah susunan tim.') : 'Pembuat project otomatis menjadi PIC utama.' ?>
                         </div>
                     <?php else : ?>
                         <div class="form-text">Pembuat project otomatis menjadi PIC utama.</div>
@@ -535,18 +607,51 @@ foreach ($users as $user) {
             </div>
 
             <?php if (!empty($project) && !empty($projectFiles)) : ?>
-                <div class="mt-4 pt-4 border-top">
-                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                        <h6 class="fw-bold mb-0">File Tersimpan</h6>
-                        <span class="badge bg-light-primary text-primary"><?= count($projectFiles) ?> file</span>
+                <div class="mt-4 pt-4 border-top" id="existingFilesContainer">
+                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <h6 class="fw-bold mb-0">File Tersimpan</h6>
+                            <span class="badge bg-light-primary text-primary"><?= count($projectFiles) ?> file</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" id="selectAllProjectFiles">
+                                <label class="form-check-label small fw-semibold user-select-none" for="selectAllProjectFiles">
+                                    Pilih Semua
+                                </label>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Bulk Actions Toolbar (Visible when 1 or more files are checked) -->
+                    <div id="bulkFileActionsBar" class="alert alert-light-primary border border-primary-subtle d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 p-2 px-3 mb-3 d-none">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small fw-bold text-dark">
+                                <span id="selectedFilesCount">0</span> file dipilih
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" id="btnBulkDownloadFiles">
+                                <i class="bi bi-download" aria-hidden="true"></i>
+                                <span>Download Terpilih</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" id="btnBulkDeleteFilesModal" data-bs-toggle="modal" data-bs-target="#modalBulkDeleteProjectFiles">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                                <span>Hapus Terpilih</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="list-group project-existing-files">
                         <?php foreach ($projectFiles as $file) : ?>
-                            <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div class="list-group-item project-file-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" data-file-id="<?= (int) $file['id'] ?>">
                                 <div class="d-flex align-items-center gap-3 min-width-0">
+                                    <div class="form-check mb-0 flex-shrink-0">
+                                        <input class="form-check-input project-file-checkbox" type="checkbox" value="<?= (int) $file['id'] ?>" id="checkProjectFile<?= (int) $file['id'] ?>" aria-label="Pilih <?= esc($file['original_name']) ?>">
+                                    </div>
                                     <span class="project-form-section-icon" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
                                     <div class="min-width-0">
-                                        <div class="fw-semibold text-break"><?= esc($file['original_name']) ?></div>
+                                        <label class="fw-semibold text-break mb-0 d-block user-select-none cursor-pointer" for="checkProjectFile<?= (int) $file['id'] ?>"><?= esc($file['original_name']) ?></label>
                                         <small class="text-muted">
                                             <?= esc(number_format(((int) ($file['file_size'] ?? 0)) / 1024, 1)) ?> KB
                                             <?php if (!empty($file['uploaded_by_name'])) : ?>
@@ -556,10 +661,10 @@ foreach ($users as $user) {
                                     </div>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 flex-shrink-0">
-                                    <a href="<?= base_url('/projects/files/' . (int) $file['id'] . '/download') ?>" class="btn btn-sm btn-outline-primary">
+                                    <a href="<?= base_url('/projects/files/' . (int) $file['id'] . '/download') ?>" class="btn btn-sm btn-outline-primary" title="Download file ini">
                                         <i class="bi bi-download" aria-hidden="true"></i> Download
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeleteProjectFile<?= (int) $file['id'] ?>">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDeleteProjectFile<?= (int) $file['id'] ?>" title="Hapus file ini">
                                         <i class="bi bi-trash" aria-hidden="true"></i> Hapus
                                     </button>
                                 </div>
@@ -587,6 +692,46 @@ foreach ($users as $user) {
 </div>
 
 <?php if (!empty($projectFiles)) : ?>
+    <!-- Bulk Delete Confirmation Modal -->
+    <div class="modal fade" id="modalBulkDeleteProjectFiles" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title text-white">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Hapus File Project Terpilih
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">
+                        Apakah kamu yakin ingin menghapus <strong id="bulkDeleteFilesText">0 file</strong> terpilih?
+                    </p>
+                    <small class="text-danger">File yang dihapus tidak dapat dipulihkan kembali.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmBulkDelete">
+                        <i class="bi bi-trash me-1"></i>Hapus File Terpilih
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form for bulk download -->
+    <form id="formBulkDownloadProjectFiles" action="<?= base_url('/projects/files/bulk-download') ?>" method="POST" class="d-none">
+        <?= csrf_field() ?>
+        <input type="hidden" name="project_id" value="<?= (int) ($project['id'] ?? 0) ?>">
+        <div id="bulkDownloadInputsContainer"></div>
+    </form>
+
+    <!-- Hidden form for bulk delete -->
+    <form id="formBulkDeleteProjectFiles" action="<?= base_url('/projects/files/bulk-delete') ?>" method="POST" class="d-none">
+        <?= csrf_field() ?>
+        <input type="hidden" name="project_id" value="<?= (int) ($project['id'] ?? 0) ?>">
+        <div id="bulkDeleteInputsContainer"></div>
+    </form>
+
     <?php foreach ($projectFiles as $file) : ?>
         <div class="modal fade" id="modalDeleteProjectFile<?= (int) $file['id'] ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -677,6 +822,130 @@ foreach ($users as $user) {
             selectedFiles = Array.from(input.files);
             renderFiles();
         });
+    })();
+</script>
+
+<script>
+    (() => {
+        const selectAllCheckbox = document.getElementById('selectAllProjectFiles');
+        const fileCheckboxes = document.querySelectorAll('.project-file-checkbox');
+        const bulkBar = document.getElementById('bulkFileActionsBar');
+        const countDisplay = document.getElementById('selectedFilesCount');
+        const btnBulkDownload = document.getElementById('btnBulkDownloadFiles');
+        const btnConfirmBulkDelete = document.getElementById('btnConfirmBulkDelete');
+        const formBulkDownload = document.getElementById('formBulkDownloadProjectFiles');
+        const formBulkDelete = document.getElementById('formBulkDeleteProjectFiles');
+        const downloadInputsContainer = document.getElementById('bulkDownloadInputsContainer');
+        const deleteInputsContainer = document.getElementById('bulkDeleteInputsContainer');
+        const bulkDeleteText = document.getElementById('bulkDeleteFilesText');
+
+        if (!fileCheckboxes.length) {
+            return;
+        }
+
+        const getSelectedFileIds = () => {
+            const ids = [];
+            document.querySelectorAll('.project-file-checkbox:checked').forEach((cb) => {
+                ids.push(cb.value);
+            });
+            return ids;
+        };
+
+        const updateBulkBarState = () => {
+            const selectedIds = getSelectedFileIds();
+            const totalFiles = fileCheckboxes.length;
+            const selectedCount = selectedIds.length;
+
+            if (countDisplay) {
+                countDisplay.textContent = String(selectedCount);
+            }
+
+            if (bulkDeleteText) {
+                bulkDeleteText.textContent = `${selectedCount} file`;
+            }
+
+            if (bulkBar) {
+                if (selectedCount > 0) {
+                    bulkBar.classList.remove('d-none');
+                } else {
+                    bulkBar.classList.add('d-none');
+                }
+            }
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = selectedCount > 0 && selectedCount === totalFiles;
+                selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < totalFiles;
+            }
+
+            // Toggle highlight class on parent list-group-item
+            fileCheckboxes.forEach((cb) => {
+                const item = cb.closest('.project-file-item');
+                if (item) {
+                    item.classList.toggle('is-selected', cb.checked);
+                }
+            });
+        };
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', () => {
+                const isChecked = selectAllCheckbox.checked;
+                fileCheckboxes.forEach((cb) => {
+                    cb.checked = isChecked;
+                });
+                updateBulkBarState();
+            });
+        }
+
+        fileCheckboxes.forEach((cb) => {
+            cb.addEventListener('change', updateBulkBarState);
+        });
+
+        // Handle bulk download
+        if (btnBulkDownload && formBulkDownload && downloadInputsContainer) {
+            btnBulkDownload.addEventListener('click', () => {
+                const selectedIds = getSelectedFileIds();
+                if (!selectedIds.length) {
+                    return;
+                }
+
+                downloadInputsContainer.innerHTML = '';
+                selectedIds.forEach((id) => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'file_ids[]';
+                    hidden.value = id;
+                    downloadInputsContainer.appendChild(hidden);
+                });
+
+                formBulkDownload.submit();
+            });
+        }
+
+        // Handle bulk delete confirm
+        if (btnConfirmBulkDelete && formBulkDelete && deleteInputsContainer) {
+            btnConfirmBulkDelete.addEventListener('click', () => {
+                const selectedIds = getSelectedFileIds();
+                if (!selectedIds.length) {
+                    return;
+                }
+
+                deleteInputsContainer.innerHTML = '';
+                selectedIds.forEach((id) => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'file_ids[]';
+                    hidden.value = id;
+                    deleteInputsContainer.appendChild(hidden);
+                });
+
+                // Disable button to prevent double-click
+                btnConfirmBulkDelete.disabled = true;
+                btnConfirmBulkDelete.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Menghapus...';
+                formBulkDelete.submit();
+            });
+        }
+
+        updateBulkBarState();
     })();
 </script>
 
@@ -780,7 +1049,8 @@ foreach ($users as $user) {
             placeholderValue: 'Cari dan pilih PIC...',
         });
 
-        const primaryId = document.getElementById('assignedToChoices').dataset.primaryId;
+        const wrapper = document.getElementById('assignedToChoices');
+        const primaryId = wrapper ? wrapper.dataset.primaryId : null;
 
         if (choicesInstance && primaryId) {
             select.addEventListener('removeItem', (event) => {
