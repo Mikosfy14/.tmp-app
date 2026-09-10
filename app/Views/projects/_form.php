@@ -427,7 +427,7 @@ foreach ($users as $user) {
 </style>
 
 <div class="card project-form-card mb-4">
-    <form action="<?= esc($formAction) ?>" method="POST" enctype="multipart/form-data">
+    <form action="<?= esc($formAction) ?>" method="POST" enctype="multipart/form-data" autocomplete="off">
         <?= csrf_field() ?>
 
         <section class="project-form-section">

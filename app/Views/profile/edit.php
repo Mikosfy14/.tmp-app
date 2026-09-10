@@ -55,7 +55,7 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
     <?php endif; ?>
 
     <div class="card profile-edit-card shadow-sm mb-4">
-        <form action="<?= base_url('/profile/update') ?>" method="post">
+        <form action="<?= base_url('/profile/update') ?>" method="post" autocomplete="off">
             <?= csrf_field() ?>
             <div class="profile-edit-identity">
                 <div class="profile-edit-avatar-wrap" title="Upload foto profil akan tersedia pada pengembangan berikutnya">
@@ -100,7 +100,7 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
     </div>
 
     <div class="card profile-edit-card shadow-sm">
-        <form action="<?= base_url('/profile/change-password') ?>" method="post">
+        <form action="<?= base_url('/profile/change-password') ?>" method="post" autocomplete="off">
             <?= csrf_field() ?>
             <section class="profile-edit-section">
                 <h5 class="mb-1">Ganti Password</h5>

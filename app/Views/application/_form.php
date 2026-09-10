@@ -171,7 +171,7 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
     }
 </style>
 
-<form action="<?= esc($formAction) ?>" method="post" class="application-form-wrap mx-auto">
+<form action="<?= esc($formAction) ?>" method="post" class="application-form-wrap mx-auto" autocomplete="off">
     <?= csrf_field() ?>
 
     <div class="card shadow-sm application-form-card mb-4">
