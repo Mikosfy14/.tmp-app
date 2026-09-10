@@ -29,9 +29,12 @@ class Application extends BaseController
         $managedByMe = (int) $this->request->getGet('managed_by_me') === 1;
         $assignedUserId = $managedByMe ? (int) session()->get('user_id') : null;
 
+        $applications = $this->applicationModel->getApplicationsPaginated($criticality, $keyword ?: null, $assignedUserId, 10);
+
         return view('application/index', [
             'title' => 'Aplikasi Pengelolaan',
-            'applications' => $this->applicationModel->getApplicationsWithDetails($criticality, $keyword ?: null, $assignedUserId),
+            'applications' => $applications,
+            'pager' => $this->applicationModel->pager,
             'criticalityOptions' => $this->criticalityRecoveryModel->getActiveOptions(),
             'keyword' => $keyword,
             'selectedCriticality' => $criticality,

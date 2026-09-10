@@ -36,10 +36,21 @@ class ApplicationModel extends Model
         'assigned_user_id',
     ];
 
+    public function getApplicationsPaginated(?int $criticalityFilter = null, ?string $keyword = null, ?int $assignedUserId = null, int $perPage = 10): array
+    {
+        $this->buildApplicationsQuery($criticalityFilter, $keyword, $assignedUserId);
+        return $this->orderBy('applications.id', 'DESC')->paginate($perPage, 'applications');
+    }
+
     public function getApplicationsWithDetails(?int $criticalityFilter = null, ?string $keyword = null, ?int $assignedUserId = null): array
     {
-        $builder = $this->builder();
-        $builder->select(
+        $this->buildApplicationsQuery($criticalityFilter, $keyword, $assignedUserId);
+        return $this->orderBy('applications.id', 'DESC')->findAll();
+    }
+
+    private function buildApplicationsQuery(?int $criticalityFilter = null, ?string $keyword = null, ?int $assignedUserId = null): void
+    {
+        $this->select(
             'applications.*, ' .
             'criticality_recovery.criticality_name AS criticality_recovery, ' .
             'criticality_recovery.criticality_name, ' .
@@ -49,19 +60,19 @@ class ApplicationModel extends Model
             'users.email AS assigned_user_email, ' .
             'users.job_title AS assigned_user_job_title'
         );
-        $builder->join('criticality_recovery', 'criticality_recovery.id = applications.criticality_recovery_id', 'left');
-        $builder->join('users', 'users.id = applications.assigned_user_id', 'left');
+        $this->join('criticality_recovery', 'criticality_recovery.id = applications.criticality_recovery_id', 'left');
+        $this->join('users', 'users.id = applications.assigned_user_id', 'left');
 
         if (!empty($criticalityFilter)) {
-            $builder->where('applications.criticality_recovery_id', $criticalityFilter);
+            $this->where('applications.criticality_recovery_id', $criticalityFilter);
         }
 
         if (!empty($assignedUserId)) {
-            $builder->where('applications.assigned_user_id', $assignedUserId);
+            $this->where('applications.assigned_user_id', $assignedUserId);
         }
 
         if (!empty($keyword)) {
-            $builder->groupStart()
+            $this->groupStart()
                 ->like('applications.app_component', $keyword)
                 ->orLike('applications.description', $keyword)
                 ->orLike('applications.business_owner', $keyword)
@@ -72,11 +83,6 @@ class ApplicationModel extends Model
                 ->orLike('users.name', $keyword)
                 ->groupEnd();
         }
-
-        return $builder
-            ->orderBy('applications.id', 'DESC')
-            ->get()
-            ->getResultArray();
     }
 
     public function getApplicationDetail(int $id): ?array
