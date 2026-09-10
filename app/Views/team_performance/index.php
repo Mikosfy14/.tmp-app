@@ -5,6 +5,10 @@
  * @var array<string, mixed> $metrics
  * @var string $selectedStartDate
  * @var string $selectedEndDate
+ * @var \CodeIgniter\Pager\Pager|null $pager
+ * @var int|null $totalMembers
+ * @var int|null $totalFilteredMembers
+ * @var string|null $memberKeyword
  */
 
 $stats = $metrics['stats'] ?? [];
@@ -23,7 +27,9 @@ $overdue = (int) ($stats['overdue'] ?? 0);
 $riskUrgent = (int) ($stats['risk_urgent'] ?? 0);
 
 $onTimeRate = $totalCompleted > 0 ? round(($onTimeDone / $totalCompleted) * 100, 1) : 0;
-$totalMembers = (int) ($capacity['total_members'] ?? count($members));
+$totalMembers = (int) ($totalMembers ?? ($capacity['total_members'] ?? count($members)));
+$totalFilteredMembers = (int) ($totalFilteredMembers ?? count($members));
+$memberKeyword = (string) ($memberKeyword ?? '');
 $avgActiveTasks = (float) ($capacity['avg_active_per_member'] ?? 0);
 $organicCount = (int) ($capacity['organic_count'] ?? 0);
 $nonOrganicCount = (int) ($capacity['non_organic_count'] ?? 0);
@@ -70,6 +76,54 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
         color: #ffffff;
     }
 
+    .workload-pagination .pagination {
+        margin: 0;
+        gap: .35rem;
+    }
+
+    .workload-pagination .page-item .page-link {
+        border: 0;
+        border-radius: .55rem;
+        min-width: 2.25rem;
+        text-align: center;
+        color: #52606d;
+        font-weight: 600;
+    }
+
+    .workload-pagination .page-item.active .page-link {
+        background: #435ebe;
+        color: #fff;
+        box-shadow: 0 .25rem .65rem rgba(67, 94, 190, .25);
+    }
+
+    .workload-pagination .page-item:not(.active) .page-link:hover {
+        background: #eef1ff;
+        color: #435ebe;
+    }
+
+    .workload-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background: #f1f3f5;
+        opacity: .75;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    [data-bs-theme="dark"] .workload-pagination .page-item:not(.active) .page-link {
+        color: #a0aec0;
+        background: transparent;
+    }
+
+    [data-bs-theme="dark"] .workload-pagination .page-item:not(.active) .page-link:hover {
+        background: rgba(67, 94, 190, 0.2);
+        color: #8fa0f0;
+    }
+
+    [data-bs-theme="dark"] .workload-pagination .page-item.disabled .page-link {
+        color: #607080;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
     .kpi-macro-card .kpi-value {
         font-size: 1.75rem;
         font-weight: 700;
@@ -114,6 +168,9 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
 <div class="card shadow-sm mb-4">
     <div class="card-body p-3">
         <form method="get" id="filterForm" class="row g-2 align-items-end">
+            <?php if (!empty($memberKeyword)) : ?>
+                <input type="hidden" name="member_keyword" value="<?= esc($memberKeyword) ?>">
+            <?php endif; ?>
             <div class="col-12 col-md-4 col-lg-3">
                 <label class="form-label small fw-semibold text-muted mb-1">Tanggal Mulai</label>
                 <input type="text" name="filter_start" id="filterStart" class="form-control form-control-sm" placeholder="Pilih tanggal..." value="<?= esc($selectedStartDate ?? '') ?>">
@@ -237,9 +294,9 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                         </small>
                         <?php if (!empty($sdlcDistribution)) : ?>
                             <div class="d-flex flex-column gap-2" style="max-height: 220px; overflow-y: auto;">
-                                <?php 
+                                <?php
                                 $totalActive = max(1, $activeProjects);
-                                foreach ($sdlcDistribution as $phaseName => $count) : 
+                                foreach ($sdlcDistribution as $phaseName => $count) :
                                     $pct = round(($count / $totalActive) * 100, 1);
                                 ?>
                                     <div>
@@ -332,9 +389,34 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
             </h5>
             <small class="text-muted">Distribusi beban kerja seluruh staf dan pengembang pada departemen.</small>
         </div>
-        <span class="badge bg-light-primary text-primary border border-primary-subtle px-3 py-2">
-            <?= count($members) ?> Personel Terdaftar
-        </span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <form method="get" action="<?= base_url('/kinerja-tim') ?>" class="d-flex align-items-center">
+                <?php if (!empty($selectedStartDate)) : ?>
+                    <input type="hidden" name="filter_start" value="<?= esc($selectedStartDate) ?>">
+                <?php endif; ?>
+                <?php if (!empty($selectedEndDate)) : ?>
+                    <input type="hidden" name="filter_end" value="<?= esc($selectedEndDate) ?>">
+                <?php endif; ?>
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <input type="text" name="member_keyword" class="form-control" placeholder="Cari nama personel..." value="<?= esc($memberKeyword) ?>">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </button>
+                    <?php if (!empty($memberKeyword)) : ?>
+                        <?php
+                        $clearSearchQuery = [];
+                        if (!empty($selectedStartDate)) $clearSearchQuery['filter_start'] = $selectedStartDate;
+                        if (!empty($selectedEndDate)) $clearSearchQuery['filter_end'] = $selectedEndDate;
+                        $clearSearchUrl = base_url('/kinerja-tim') . (!empty($clearSearchQuery) ? '?' . http_build_query($clearSearchQuery) : '');
+                        ?>
+                        <a href="<?= $clearSearchUrl ?>" class="btn btn-outline-secondary">Reset</a>
+                    <?php endif; ?>
+                </div>
+            </form>
+            <span class="badge bg-light-primary text-primary border border-primary-subtle px-3 py-2">
+                <?= (int) $totalFilteredMembers ?> Personel<?= !empty($memberKeyword) ? ' Ditemukan' : ' Terdaftar' ?>
+            </span>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -352,7 +434,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                 <tbody>
                     <?php if (!empty($members)) : ?>
                         <?php foreach ($members as $member) : ?>
-                            <?php 
+                            <?php
                             $isOverdue = (int) ($member['overdue'] ?? 0) > 0;
                             $wl = $member['workload_status'] ?? ['label' => 'Optimal', 'class' => 'success'];
                             ?>
@@ -406,12 +488,34 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">Belum ada data anggota tim pada sistem.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <?php if (!empty($memberKeyword)) : ?>
+                                    <div>Tidak ditemukan personel dengan kata kunci "<strong><?= esc($memberKeyword) ?></strong>".</div>
+                                    <div class="mt-2">
+                                        <?php
+                                        $clearSearchQuery = [];
+                                        if (!empty($selectedStartDate)) $clearSearchQuery['filter_start'] = $selectedStartDate;
+                                        if (!empty($selectedEndDate)) $clearSearchQuery['filter_end'] = $selectedEndDate;
+                                        $clearSearchUrl = base_url('/kinerja-tim') . (!empty($clearSearchQuery) ? '?' . http_build_query($clearSearchQuery) : '');
+                                        ?>
+                                        <a href="<?= $clearSearchUrl ?>" class="btn btn-sm btn-outline-secondary">
+                                            Hapus Pencarian
+                                        </a>
+                                    </div>
+                                <?php else : ?>
+                                    Belum ada data anggota tim pada sistem.
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
+        <?php if (!empty($members) && !empty($pager) && $pager->getPageCount('members') > 1) : ?>
+            <div class="workload-pagination d-flex justify-content-end p-3 border-top">
+                <?= $pager->links('members', 'complete') ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -437,162 +541,289 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function getChartThemeOptions() {
-        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        const textColor = isDark ? '#f5f7ff' : '#25396f';
-        const mutedColor = isDark ? '#a6a8b8' : '#607080';
-        const gridColor = isDark ? '#2b2b40' : '#e6eaee';
-        return {
-            chart: { foreColor: textColor },
-            theme: { mode: isDark ? 'dark' : 'light' },
-            tooltip: { theme: isDark ? 'dark' : 'light' },
-            legend: { labels: { colors: textColor } },
-            grid: { borderColor: gridColor },
-            xaxis: { labels: { style: { colors: mutedColor } }, axisBorder: { color: gridColor }, axisTicks: { color: gridColor } },
-            yaxis: { labels: { style: { colors: mutedColor } } }
-        };
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        function getChartThemeOptions() {
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const textColor = isDark ? '#f5f7ff' : '#25396f';
+            const mutedColor = isDark ? '#a6a8b8' : '#607080';
+            const gridColor = isDark ? '#2b2b40' : '#e6eaee';
+            return {
+                chart: {
+                    foreColor: textColor
+                },
+                theme: {
+                    mode: isDark ? 'dark' : 'light'
+                },
+                tooltip: {
+                    theme: isDark ? 'dark' : 'light'
+                },
+                legend: {
+                    labels: {
+                        colors: textColor
+                    }
+                },
+                grid: {
+                    borderColor: gridColor
+                },
+                xaxis: {
+                    labels: {
+                        style: {
+                            colors: mutedColor
+                        }
+                    },
+                    axisBorder: {
+                        color: gridColor
+                    },
+                    axisTicks: {
+                        color: gridColor
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: mutedColor
+                        }
+                    }
+                }
+            };
+        }
 
-    const themeOpts = getChartThemeOptions();
+        const themeOpts = getChartThemeOptions();
 
-    // 1. SDLC Donut Chart
-    const sdlcData = <?= json_encode($sdlcDistribution ?? []) ?>;
-    const sdlcLabels = Object.keys(sdlcData);
-    const sdlcSeries = Object.values(sdlcData).map(Number);
-    const hasActiveSdlcData = sdlcSeries.some(val => val > 0);
-    const sdlcChartEl = document.querySelector("#teamSdlcChart");
+        // 1. SDLC Donut Chart
+        const sdlcData = <?= json_encode($sdlcDistribution ?? []) ?>;
+        const sdlcLabels = Object.keys(sdlcData);
+        const sdlcSeries = Object.values(sdlcData).map(Number);
+        const hasActiveSdlcData = sdlcSeries.some(val => val > 0);
+        const sdlcChartEl = document.querySelector("#teamSdlcChart");
 
-    let chartSdlc = null;
-    if (hasActiveSdlcData && sdlcChartEl) {
-        chartSdlc = new ApexCharts(sdlcChartEl, {
-            chart: { type: 'donut', height: 230, ...themeOpts.chart },
-            series: sdlcSeries,
-            labels: sdlcLabels,
-            colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107', '#6c757d'],
-            theme: themeOpts.theme,
-            tooltip: themeOpts.tooltip,
-            legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
-            dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
-            plotOptions: { pie: { donut: { labels: { show: false } } } }
-        });
-        chartSdlc.render();
-    }
-
-    // 2. Monthly Trend Stacked Bar Chart
-    const trendMonths = <?= json_encode($completionChart['months'] ?? []) ?>;
-    const trendOnTime = <?= json_encode($completionChart['on_time'] ?? []) ?>;
-    const trendLate = <?= json_encode($completionChart['late'] ?? []) ?>;
-
-    var chartTrend = new ApexCharts(document.querySelector("#teamTrendChart"), {
-        chart: { type: 'bar', height: 230, stacked: true, toolbar: { show: false }, ...themeOpts.chart },
-        series: [
-            { name: 'Tepat Waktu', data: trendOnTime },
-            { name: 'Terlambat', data: trendLate }
-        ],
-        colors: ['#198754', '#dc3545'],
-        plotOptions: { bar: { horizontal: false, columnWidth: '45%', borderRadius: 3 } },
-        xaxis: { categories: trendMonths, ...themeOpts.xaxis },
-        yaxis: { ...themeOpts.yaxis, labels: { ...themeOpts.yaxis.labels, formatter: function(val) { return Math.floor(val); } } },
-        grid: themeOpts.grid,
-        legend: { position: 'top', fontSize: '11px', ...themeOpts.legend },
-        tooltip: { ...themeOpts.tooltip, y: { formatter: function(val) { return val + ' project'; } } },
-        dataLabels: { enabled: false },
-        theme: themeOpts.theme
-    });
-    chartTrend.render();
-
-    // 3. Capacity Allocation Donut Chart
-    const organicActive = <?= $organicActiveTasks ?>;
-    const nonOrganicActive = <?= $nonOrganicActiveTasks ?>;
-    const capacityChartEl = document.querySelector("#teamCapacityChart");
-
-    let chartCapacity = null;
-    if ((organicActive + nonOrganicActive) > 0 && capacityChartEl) {
-        chartCapacity = new ApexCharts(capacityChartEl, {
-            chart: { type: 'donut', height: 200, ...themeOpts.chart },
-            series: [organicActive, nonOrganicActive],
-            labels: ['Organik', 'Manmonth'],
-            colors: ['#435ebe', '#57caeb'],
-            theme: themeOpts.theme,
-            tooltip: themeOpts.tooltip,
-            legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
-            dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
-            plotOptions: { pie: { donut: { labels: { show: false } } } }
-        });
-        chartCapacity.render();
-    }
-
-    // Chart Toggle between Monthly Trend and Capacity
-    document.getElementById('macroChartToggle').addEventListener('change', function() {
-        const isTrend = this.value === 'trend';
-        document.getElementById('view-macro-trend').classList.toggle('d-none', !isTrend);
-        document.getElementById('view-macro-capacity').classList.toggle('d-none', isTrend);
-    });
-
-    // Flatpickr Range Initialization for Indonesian d/m/Y format
-    let fpStart = null;
-    let fpEnd = null;
-
-    if (typeof flatpickr !== 'undefined') {
-        const fpConfig = {
-            dateFormat: 'Y-m-d',
-            altInput: true,
-            altFormat: 'd/m/Y',
-            allowInput: false,
-            locale: (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : 'default',
-        };
-
-        const startEl = document.getElementById('filterStart');
-        const endEl = document.getElementById('filterEnd');
-
-        if (startEl) {
-            fpStart = flatpickr(startEl, {
-                ...fpConfig,
-                onChange: function(selectedDates) {
-                    if (fpEnd && selectedDates[0]) {
-                        fpEnd.set('minDate', selectedDates[0]);
-                        if (fpEnd.selectedDates[0] && fpEnd.selectedDates[0] < selectedDates[0]) {
-                            fpEnd.setDate(selectedDates[0]);
+        let chartSdlc = null;
+        if (hasActiveSdlcData && sdlcChartEl) {
+            chartSdlc = new ApexCharts(sdlcChartEl, {
+                chart: {
+                    type: 'donut',
+                    height: 230,
+                    ...themeOpts.chart
+                },
+                series: sdlcSeries,
+                labels: sdlcLabels,
+                colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107', '#6c757d'],
+                theme: themeOpts.theme,
+                tooltip: themeOpts.tooltip,
+                legend: {
+                    position: 'bottom',
+                    fontSize: '11px',
+                    ...themeOpts.legend
+                },
+                dataLabels: {
+                    enabled: true,
+                    style: {
+                        colors: ['#ffffff']
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                show: false
+                            }
                         }
                     }
                 }
             });
+            chartSdlc.render();
         }
 
-        if (endEl) {
-            fpEnd = flatpickr(endEl, {
-                ...fpConfig,
-                minDate: startEl && startEl.value ? startEl.value : null,
-            });
-        }
-    }
+        // 2. Monthly Trend Stacked Bar Chart
+        const trendMonths = <?= json_encode($completionChart['months'] ?? []) ?>;
+        const trendOnTime = <?= json_encode($completionChart['on_time'] ?? []) ?>;
+        const trendLate = <?= json_encode($completionChart['late'] ?? []) ?>;
 
-    // Quarterly Filter Shortcuts
-    const currentYear = new Date().getFullYear();
-    const quarters = {
-        1: { start: `${currentYear}-01-01`, end: `${currentYear}-03-31` },
-        2: { start: `${currentYear}-04-01`, end: `${currentYear}-06-30` },
-        3: { start: `${currentYear}-07-01`, end: `${currentYear}-09-30` },
-        4: { start: `${currentYear}-10-01`, end: `${currentYear}-12-31` }
-    };
-
-    document.querySelectorAll('.btn-quarter').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const q = this.getAttribute('data-quarter');
-            if (quarters[q]) {
-                if (fpStart && fpEnd) {
-                    fpStart.setDate(quarters[q].start, false);
-                    fpEnd.set('minDate', quarters[q].start);
-                    fpEnd.setDate(quarters[q].end, false);
-                } else {
-                    document.getElementById('filterStart').value = quarters[q].start;
-                    document.getElementById('filterEnd').value = quarters[q].end;
+        var chartTrend = new ApexCharts(document.querySelector("#teamTrendChart"), {
+            chart: {
+                type: 'bar',
+                height: 230,
+                stacked: true,
+                toolbar: {
+                    show: false
+                },
+                ...themeOpts.chart
+            },
+            series: [{
+                    name: 'Tepat Waktu',
+                    data: trendOnTime
+                },
+                {
+                    name: 'Terlambat',
+                    data: trendLate
                 }
-                document.getElementById('filterForm').submit();
+            ],
+            colors: ['#198754', '#dc3545'],
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '45%',
+                    borderRadius: 3
+                }
+            },
+            xaxis: {
+                categories: trendMonths,
+                ...themeOpts.xaxis
+            },
+            yaxis: {
+                ...themeOpts.yaxis,
+                labels: {
+                    ...themeOpts.yaxis.labels,
+                    formatter: function(val) {
+                        return Math.floor(val);
+                    }
+                }
+            },
+            grid: themeOpts.grid,
+            legend: {
+                position: 'top',
+                fontSize: '11px',
+                ...themeOpts.legend
+            },
+            tooltip: {
+                ...themeOpts.tooltip,
+                y: {
+                    formatter: function(val) {
+                        return val + ' project';
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            theme: themeOpts.theme
+        });
+        chartTrend.render();
+
+        // 3. Capacity Allocation Donut Chart
+        const organicActive = <?= $organicActiveTasks ?>;
+        const nonOrganicActive = <?= $nonOrganicActiveTasks ?>;
+        const capacityChartEl = document.querySelector("#teamCapacityChart");
+
+        let chartCapacity = null;
+        if ((organicActive + nonOrganicActive) > 0 && capacityChartEl) {
+            chartCapacity = new ApexCharts(capacityChartEl, {
+                chart: {
+                    type: 'donut',
+                    height: 200,
+                    ...themeOpts.chart
+                },
+                series: [organicActive, nonOrganicActive],
+                labels: ['Organik', 'Manmonth'],
+                colors: ['#435ebe', '#57caeb'],
+                theme: themeOpts.theme,
+                tooltip: themeOpts.tooltip,
+                legend: {
+                    position: 'bottom',
+                    fontSize: '11px',
+                    ...themeOpts.legend
+                },
+                dataLabels: {
+                    enabled: true,
+                    style: {
+                        colors: ['#ffffff']
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                show: false
+                            }
+                        }
+                    }
+                }
+            });
+            chartCapacity.render();
+        }
+
+        // Chart Toggle between Monthly Trend and Capacity
+        document.getElementById('macroChartToggle').addEventListener('change', function() {
+            const isTrend = this.value === 'trend';
+            document.getElementById('view-macro-trend').classList.toggle('d-none', !isTrend);
+            document.getElementById('view-macro-capacity').classList.toggle('d-none', isTrend);
+        });
+
+        // Flatpickr Range Initialization for Indonesian d/m/Y format
+        let fpStart = null;
+        let fpEnd = null;
+
+        if (typeof flatpickr !== 'undefined') {
+            const fpConfig = {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                allowInput: false,
+                locale: (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : 'default',
+            };
+
+            const startEl = document.getElementById('filterStart');
+            const endEl = document.getElementById('filterEnd');
+
+            if (startEl) {
+                fpStart = flatpickr(startEl, {
+                    ...fpConfig,
+                    onChange: function(selectedDates) {
+                        if (fpEnd && selectedDates[0]) {
+                            fpEnd.set('minDate', selectedDates[0]);
+                            if (fpEnd.selectedDates[0] && fpEnd.selectedDates[0] < selectedDates[0]) {
+                                fpEnd.setDate(selectedDates[0]);
+                            }
+                        }
+                    }
+                });
             }
+
+            if (endEl) {
+                fpEnd = flatpickr(endEl, {
+                    ...fpConfig,
+                    minDate: startEl && startEl.value ? startEl.value : null,
+                });
+            }
+        }
+
+        // Quarterly Filter Shortcuts
+        const currentYear = new Date().getFullYear();
+        const quarters = {
+            1: {
+                start: `${currentYear}-01-01`,
+                end: `${currentYear}-03-31`
+            },
+            2: {
+                start: `${currentYear}-04-01`,
+                end: `${currentYear}-06-30`
+            },
+            3: {
+                start: `${currentYear}-07-01`,
+                end: `${currentYear}-09-30`
+            },
+            4: {
+                start: `${currentYear}-10-01`,
+                end: `${currentYear}-12-31`
+            }
+        };
+
+        document.querySelectorAll('.btn-quarter').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const q = this.getAttribute('data-quarter');
+                if (quarters[q]) {
+                    if (fpStart && fpEnd) {
+                        fpStart.setDate(quarters[q].start, false);
+                        fpEnd.set('minDate', quarters[q].start);
+                        fpEnd.setDate(quarters[q].end, false);
+                    } else {
+                        document.getElementById('filterStart').value = quarters[q].start;
+                        document.getElementById('filterEnd').value = quarters[q].end;
+                    }
+                    document.getElementById('filterForm').submit();
+                }
+            });
         });
     });
-});
 </script>
 <?= $this->endSection() ?>

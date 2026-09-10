@@ -222,7 +222,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                 </div>
                 <div class="col-12 col-md-4 col-lg-1 d-flex">
                     <button type="submit" class="btn btn-primary management-filter-submit w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
-                        <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span>
+                        <i class="bi bi-search" aria-hidden="true"></i>
                     </button>
                 </div>
                 <div class="col-12 col-md-4 col-lg-1 d-flex justify-content-lg-end">
