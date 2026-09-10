@@ -53,8 +53,8 @@ class Users extends BaseController
         }
 
         $totalUsers = $builder->countAllResults(false);
-        $pager->store('users', $currentPage, 5, $totalUsers);
-        $users = $builder->get(5, ($currentPage - 1) * 5)->getResultArray();
+        $pager->store('users', $currentPage, 10, $totalUsers);
+        $users = $builder->get(10, ($currentPage - 1) * 10)->getResultArray();
 
         return view('users/index', [
             'title' => 'User Management',
