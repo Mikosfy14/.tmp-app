@@ -316,12 +316,30 @@ class Projects extends BaseController
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
         $selectedStartDate = $dateRange['start_date'] ?? '';
         $selectedEndDate = $dateRange['end_date'] ?? '';
-        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
-        $userId = $targetUserId ?? (int) session()->get('user_id');
+
+        $isKadept = $this->isKepalaDepartemen();
+        $currentUserId = (int) session()->get('user_id');
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
 
         if ($targetUserId && !$targetUser) {
             return redirect()->to('/projects')->with('error', 'User tidak ditemukan.');
+        }
+
+        $scope = 'my';
+        $countMyProjects = 0;
+        $countAllProjects = 0;
+
+        if ($isKadept && $targetUserId === null) {
+            $requestedScope = strtolower(trim((string) $this->request->getGet('scope')));
+            $scope = ($requestedScope === 'all') ? 'all' : 'my';
+            $includeAll = ($scope === 'all');
+            $userId = $currentUserId;
+
+            $countMyProjects = $this->projectModel->countProjects($currentUserId, false);
+            $countAllProjects = $this->projectModel->countProjects(null, true);
+        } else {
+            $includeAll = false;
+            $userId = $targetUserId ?? $currentUserId;
         }
 
         $data = [
@@ -337,6 +355,10 @@ class Projects extends BaseController
             'statusOptions' => $this->projectStatusModel->getActiveOptions(),
             'isFilteredUser' => $targetUserId !== null,
             'targetUser' => $targetUser,
+            'isKadept' => $isKadept,
+            'scope' => $scope,
+            'countMyProjects' => $countMyProjects,
+            'countAllProjects' => $countAllProjects,
         ];
 
         return view('projects/index', $data);
@@ -592,9 +614,11 @@ class Projects extends BaseController
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
         $targetUserId = $this->request->getGet('user_id');
         $targetUserId = is_numeric($targetUserId) ? (int) $targetUserId : null;
+        $scope = strtolower(trim((string) $this->request->getGet('scope')));
 
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
-        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
+        $isKadept = $this->isKepalaDepartemen();
+        $includeAll = $isKadept && $targetUserId === null && $scope === 'all';
         $userId = $targetUserId ?? (int) session()->get('user_id');
 
         $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
@@ -610,8 +634,17 @@ class Projects extends BaseController
             default => 'Semua',
         };
 
+        $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
+        if ($targetUser) {
+            $scopeText = 'Proyek User: ' . ($targetUser['name'] ?? '');
+        } elseif ($includeAll) {
+            $scopeText = 'Seluruh Proyek Tim Departemen';
+        } else {
+            $scopeText = $isKadept ? 'Proyek Saya (Kepala Departemen)' : 'Proyek Ditugaskan';
+        }
+
         $metadataLines = [
-            'Status SDLC: ' . $statusText . ' | Penyelesaian: ' . $completionText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
+            'Cakupan: ' . $scopeText . ' | Status SDLC: ' . $statusText . ' | Penyelesaian: ' . $completionText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
             'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project',
         ];
 
@@ -684,9 +717,11 @@ class Projects extends BaseController
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
         $targetUserId = $this->request->getGet('user_id');
         $targetUserId = is_numeric($targetUserId) ? (int) $targetUserId : null;
+        $scope = strtolower(trim((string) $this->request->getGet('scope')));
 
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
-        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
+        $isKadept = $this->isKepalaDepartemen();
+        $includeAll = $isKadept && $targetUserId === null && $scope === 'all';
         $userId = $targetUserId ?? (int) session()->get('user_id');
 
         $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
@@ -703,7 +738,13 @@ class Projects extends BaseController
         };
 
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
-        $scopeText = $targetUser ? 'Proyek User: ' . ($targetUser['name'] ?? '') : ($includeAll ? 'Seluruh Proyek Departemen' : 'Proyek Ditugaskan');
+        if ($targetUser) {
+            $scopeText = 'Proyek User: ' . ($targetUser['name'] ?? '');
+        } elseif ($includeAll) {
+            $scopeText = 'Seluruh Proyek Tim Departemen';
+        } else {
+            $scopeText = $isKadept ? 'Proyek Saya (Kepala Departemen)' : 'Proyek Ditugaskan';
+        }
 
         $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.pdf';
 

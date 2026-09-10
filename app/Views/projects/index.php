@@ -10,6 +10,10 @@
  * @var bool $isFilteredUser
  * @var array|null $targetUser
  * @var \CodeIgniter\Pager\Pager|null $pager
+ * @var bool|null $isKadept
+ * @var string|null $scope
+ * @var int|null $countMyProjects
+ * @var int|null $countAllProjects
  */
 
 helper('deadline');
@@ -18,6 +22,10 @@ $displayProjects = $projects ?? [];
 $selectedStartDate = (string) ($selectedStartDate ?? '');
 $selectedEndDate = (string) ($selectedEndDate ?? '');
 $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
+$isKadept = (bool) ($isKadept ?? false);
+$scope = (string) ($scope ?? 'my');
+$countMyProjects = (int) ($countMyProjects ?? 0);
+$countAllProjects = (int) ($countAllProjects ?? 0);
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -25,6 +33,78 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
+    .project-scope-pills {
+        background-color: #ffffff;
+    }
+
+    [data-bs-theme="dark"] .project-scope-pills {
+        background-color: var(--bs-card-bg, #1e1e2d) !important;
+        border-color: var(--bs-border-color) !important;
+    }
+
+    .project-scope-pills .nav-link {
+        border-radius: 8px;
+        transition: all .2s ease-in-out;
+    }
+
+    .project-scope-pills .nav-link.active {
+        background-color: #435ebe;
+        color: #ffffff !important;
+    }
+
+    [data-bs-theme="dark"] .project-scope-pills .nav-link.active .badge {
+        background-color: #ffffff !important;
+        color: #435ebe !important;
+    }
+
+    .project-pagination .pagination {
+        margin: 0;
+        gap: .35rem;
+    }
+
+    .project-pagination .page-item .page-link {
+        border: 0;
+        border-radius: .55rem;
+        min-width: 2.25rem;
+        text-align: center;
+        color: #52606d;
+        font-weight: 600;
+    }
+
+    .project-pagination .page-item.active .page-link {
+        background: #435ebe;
+        color: #fff;
+        box-shadow: 0 .25rem .65rem rgba(67, 94, 190, .25);
+    }
+
+    .project-pagination .page-item:not(.active) .page-link:hover {
+        background: #eef1ff;
+        color: #435ebe;
+    }
+
+    .project-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background: #f1f3f5;
+        opacity: .75;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    [data-bs-theme="dark"] .project-pagination .page-item:not(.active) .page-link {
+        color: #a0aec0;
+        background: transparent;
+    }
+
+    [data-bs-theme="dark"] .project-pagination .page-item:not(.active) .page-link:hover {
+        background: rgba(67, 94, 190, 0.2);
+        color: #8fa0f0;
+    }
+
+    [data-bs-theme="dark"] .project-pagination .page-item.disabled .page-link {
+        color: #607080;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
     .period-filter-group .form-control[readonly] {
         background-color: var(--bs-body-bg);
         cursor: pointer;
@@ -229,8 +309,8 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
             <?php if (!empty($isFilteredUser) && !empty($targetUser)) : ?>
                 Menampilkan seluruh project yang ditugaskan kepada <strong><?= esc($targetUser['name']) ?></strong> (<?= esc($targetUser['job_title'] ?: 'Staff') ?>).
                 <a href="<?= base_url('/projects') ?>" class="ms-2 text-primary fw-semibold"><i class="bi bi-arrow-left me-1"></i>Kembali ke Semua Project</a>
-            <?php elseif (strtolower((string) session()->get('role_name')) === 'kepala departemen') : ?>
-                Kelola dan pantau seluruh proyek departemen secara real-time.
+            <?php elseif ($isKadept) : ?>
+                <?= $scope === 'all' ? 'Memantau seluruh proyek yang dikelola oleh tim departemen.' : 'Menampilkan proyek yang secara spesifik ditugaskan kepada Anda.' ?>
             <?php else : ?>
                 Kelola dan pantau project yang ditugaskan kepada Anda.
             <?php endif; ?>
@@ -243,7 +323,11 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
     if (!empty($keyword)) $exportParams['keyword'] = $keyword;
     if (!empty($selectedStartDate)) $exportParams['filter_start'] = $selectedStartDate;
     if (!empty($selectedEndDate)) $exportParams['filter_end'] = $selectedEndDate;
-    if (!empty($isFilteredUser) && !empty($targetUser)) $exportParams['user_id'] = $targetUser['id'];
+    if (!empty($isFilteredUser) && !empty($targetUser)) {
+        $exportParams['user_id'] = $targetUser['id'];
+    } elseif ($isKadept) {
+        $exportParams['scope'] = $scope;
+    }
     $exportQueryString = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
     ?>
     <div class="d-flex align-items-center gap-2">
@@ -296,10 +380,32 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
 <?php endif; ?>
 
 <div class="page-content">
+    <?php if ($isKadept && empty($isFilteredUser)) : ?>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <ul class="nav nav-pills project-scope-pills p-1 rounded-3 border" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link <?= $scope === 'my' ? 'active fw-bold' : 'text-body' ?> d-inline-flex align-items-center gap-2 py-2 px-3" href="<?= base_url('/projects?scope=my') ?>">
+                        <span>Project Saya</span>
+                        <span class="badge rounded-pill <?= $scope === 'my' ? 'bg-light text-primary' : 'bg-secondary text-white' ?> ms-1"><?= $countMyProjects ?></span>
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link <?= $scope === 'all' ? 'active fw-bold' : 'text-body' ?> d-inline-flex align-items-center gap-2 py-2 px-3" href="<?= base_url('/projects?scope=all') ?>">
+                        <span>Semua Project Tim</span>
+                        <span class="badge rounded-pill <?= $scope === 'all' ? 'bg-light text-primary' : 'bg-secondary text-white' ?> ms-1"><?= $countAllProjects ?></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    <?php endif; ?>
+
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="row g-2 align-items-center">
                 <input type="hidden" name="page_projects" value="1">
+                <?php if ($isKadept && empty($isFilteredUser)) : ?>
+                    <input type="hidden" name="scope" value="<?= esc($scope) ?>">
+                <?php endif; ?>
                 <div class="col-12 col-lg-3">
                     <div class="input-group">
                         <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama, atau PIC..." value="<?= esc($keyword ?? '') ?>">
@@ -336,7 +442,15 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
                     </button>
                 </div>
                 <div class="col-6 col-md-3 col-lg-1 d-flex justify-content-lg-end">
-                    <a href="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="btn btn-outline-secondary filter-reset-button" title="Reset filter" aria-label="Reset filter">
+                    <?php
+                    $resetUrl = '/projects';
+                    if (!empty($isFilteredUser) && !empty($targetUser)) {
+                        $resetUrl = '/projects/user/' . $targetUser['id'];
+                    } elseif ($isKadept && $scope === 'all') {
+                        $resetUrl = '/projects?scope=all';
+                    }
+                    ?>
+                    <a href="<?= base_url($resetUrl) ?>" class="btn btn-outline-secondary filter-reset-button" title="Reset filter" aria-label="Reset filter">
                         <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span>
                     </a>
                 </div>
@@ -454,7 +568,9 @@ $selectedIsCompleted = (string) ($selectedIsCompleted ?? '');
                             <?php endforeach; ?>
                         <?php else : ?>
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">Data project tidak tersedia</td>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Data project tidak tersedia
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
