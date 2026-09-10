@@ -302,7 +302,7 @@ foreach ($roles as $role) {
 </style>
 
 <div class="card user-form-card">
-    <form action="<?= esc($formAction) ?>" method="post">
+    <form action="<?= esc($formAction) ?>" method="post" autocomplete="off">
         <?= csrf_field() ?>
 
         <section class="user-form-section">

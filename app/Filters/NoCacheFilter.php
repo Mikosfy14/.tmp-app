@@ -19,8 +19,8 @@ class NoCacheFilter implements FilterInterface
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
         return $response
-            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0')
             ->setHeader('Pragma', 'no-cache')
-            ->setHeader('Expires', '0');
+            ->setHeader('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 }

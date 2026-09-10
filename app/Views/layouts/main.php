@@ -358,6 +358,20 @@
             }
         });
     </script>
+    <script>
+        // Force refresh from server when page is restored from browser BFCache or back/forward navigation
+        window.addEventListener('pageshow', function(event) {
+            const isBfCache = event.persisted;
+            const navEntry = window.performance && window.performance.getEntriesByType ?
+                window.performance.getEntriesByType('navigation')[0] :
+                null;
+            const isBackForwardNav = navEntry && navEntry.type === 'back_forward';
+
+            if (isBfCache || isBackForwardNav) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
 
 </html>
