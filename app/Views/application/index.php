@@ -5,6 +5,7 @@
 /** @var string $keyword */
 /** @var int|null $selectedCriticality */
 /** @var bool $managedByMe */
+/** @var \CodeIgniter\Pager\Pager|null $pager */
 
 $applications = $applications ?? [];
 $criticalityOptions = $criticalityOptions ?? [];
@@ -59,6 +60,54 @@ $criticalityClass = static fn(?string $name) => match ($name) {
             padding-inline: .75rem;
             flex: 1 1 auto;
         }
+    }
+
+    .application-pagination .pagination {
+        margin: 0;
+        gap: .35rem;
+    }
+
+    .application-pagination .page-item .page-link {
+        border: 0;
+        border-radius: .55rem;
+        min-width: 2.25rem;
+        text-align: center;
+        color: #52606d;
+        font-weight: 600;
+    }
+
+    .application-pagination .page-item.active .page-link {
+        background: #435ebe;
+        color: #fff;
+        box-shadow: 0 .25rem .65rem rgba(67, 94, 190, .25);
+    }
+
+    .application-pagination .page-item:not(.active) .page-link:hover {
+        background: #eef1ff;
+        color: #435ebe;
+    }
+
+    .application-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background: #f1f3f5;
+        opacity: .75;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    [data-bs-theme="dark"] .application-pagination .page-item:not(.active) .page-link {
+        color: #a0aec0;
+        background: transparent;
+    }
+
+    [data-bs-theme="dark"] .application-pagination .page-item:not(.active) .page-link:hover {
+        background: rgba(67, 94, 190, 0.2);
+        color: #8fa0f0;
+    }
+
+    [data-bs-theme="dark"] .application-pagination .page-item.disabled .page-link {
+        color: #607080;
+        background: rgba(255, 255, 255, 0.05);
     }
 </style>
 <?= $this->endSection() ?>
@@ -183,6 +232,11 @@ $criticalityClass = static fn(?string $name) => match ($name) {
                 </tbody>
             </table>
         </div>
+        <?php if (!empty($applications) && !empty($pager) && $pager->getPageCount('applications') > 1) : ?>
+            <div class="application-pagination d-flex justify-content-end p-3 border-top">
+                <?= $pager->links('applications', 'complete') ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 <?= $this->endSection() ?>

@@ -187,15 +187,28 @@ if ($isCompleted) {
                 </div>
                 <div class="card-body">
                     <?php if (!empty($project['assigned_users'])) : ?>
+                        <?php 
+                        $primaryPicId = (int) (explode(',', (string) ($project['assigned_to'] ?? ''))[0] ?? 0);
+                        ?>
                         <div class="d-flex flex-column gap-3">
                             <?php foreach ($project['assigned_users'] as $assignedUser) : ?>
+                                <?php 
+                                $isPrimaryPic = ((int) ($assignedUser['user_id'] ?? $assignedUser['id'] ?? 0) === $primaryPicId);
+                                ?>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-light-primary text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; border-radius: 50%;">
                                         <?= esc(strtoupper(substr($assignedUser['name'] ?? 'U', 0, 1))) ?>
                                     </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold"><?= esc($assignedUser['name']) ?></h6>
-                                        <small class="text-muted"><?= esc($assignedUser['job_title'] ?? '-') ?></small>
+                                    <div class="min-width-0 flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <h6 class="mb-0 fw-bold"><?= esc($assignedUser['name']) ?></h6>
+                                            <?php if ($isPrimaryPic) : ?>
+                                                <span class="badge bg-light-success text-success border border-success-subtle py-1" style="font-size: 0.68rem;">
+                                                    <i class="bi bi-star-fill me-1"></i>Penanggung Jawab
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <small class="text-muted d-block"><?= esc($assignedUser['job_title'] ?? '-') ?></small>
                                     </div>
                                 </div>
                             <?php endforeach; ?>

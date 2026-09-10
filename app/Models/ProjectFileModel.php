@@ -40,6 +40,22 @@ class ProjectFileModel extends Model
             ->first();
     }
 
+    /**
+     * @param int[] $ids
+     * @return array<int, array<string, mixed>>
+     */
+    public function getFilesForDownloadByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        return $this->select('project_files.*, users.name AS uploaded_by_name')
+            ->join('users', 'users.id = project_files.uploaded_by', 'left')
+            ->whereIn('project_files.id', $ids)
+            ->findAll();
+    }
+
     public function insertUploadedFile(array $metadata, string $binaryData): bool
     {
         $hexData = bin2hex($binaryData);

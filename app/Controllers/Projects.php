@@ -197,6 +197,115 @@ class Projects extends BaseController
         return redirect()->to('/projects/edit/' . $project['id'])->with('success', 'File project berhasil dihapus.');
     }
 
+    public function bulkDownloadFiles()
+    {
+        $projectId = (int) $this->request->getPost('project_id');
+        $fileIds = $this->request->getPost('file_ids');
+
+        if (!is_array($fileIds) || empty($fileIds)) {
+            return redirect()->back()->with('error', 'Tidak ada file yang dipilih untuk diunduh.');
+        }
+
+        $fileIds = array_values(array_filter(array_map('intval', $fileIds)));
+        if (empty($fileIds)) {
+            return redirect()->back()->with('error', 'Pilihan file tidak valid.');
+        }
+
+        if (!$this->canAccessProject($projectId)) {
+            return redirect()->to('/projects')->with('error', 'Akses ditolak.');
+        }
+
+        $files = $this->projectFileModel->getFilesForDownloadByIds($fileIds);
+        // Ensure all files belong to this project
+        $files = array_values(array_filter($files, static fn ($f) => (int) ($f['project_id'] ?? 0) === $projectId));
+
+        if (empty($files)) {
+            return redirect()->back()->with('error', 'File yang dipilih tidak ditemukan.');
+        }
+
+        // Single file: download directly with original name
+        if (count($files) === 1) {
+            $file = $files[0];
+            return $this->response
+                ->setHeader('Content-Type', $file['mime_type'] ?? 'application/octet-stream')
+                ->setHeader('Content-Disposition', 'attachment; filename="' . ($file['original_name'] ?? 'project-file') . '"')
+                ->setBody($file['file_data']);
+        }
+
+        // Multiple files: pack into a zip archive
+        $tempZipPath = tempnam(sys_get_temp_dir(), 'prj_zip_');
+        $zip = new \ZipArchive();
+
+        if ($zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Gagal membuat file arsip zip.');
+        }
+
+        $usedNames = [];
+        foreach ($files as $file) {
+            $name = $file['original_name'] ?? 'file';
+            // Prevent duplicate file names inside zip
+            if (isset($usedNames[$name])) {
+                $usedNames[$name]++;
+                $ext = pathinfo($name, PATHINFO_EXTENSION);
+                $base = pathinfo($name, PATHINFO_FILENAME);
+                $name = $ext !== '' ? "{$base} ({$usedNames[$name]}).{$ext}" : "{$base} ({$usedNames[$name]})";
+            } else {
+                $usedNames[$name] = 1;
+            }
+
+            $zip->addFromString($name, $file['file_data']);
+        }
+        $zip->close();
+
+        $zipData = file_get_contents($tempZipPath);
+        @unlink($tempZipPath);
+
+        $project = $this->projectModel->find($projectId);
+        $projectCodeSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', (string) ($project['project_code'] ?? 'PROJECT'));
+        $zipFileName = 'Files_' . $projectCodeSafe . '_' . date('Ymd_His') . '.zip';
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/zip')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $zipFileName . '"')
+            ->setBody($zipData);
+    }
+
+    public function bulkDeleteFiles()
+    {
+        $projectId = (int) $this->request->getPost('project_id');
+        $fileIds = $this->request->getPost('file_ids');
+
+        if (!is_array($fileIds) || empty($fileIds)) {
+            return redirect()->back()->with('error', 'Tidak ada file yang dipilih untuk dihapus.');
+        }
+
+        $fileIds = array_values(array_filter(array_map('intval', $fileIds)));
+        if (empty($fileIds)) {
+            return redirect()->back()->with('error', 'Pilihan file tidak valid.');
+        }
+
+        if (!$this->canAccessProject($projectId)) {
+            return redirect()->to('/projects')->with('error', 'Akses ditolak.');
+        }
+
+        $files = $this->projectFileModel->getFilesForDownloadByIds($fileIds);
+        $validIds = [];
+        foreach ($files as $f) {
+            if ((int) ($f['project_id'] ?? 0) === $projectId) {
+                $validIds[] = (int) $f['id'];
+            }
+        }
+
+        if (empty($validIds)) {
+            return redirect()->back()->with('error', 'File yang dipilih tidak ditemukan.');
+        }
+
+        $this->projectFileModel->whereIn('id', $validIds)->delete();
+        $count = count($validIds);
+
+        return redirect()->to('/projects/edit/' . $projectId)->with('success', "{$count} file project berhasil dihapus.");
+    }
+
     private function renderProjectList(?int $targetUserId = null)
     {
         $statusFilter = $this->request->getGet('status');
@@ -207,12 +316,30 @@ class Projects extends BaseController
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
         $selectedStartDate = $dateRange['start_date'] ?? '';
         $selectedEndDate = $dateRange['end_date'] ?? '';
-        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
-        $userId = $targetUserId ?? (int) session()->get('user_id');
+
+        $isKadept = $this->isKepalaDepartemen();
+        $currentUserId = (int) session()->get('user_id');
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
 
         if ($targetUserId && !$targetUser) {
             return redirect()->to('/projects')->with('error', 'User tidak ditemukan.');
+        }
+
+        $scope = 'my';
+        $countMyProjects = 0;
+        $countAllProjects = 0;
+
+        if ($isKadept && $targetUserId === null) {
+            $requestedScope = strtolower(trim((string) $this->request->getGet('scope')));
+            $scope = ($requestedScope === 'all') ? 'all' : 'my';
+            $includeAll = ($scope === 'all');
+            $userId = $currentUserId;
+
+            $countMyProjects = $this->projectModel->countProjects($currentUserId, false);
+            $countAllProjects = $this->projectModel->countProjects(null, true);
+        } else {
+            $includeAll = false;
+            $userId = $targetUserId ?? $currentUserId;
         }
 
         $data = [
@@ -228,6 +355,10 @@ class Projects extends BaseController
             'statusOptions' => $this->projectStatusModel->getActiveOptions(),
             'isFilteredUser' => $targetUserId !== null,
             'targetUser' => $targetUser,
+            'isKadept' => $isKadept,
+            'scope' => $scope,
+            'countMyProjects' => $countMyProjects,
+            'countAllProjects' => $countAllProjects,
         ];
 
         return view('projects/index', $data);
@@ -320,17 +451,28 @@ class Projects extends BaseController
 
     private function buildProjectPayload(?array $existingProject = null): array
     {
-        $selectedAssignedIds = $this->request->getPost('assigned_to');
-        $selectedAssignedIds = is_array($selectedAssignedIds) ? $selectedAssignedIds : [];
-        $selectedAssignedIds = array_values(array_filter(array_map('intval', $selectedAssignedIds), static fn (int $id) => $id > 0));
+        $currentUserId = (int) session()->get('user_id');
+        $isKadept = $this->isKepalaDepartemen();
 
         $primaryUserId = $existingProject
             ? $this->getPrimaryAssignedUserId($existingProject['assigned_to'] ?? '')
-            : (int) session()->get('user_id');
+            : $currentUserId;
 
-        if ($primaryUserId > 0) {
-            $selectedAssignedIds = array_values(array_diff($selectedAssignedIds, [$primaryUserId]));
-            array_unshift($selectedAssignedIds, $primaryUserId);
+        // If editing an existing project and the current user is not the primary PIC nor Kepala Departemen:
+        // preserve the existing assigned_to string completely so team members cannot tamper with assignees.
+        if ($existingProject !== null && !$isKadept && $currentUserId !== $primaryUserId) {
+            $assignedToString = (string) ($existingProject['assigned_to'] ?? '');
+        } else {
+            $selectedAssignedIds = $this->request->getPost('assigned_to');
+            $selectedAssignedIds = is_array($selectedAssignedIds) ? $selectedAssignedIds : [];
+            $selectedAssignedIds = array_values(array_filter(array_map('intval', $selectedAssignedIds), static fn (int $id) => $id > 0));
+
+            if ($primaryUserId > 0) {
+                $selectedAssignedIds = array_values(array_diff($selectedAssignedIds, [$primaryUserId]));
+                array_unshift($selectedAssignedIds, $primaryUserId);
+            }
+
+            $assignedToString = implode(',', array_values(array_unique($selectedAssignedIds)));
         }
 
         return [
@@ -344,7 +486,7 @@ class Projects extends BaseController
             'sit_date' => $this->nullablePost('sit_date'),
             'uat_date' => $this->nullablePost('uat_date'),
             'promote_date' => $this->nullablePost('promote_date'),
-            'assigned_to' => implode(',', array_values(array_unique($selectedAssignedIds))),
+            'assigned_to' => $assignedToString,
         ];
     }
 
@@ -472,9 +614,11 @@ class Projects extends BaseController
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
         $targetUserId = $this->request->getGet('user_id');
         $targetUserId = is_numeric($targetUserId) ? (int) $targetUserId : null;
+        $scope = strtolower(trim((string) $this->request->getGet('scope')));
 
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
-        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
+        $isKadept = $this->isKepalaDepartemen();
+        $includeAll = $isKadept && $targetUserId === null && $scope === 'all';
         $userId = $targetUserId ?? (int) session()->get('user_id');
 
         $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
@@ -490,8 +634,17 @@ class Projects extends BaseController
             default => 'Semua',
         };
 
+        $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
+        if ($targetUser) {
+            $scopeText = 'Proyek User: ' . ($targetUser['name'] ?? '');
+        } elseif ($includeAll) {
+            $scopeText = 'Seluruh Proyek Tim Departemen';
+        } else {
+            $scopeText = $isKadept ? 'Proyek Saya (Kepala Departemen)' : 'Proyek Ditugaskan';
+        }
+
         $metadataLines = [
-            'Status SDLC: ' . $statusText . ' | Penyelesaian: ' . $completionText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
+            'Cakupan: ' . $scopeText . ' | Status SDLC: ' . $statusText . ' | Penyelesaian: ' . $completionText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
             'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project',
         ];
 
@@ -564,9 +717,11 @@ class Projects extends BaseController
         $selectedEndDate = trim((string) $this->request->getGet('filter_end'));
         $targetUserId = $this->request->getGet('user_id');
         $targetUserId = is_numeric($targetUserId) ? (int) $targetUserId : null;
+        $scope = strtolower(trim((string) $this->request->getGet('scope')));
 
         $dateRange = $this->resolveProjectDateRange($selectedStartDate, $selectedEndDate);
-        $includeAll = $this->isKepalaDepartemen() && $targetUserId === null;
+        $isKadept = $this->isKepalaDepartemen();
+        $includeAll = $isKadept && $targetUserId === null && $scope === 'all';
         $userId = $targetUserId ?? (int) session()->get('user_id');
 
         $projects = $this->projectModel->getAllProjectsWithAssignees($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
@@ -583,7 +738,13 @@ class Projects extends BaseController
         };
 
         $targetUser = $targetUserId ? $this->userModel->find($targetUserId) : null;
-        $scopeText = $targetUser ? 'Proyek User: ' . ($targetUser['name'] ?? '') : ($includeAll ? 'Seluruh Proyek Departemen' : 'Proyek Ditugaskan');
+        if ($targetUser) {
+            $scopeText = 'Proyek User: ' . ($targetUser['name'] ?? '');
+        } elseif ($includeAll) {
+            $scopeText = 'Seluruh Proyek Tim Departemen';
+        } else {
+            $scopeText = $isKadept ? 'Proyek Saya (Kepala Departemen)' : 'Proyek Ditugaskan';
+        }
 
         $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.pdf';
 

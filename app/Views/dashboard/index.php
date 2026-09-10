@@ -479,9 +479,6 @@ $deadlineAlerts = get_user_deadline_notifications();
                     <?php else : ?>
                         <div class="text-center py-3 text-muted">
                             <p class="mb-1 text-sm">Belum ada aplikasi yang ditugaskan sebagai PIC.</p>
-                            <a href="<?= base_url('/aplikasi') ?>" class="btn btn-sm btn-outline-primary py-0 px-2">
-                                <i class="bi bi-grid me-1"></i>Katalog Aplikasi
-                            </a>
                         </div>
                     <?php endif; ?>
                 </div>

@@ -32,7 +32,7 @@ class ProjectModel extends Model
     public function getProjectsWithAssignees($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null, ?string $isCompletedFilter = null): array
     {
         $builder = $this->buildProjectsQuery($statusFilter, $keyword, $userId, $includeAll, $dateRange, $isCompletedFilter);
-        $projects = $builder->orderBy('projects.id', 'DESC')->paginate(5, 'projects');
+        $projects = $builder->orderBy('projects.id', 'DESC')->paginate(10, 'projects');
         return $this->attachAssignees($projects);
     }
 
@@ -115,6 +115,16 @@ class ProjectModel extends Model
 
         $project['assigned_users'] = $this->getUsersFromAssignedTo($project['assigned_to'] ?? '');
         return $project;
+    }
+
+    /** Hitung total project berdasarkan scope (milik user atau semua project). */
+    public function countProjects(?int $userId = null, bool $includeAll = false): int
+    {
+        $builder = $this->builder();
+        if (!$includeAll && !empty($userId)) {
+            $this->whereAssignedToContains($builder, $userId);
+        }
+        return $builder->countAllResults();
     }
 
     private function whereAssignedToContains($builder, int $userId): void
