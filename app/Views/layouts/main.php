@@ -85,6 +85,14 @@
             transform: translateX(-100%);
         }
 
+        html.sidebar-closed #sidebar-backdrop,
+        html.sidebar-closed #sidebar.active #sidebar-backdrop {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: none !important;
+        }
+
         #sidebar-backdrop {
             position: fixed;
             inset: 0;
@@ -234,6 +242,22 @@
         [data-bs-theme="dark"] .navbar-top {
             background-color: #151521 !important;
         }
+
+        body.session-expired-active .modal-backdrop {
+            background-color: rgba(15, 18, 30, .48) !important;
+            opacity: 1 !important;
+            transition: opacity .25s ease !important;
+        }
+
+        #modalSessionExpired .modal-content {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        [data-bs-theme="dark"] #modalSessionExpired .modal-content {
+            background-color: #1e1e2d !important;
+            color: #ffffff !important;
+            border-color: #2b2b40 !important;
+        }
     </style>
 </head>
 
@@ -254,21 +278,75 @@
         </div>
     </div>
 
+    <!-- Modal Notifikasi Sesi Habis -->
+    <div class="modal fade" id="modalSessionExpired" tabindex="-1" aria-labelledby="modalSessionExpiredLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-body text-center p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; border-radius: 50%; background-color: rgba(255, 193, 7, 0.15); color: #eaca4a;">
+                        <i class="bi bi-clock-history" style="font-size: 2rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto;"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold mb-2" id="modalSessionExpiredLabel">Sesi Telah Habis</h5>
+                    <p class="text-muted mb-4" style="font-size: 0.92rem; line-height: 1.5;">
+                        Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Demi keamanan data akun Anda, silakan masuk kembali.
+                    </p>
+                    <div class="d-grid">
+                        <a href="<?= base_url('/logout') ?>" class="btn btn-primary py-2 fw-semibold" id="btnSessionRelogin" style="border-radius: 8px;">
+                            Login ulang
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
     <?= $this->renderSection('scripts') ?>
     <script>
         (() => {
-            const idleTimeout = 15 * 60 * 1000;
+            const idleTimeout = 30 * 60 * 1000;
             const logoutUrl = <?= json_encode(base_url('/logout')) ?>;
             const activityUrl = <?= json_encode(base_url('/session/activity')) ?>;
             const serverSyncInterval = 60 * 1000;
             const activityStorageKey = 'authenticated-last-activity';
+            const activityEvents = ['click', 'keydown', 'pointerdown', 'scroll', 'touchstart'];
             let idleTimer;
             let lastActivityEvent = 0;
             let lastServerSync = Date.now();
+            let isSessionExpired = false;
+
+            const showSessionExpiredModal = () => {
+                if (isSessionExpired) return;
+                isSessionExpired = true;
+
+                // Stop activity tracking
+                window.clearTimeout(idleTimer);
+                activityEvents.forEach((eventName) => {
+                    document.removeEventListener(eventName, registerActivity);
+                });
+                localStorage.removeItem(activityStorageKey);
+
+                // Notify server in background to destroy session
+                fetch(logoutUrl, { method: 'GET', keepalive: true }).catch(() => {});
+
+                // Apply sidebar-style backdrop class
+                document.body.classList.add('session-expired-active');
+
+                const modalEl = document.getElementById('modalSessionExpired');
+                if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    modalInstance.show();
+                } else {
+                    window.location.assign(logoutUrl);
+                }
+            };
 
             const resetIdleTimer = () => {
+                if (isSessionExpired) return;
                 window.clearTimeout(idleTimer);
                 const lastActivity = Number(localStorage.getItem(activityStorageKey)) || Date.now();
                 const remainingTime = Math.max(0, idleTimeout - (Date.now() - lastActivity));
@@ -279,11 +357,12 @@
                         return;
                     }
 
-                    window.location.assign(logoutUrl);
+                    showSessionExpiredModal();
                 }, remainingTime);
             };
 
             const registerActivity = () => {
+                if (isSessionExpired) return;
                 const now = Date.now();
                 if (now - lastActivityEvent < 1000) {
                     return;
@@ -298,13 +377,14 @@
                     fetch(activityUrl, {
                         method: 'POST',
                         headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            '<?= csrf_header() ?>': '<?= csrf_hash() ?>'
                         },
                         credentials: 'same-origin',
                         keepalive: true,
                     }).then((response) => {
                         if (response.redirected || response.status === 401) {
-                            window.location.assign(logoutUrl);
+                            showSessionExpiredModal();
                         }
                     }).catch(() => {
                         // The server-side timeout remains authoritative if synchronization fails.
@@ -312,7 +392,7 @@
                 }
             };
 
-            ['click', 'keydown', 'pointerdown', 'scroll', 'touchstart'].forEach((eventName) => {
+            activityEvents.forEach((eventName) => {
                 document.addEventListener(eventName, registerActivity, {
                     passive: true
                 });
@@ -320,7 +400,11 @@
 
             window.addEventListener('storage', (event) => {
                 if (event.key === activityStorageKey) {
-                    resetIdleTimer();
+                    if (event.newValue === null) {
+                        showSessionExpiredModal();
+                    } else {
+                        resetIdleTimer();
+                    }
                 }
             });
 
@@ -370,6 +454,42 @@
             if (isBfCache || isBackForwardNav) {
                 window.location.reload();
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('show.bs.modal', function(event) {
+            const modal = event.target;
+            const cooldownBtn = modal.querySelector('[data-cooldown]');
+            if (!cooldownBtn) return;
+
+            const initialText = cooldownBtn.getAttribute('data-original-text') || cooldownBtn.textContent.trim();
+            if (!cooldownBtn.getAttribute('data-original-text')) {
+                cooldownBtn.setAttribute('data-original-text', initialText);
+            }
+
+            let duration = parseInt(cooldownBtn.getAttribute('data-cooldown'), 10) || 3;
+            cooldownBtn.disabled = true;
+            cooldownBtn.textContent = `${initialText} (${duration}s)`;
+
+            let timer = setInterval(function() {
+                duration--;
+                if (duration > 0) {
+                    cooldownBtn.textContent = `${initialText} (${duration}s)`;
+                } else {
+                    clearInterval(timer);
+                    cooldownBtn.disabled = false;
+                    cooldownBtn.textContent = initialText;
+                }
+            }, 1000);
+
+            const onModalHidden = function() {
+                clearInterval(timer);
+                cooldownBtn.disabled = true;
+                cooldownBtn.textContent = initialText;
+                modal.removeEventListener('hidden.bs.modal', onModalHidden);
+            };
+
+            modal.addEventListener('hidden.bs.modal', onModalHidden);
         });
     </script>
 </body>

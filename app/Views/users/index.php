@@ -468,7 +468,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal"><i class="bi bi-check-circle me-1"></i> Simpan Perubahan</button>
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Simpan Perubahan</button>
                 </div>
             </div>
         </div>
@@ -488,7 +488,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <form action="<?= base_url('/users/deactivate/' . (int) $user['id']) ?>" method="post">
                         <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-danger">Nonaktifkan</button>
+                        <button type="submit" class="btn btn-danger" data-cooldown="3">Nonaktifkan</button>
                     </form>
                 </div>
             </div>
@@ -569,7 +569,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="bi bi-save me-1"></i> Simpan User</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Simpan User</button>
             </div>
         </div>
     </div>

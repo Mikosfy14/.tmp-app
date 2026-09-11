@@ -115,7 +115,7 @@ $criticalityClass = static fn(?string $name) => match ($name) {
 <?= $this->section('content') ?>
 <div class="page-heading d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h3 class="mb-1">Aplikasi Pengelolaan</h3>
+        <h3 class="mb-1">Application</h3>
         <p class="text-muted mb-0">Katalog aplikasi dan service yang dikelola tim.</p>
     </div>
     <?php

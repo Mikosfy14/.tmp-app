@@ -60,12 +60,10 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
             <div class="profile-edit-identity">
                 <div class="profile-edit-avatar-wrap" title="Upload foto profil akan tersedia pada pengembangan berikutnya">
                     <div class="profile-edit-avatar d-flex align-items-center justify-content-center fw-bold" aria-hidden="true"><?= esc($profileInitial) ?></div>
-                    <span class="profile-edit-avatar-hint" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
                 </div>
                 <div>
                     <div class="fw-bold"><?= esc($user['name'] ?? '-') ?></div>
                     <div class="text-muted small">@<?= esc($user['username'] ?? '-') ?></div>
-                    <div class="text-muted small">Foto profil belum tersedia.</div>
                 </div>
             </div>
             <section class="profile-edit-section">
@@ -94,7 +92,7 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
             </section>
             <div class="profile-edit-actions d-flex justify-content-end gap-2">
                 <a href="<?= base_url('/profile') ?>" class="btn btn-outline-secondary">Batal</a>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1" aria-hidden="true"></i> Simpan Perubahan Profil</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan Profil</button>
             </div>
         </form>
     </div>

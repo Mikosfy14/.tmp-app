@@ -35,9 +35,8 @@ $deadlineAlerts = get_user_deadline_notifications();
                 <div class="modal-content shadow-lg border-0">
                     <div class="modal-header bg-danger text-white">
                         <h5 class="modal-title text-white d-flex align-items-center mb-0" id="modalDeadlineAlertLabel">
-                            Peringatan Tenggat Waktu (Deadline Alert)
+                            Peringatan Tenggat Waktu
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body p-4">
                         <div class="alert alert-light border d-flex align-items-center mb-3">
