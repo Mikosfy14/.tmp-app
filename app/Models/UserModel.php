@@ -18,14 +18,14 @@ class UserModel extends Model
     //mengambil user active + role
     public function getUserByUsername(string $username)
     {
-        $escapedUsername = $this->db->escape($username);
+        $sql = '
+            SELECT u.*, r.role_name, r.category
+            FROM users u
+            LEFT JOIN roles r ON r.id = u.role_id
+            WHERE u.username COLLATE Latin1_General_BIN2 = ?
+        ';
 
-        return $this->db->table('users u')
-            ->select('u.*, r.role_name, r.category')
-            ->join('roles r', 'r.id = u.role_id', 'left')
-            ->where("u.username COLLATE Latin1_General_BIN2 = {$escapedUsername}", null, false)
-            ->get()
-            ->getRowArray();
+        return $this->db->query($sql, [$username])->getRowArray();
     }
 
     public function getUserByEmail(string $email)
