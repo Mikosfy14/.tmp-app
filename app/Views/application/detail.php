@@ -1,4 +1,5 @@
 <?php
+
 /** @var array<string, mixed> $application */
 $application = $application ?? [];
 $a = $application;
@@ -60,15 +61,17 @@ $fields = ['App Component' => 'app_component', 'Description' => 'description', '
     <div class="modal fade" id="deleteApplicationModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title text-white"><i class="bi bi-exclamation-triangle me-2"></i>Hapus Aplikasi</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
                 <div class="modal-body">
-                    <p>Yakin ingin menghapus <strong><?= $show($a['app_component'] ?? null) ?></strong>?</p>
-                    <div class="alert alert-light-danger mb-0">Data aplikasi akan dihapus permanen dan tidak dapat dipulihkan.</div>
+                    <p class="mb-0">Yakin ingin menghapus aplikasi <strong><?= $show($a['app_component'] ?? null) ?></strong>?
+                        Data aplikasi akan dihapus permanen dan tidak dapat dipulihkan.
+                    </p>
                 </div>
-                <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <form method="post" action="<?= base_url('/aplikasi/delete/' . $a['id']) ?>"><?= csrf_field() ?><button class="btn btn-danger">Ya, Hapus Aplikasi</button></form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <form action="<?= base_url('/aplikasi/delete/' . $application['id']) ?>" method="POST" class="d-inline">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-danger" data-cooldown="3">Ya, Hapus Aplikasi</button>
+                    </form>
                 </div>
             </div>
         </div>

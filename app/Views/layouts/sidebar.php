@@ -47,7 +47,7 @@
                 <li class="sidebar-item <?= is_active('aplikasi') ?>">
                     <a href="<?= base_url('/aplikasi') ?>" class='sidebar-link d-flex align-items-center'>
                         <i class="bi bi-stack me-2 fs-5"></i>
-                        <span>Aplikasi Pengelolaan</span>
+                        <span>Application</span>
                     </a>
                 </li>
 
@@ -63,7 +63,7 @@
                     <li class="sidebar-item <?= is_active('kinerja-tim') ?>">
                         <a href="<?= base_url('/kinerja-tim') ?>" class='sidebar-link d-flex align-items-center'>
                             <i class="bi bi-bar-chart-line me-2 fs-5"></i>
-                            <span>Kinerja Tim</span>
+                            <span>Team Performance</span>
                         </a>
                     </li>
                     <li class="sidebar-item <?= is_active('users') ?>">

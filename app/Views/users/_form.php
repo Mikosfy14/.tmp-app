@@ -413,7 +413,7 @@ foreach ($roles as $role) {
             <div class="d-flex gap-2">
                 <a href="<?= esc($cancelUrl) ?>" class="btn btn-outline-secondary">Batal</a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-floppy" aria-hidden="true"></i><?= esc($submitLabel) ?>
+                    <?= esc($submitLabel) ?>
                 </button>
             </div>
         </div>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @var array $project
  * @var array $projectFiles
@@ -16,7 +17,7 @@ $statusBadge = match ($project['status'] ?? '') {
     default => 'bg-secondary',
 };
 
-$dateValue = static fn ($value): string => !empty($value) ? date('d M Y', strtotime($value)) : '-';
+$dateValue = static fn($value): string => !empty($value) ? date('d M Y', strtotime($value)) : '-';
 
 $isCompleted = is_project_completed($project);
 $deadline = get_deadline_status($project['end_date'] ?? null, $isCompleted);
@@ -33,7 +34,7 @@ if ($isCompleted) {
             $endDateObj = new DateTimeImmutable(date('Y-m-d', strtotime($project['end_date'])));
             $promoteDateObj = new DateTimeImmutable(date('Y-m-d', strtotime($project['promote_date'])));
             $delayDays = (int) $endDateObj->diff($promoteDateObj)->format('%r%a');
-            
+
             if ($delayDays > 0) {
                 $timingText = "Telat {$delayDays} hari";
                 $timingClass = "text-danger fw-semibold";
@@ -187,12 +188,12 @@ if ($isCompleted) {
                 </div>
                 <div class="card-body">
                     <?php if (!empty($project['assigned_users'])) : ?>
-                        <?php 
+                        <?php
                         $primaryPicId = (int) (explode(',', (string) ($project['assigned_to'] ?? ''))[0] ?? 0);
                         ?>
                         <div class="d-flex flex-column gap-3">
                             <?php foreach ($project['assigned_users'] as $assignedUser) : ?>
-                                <?php 
+                                <?php
                                 $isPrimaryPic = ((int) ($assignedUser['user_id'] ?? $assignedUser['id'] ?? 0) === $primaryPicId);
                                 ?>
                                 <div class="d-flex align-items-center gap-3">
@@ -252,10 +253,6 @@ if ($isCompleted) {
 <div class="modal fade" id="modalDeleteProject" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title text-white"><i class="bi bi-exclamation-triangle me-2"></i>Hapus Project</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
             <div class="modal-body">
                 <p class="mb-0">
                     Project <strong><?= esc($project['name']) ?></strong> akan dihapus permanen dari daftar project.
@@ -264,9 +261,9 @@ if ($isCompleted) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <form action="<?= base_url('/projects/delete/' . $project['id']) ?>" method="POST">
+                <form action="<?= base_url('/projects/delete/' . $project['id']) ?>" method="POST" class="d-inline">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-danger">Ya, Hapus Project</button>
+                    <button type="submit" class="btn btn-danger" data-cooldown="3">Ya, Hapus Project</button>
                 </form>
             </div>
         </div>

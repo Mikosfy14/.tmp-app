@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @var array $user
  * @var array $assignedProjects
@@ -41,8 +42,8 @@ $statusBadge = static function (?string $status): string {
     };
 };
 
-$dateValue = static fn ($value): string => !empty($value) ? date('d M Y', strtotime($value)) : '-';
-$valueOrDash = static fn ($value): string => $value !== null && $value !== '' ? esc($value) : '-';
+$dateValue = static fn($value): string => !empty($value) ? date('d M Y', strtotime($value)) : '-';
+$valueOrDash = static fn($value): string => $value !== null && $value !== '' ? esc($value) : '-';
 $isActive = (int) ($user['is_active'] ?? 0) === 1;
 $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
 
@@ -458,10 +459,6 @@ foreach ($assignedProjects as $p) {
 <div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title text-dark"><i class="bi bi-key-fill me-2"></i>Reset Password</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
             <div class="modal-body">
                 <p class="mb-0">Password user <strong><?= esc($user['name'] ?? '-') ?></strong> akan direset ke password default sistem.</p>
             </div>
@@ -479,18 +476,14 @@ foreach ($assignedProjects as $p) {
 <div class="modal fade" id="modalDeactivateUser" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title text-white"><i class="bi bi-person-dash-fill me-2"></i>Deactivate User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
             <div class="modal-body">
                 <p class="mb-0">User <strong><?= esc($user['name'] ?? '-') ?></strong> akan dibuat nonaktif. Data historis tetap dipertahankan.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <form action="<?= base_url('/users/deactivate/' . (int) $user['id']) ?>" method="post">
+                <form action="<?= base_url('/users/deactivate/' . (int) $user['id']) ?>" method="post" class="d-inline">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-danger">Deactivate User</button>
+                    <button type="submit" class="btn btn-danger" data-cooldown="3">Deactivate User</button>
                 </form>
             </div>
         </div>
@@ -519,75 +512,208 @@ foreach ($assignedProjects as $p) {
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function getChartThemeOptions() {
-        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        const textColor = isDark ? '#f5f7ff' : '#25396f';
-        const mutedColor = isDark ? '#a6a8b8' : '#607080';
-        const gridColor = isDark ? '#2b2b40' : '#e6eaee';
-        return {
-            chart: { foreColor: textColor },
-            theme: { mode: isDark ? 'dark' : 'light' },
-            tooltip: { theme: isDark ? 'dark' : 'light' },
-            legend: { labels: { colors: textColor } },
-            grid: { borderColor: gridColor },
-            xaxis: { labels: { style: { colors: mutedColor } }, axisBorder: { color: gridColor }, axisTicks: { color: gridColor } },
-            yaxis: { labels: { style: { colors: mutedColor } } }
+    document.addEventListener('DOMContentLoaded', function() {
+        function getChartThemeOptions() {
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const textColor = isDark ? '#f5f7ff' : '#25396f';
+            const mutedColor = isDark ? '#a6a8b8' : '#607080';
+            const gridColor = isDark ? '#2b2b40' : '#e6eaee';
+            return {
+                chart: {
+                    foreColor: textColor
+                },
+                theme: {
+                    mode: isDark ? 'dark' : 'light'
+                },
+                tooltip: {
+                    theme: isDark ? 'dark' : 'light'
+                },
+                legend: {
+                    labels: {
+                        colors: textColor
+                    }
+                },
+                grid: {
+                    borderColor: gridColor
+                },
+                xaxis: {
+                    labels: {
+                        style: {
+                            colors: mutedColor
+                        }
+                    },
+                    axisBorder: {
+                        color: gridColor
+                    },
+                    axisTicks: {
+                        color: gridColor
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: mutedColor
+                        }
+                    }
+                }
+            };
+        }
+
+        const sdlcData = <?= json_encode($sdlc_distribution ?? []) ?>;
+        const sdlcLabels = Object.keys(sdlcData);
+        const sdlcSeries = Object.values(sdlcData);
+
+        const trendMonths = <?= json_encode($completion_chart['months'] ?? []) ?>;
+        const trendOnTime = <?= json_encode($completion_chart['on_time'] ?? []) ?>;
+        const trendLate = <?= json_encode($completion_chart['late'] ?? []) ?>;
+
+        let chartSdlc = null;
+        let chartTrend = null;
+
+        const renderUserCharts = async () => {
+            if (chartSdlc) {
+                chartSdlc.destroy();
+                chartSdlc = null;
+            }
+            if (chartTrend) {
+                chartTrend.destroy();
+                chartTrend = null;
+            }
+
+            const elSdlc = document.querySelector("#chart-user-sdlc");
+            if (elSdlc) elSdlc.innerHTML = '';
+            const elTrend = document.querySelector("#chart-user-trend");
+            if (elTrend) elTrend.innerHTML = '';
+
+            const themeOpts = getChartThemeOptions();
+
+            // SDLC Distribution Donut
+            if (sdlcSeries.length > 0 && elSdlc) {
+                chartSdlc = new ApexCharts(elSdlc, {
+                    chart: {
+                        type: 'donut',
+                        height: 220,
+                        ...themeOpts.chart
+                    },
+                    series: sdlcSeries,
+                    labels: sdlcLabels,
+                    colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
+                    theme: themeOpts.theme,
+                    tooltip: themeOpts.tooltip,
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '11px',
+                        ...themeOpts.legend
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            colors: ['#ffffff']
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    show: false
+                                }
+                            }
+                        }
+                    }
+                });
+                await chartSdlc.render();
+            }
+
+            // Monthly Completion Trend (Stacked Bar)
+            if (elTrend) {
+                chartTrend = new ApexCharts(elTrend, {
+                    chart: {
+                        type: 'bar',
+                        height: 220,
+                        stacked: true,
+                        toolbar: {
+                            show: false
+                        },
+                        ...themeOpts.chart
+                    },
+                    series: [{
+                            name: 'Tepat Waktu',
+                            data: trendOnTime
+                        },
+                        {
+                            name: 'Terlambat',
+                            data: trendLate
+                        }
+                    ],
+                    colors: ['#198754', '#dc3545'],
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '50%',
+                            borderRadius: 3
+                        }
+                    },
+                    xaxis: {
+                        categories: trendMonths,
+                        ...themeOpts.xaxis
+                    },
+                    yaxis: {
+                        ...themeOpts.yaxis,
+                        labels: {
+                            ...themeOpts.yaxis.labels,
+                            formatter: function(val) {
+                                return Math.floor(val);
+                            }
+                        }
+                    },
+                    grid: themeOpts.grid,
+                    legend: {
+                        position: 'top',
+                        fontSize: '11px',
+                        ...themeOpts.legend
+                    },
+                    tooltip: {
+                        ...themeOpts.tooltip,
+                        y: {
+                            formatter: function(val) {
+                                return val + ' project';
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    theme: themeOpts.theme
+                });
+                await chartTrend.render();
+            }
         };
-    }
 
-    const themeOpts = getChartThemeOptions();
+        renderUserCharts();
 
-    // SDLC Distribution Donut
-    const sdlcData = <?= json_encode($sdlc_distribution) ?>;
-    const sdlcLabels = Object.keys(sdlcData);
-    const sdlcSeries = Object.values(sdlcData);
+        const toggleDark = document.getElementById('toggle-dark');
+        if (toggleDark) {
+            toggleDark.addEventListener('change', function() {
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    renderUserCharts();
+                }));
+            });
+        }
 
-    var chartSdlc = null;
-    if (sdlcSeries.length > 0 && document.querySelector("#chart-user-sdlc")) {
-        chartSdlc = new ApexCharts(document.querySelector("#chart-user-sdlc"), {
-            chart: { type: 'donut', height: 220, ...themeOpts.chart },
-            series: sdlcSeries,
-            labels: sdlcLabels,
-            colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
-            theme: themeOpts.theme,
-            tooltip: themeOpts.tooltip,
-            legend: { position: 'bottom', fontSize: '11px', ...themeOpts.legend },
-            dataLabels: { enabled: true, style: { colors: ['#ffffff'] } },
-            plotOptions: { pie: { donut: { labels: { show: false } } } }
-        });
-        chartSdlc.render();
-    }
-
-    // Monthly Completion Trend (Stacked Bar)
-    const trendMonths = <?= json_encode($completion_chart['months'] ?? []) ?>;
-    const trendOnTime = <?= json_encode($completion_chart['on_time'] ?? []) ?>;
-    const trendLate = <?= json_encode($completion_chart['late'] ?? []) ?>;
-
-    var chartTrend = new ApexCharts(document.querySelector("#chart-user-trend"), {
-        chart: { type: 'bar', height: 220, stacked: true, toolbar: { show: false }, ...themeOpts.chart },
-        series: [
-            { name: 'Tepat Waktu', data: trendOnTime },
-            { name: 'Terlambat', data: trendLate }
-        ],
-        colors: ['#198754', '#dc3545'],
-        plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 3 } },
-        xaxis: { categories: trendMonths, ...themeOpts.xaxis },
-        yaxis: { ...themeOpts.yaxis, labels: { ...themeOpts.yaxis.labels, formatter: function(val) { return Math.floor(val); } } },
-        grid: themeOpts.grid,
-        legend: { position: 'top', fontSize: '11px', ...themeOpts.legend },
-        tooltip: { ...themeOpts.tooltip, y: { formatter: function(val) { return val + ' project'; } } },
-        dataLabels: { enabled: false },
-        theme: themeOpts.theme
+        // Chart Toggle
+        const userToggle = document.getElementById('userChartToggle');
+        if (userToggle) {
+            userToggle.addEventListener('change', function() {
+                const isSdlc = this.value === 'sdlc';
+                document.getElementById('view-user-sdlc').classList.toggle('d-none', !isSdlc);
+                document.getElementById('view-user-trend').classList.toggle('d-none', isSdlc);
+                window.setTimeout(() => {
+                    if (isSdlc && chartSdlc) chartSdlc.resize();
+                    if (!isSdlc && chartTrend) chartTrend.resize();
+                }, 50);
+            });
+        }
     });
-    chartTrend.render();
-
-    // Chart Toggle
-    document.getElementById('userChartToggle').addEventListener('change', function() {
-        document.getElementById('view-user-sdlc').classList.toggle('d-none', this.value !== 'sdlc');
-        document.getElementById('view-user-trend').classList.toggle('d-none', this.value !== 'trend');
-    });
-});
 </script>
 
 <?= $this->endSection() ?>

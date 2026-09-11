@@ -298,11 +298,16 @@ class Users extends BaseController
 
     private function getAssignedProjects(int $userId): array
     {
+        $cleanUserId = abs((int) $userId);
+        if ($cleanUserId <= 0) {
+            return [];
+        }
+
         return db_connect()
             ->table('projects p')
             ->select('p.id, p.project_code, p.name, p.end_date, p.project_status_id, ps.status_name AS status')
             ->join('project_status ps', 'ps.id = p.project_status_id', 'left')
-            ->where("CHARINDEX(',$userId,', ',' + ISNULL(p.assigned_to, '') + ',') >", 0, false)
+            ->where("CHARINDEX(',$cleanUserId,', ',' + ISNULL(p.assigned_to, '') + ',') >", 0, false)
             ->orderBy('p.end_date', 'ASC')
             ->get()
             ->getResultArray();

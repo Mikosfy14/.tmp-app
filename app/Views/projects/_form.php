@@ -632,12 +632,10 @@ foreach ($users as $user) {
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" id="btnBulkDownloadFiles">
-                                <i class="bi bi-download" aria-hidden="true"></i>
-                                <span>Download Terpilih</span>
+                                <span>Download File Terpilih</span>
                             </button>
                             <button type="button" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" id="btnBulkDeleteFilesModal" data-bs-toggle="modal" data-bs-target="#modalBulkDeleteProjectFiles">
-                                <i class="bi bi-trash" aria-hidden="true"></i>
-                                <span>Hapus Terpilih</span>
+                                <span>Hapus File Terpilih</span>
                             </button>
                         </div>
                     </div>
@@ -684,7 +682,7 @@ foreach ($users as $user) {
             <div class="d-flex gap-2">
                 <a href="<?= base_url('/projects') ?>" class="btn btn-outline-secondary">Batal</a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle" aria-hidden="true"></i><?= esc($submitLabel) ?>
+                    </i><?= esc($submitLabel) ?>
                 </button>
             </div>
         </div>
@@ -696,12 +694,6 @@ foreach ($users as $user) {
     <div class="modal fade" id="modalBulkDeleteProjectFiles" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title text-white">
-                        <i class="bi bi-exclamation-triangle me-2"></i>Hapus File Project Terpilih
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
                 <div class="modal-body">
                     <p class="mb-1">
                         Apakah kamu yakin ingin menghapus <strong id="bulkDeleteFilesText">0 file</strong> terpilih?
@@ -711,7 +703,7 @@ foreach ($users as $user) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-danger" id="btnConfirmBulkDelete">
-                        <i class="bi bi-trash me-1"></i>Hapus File Terpilih
+                        Hapus File Terpilih
                     </button>
                 </div>
             </div>
@@ -736,10 +728,6 @@ foreach ($users as $user) {
         <div class="modal fade" id="modalDeleteProjectFile<?= (int) $file['id'] ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Hapus File Project</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                    </div>
                     <div class="modal-body">
                         Apakah kamu yakin ingin menghapus file <strong><?= esc($file['original_name']) ?></strong>?
                     </div>

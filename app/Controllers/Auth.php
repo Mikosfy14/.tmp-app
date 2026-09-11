@@ -35,46 +35,55 @@ class Auth extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
+        $throttler = service('throttler');
+        $ipAddress = $this->request->getIPAddress();
+        $throttleKey = md5('login_attempt_' . $ipAddress);
 
-        //Cek user di database
+        // Batasi maksimal 5 percobaan login per menit per IP
+        if ($throttler->check($throttleKey, 5, 60) === false) {
+            $retrySeconds = max(1, $throttler->getTokenTime());
+            return redirect()->back()->withInput()->with('error', "Terlalu banyak percobaan login. Silakan tunggu {$retrySeconds} detik sebelum mencoba lagi.");
+        }
+
+        $username = (string) $this->request->getPost('username');
+        $password = (string) $this->request->getPost('password');
+
+        // Cek user di database
         $user = $this->userModel->getUserByUsername($username);
 
-        if (!$user) {
-            return redirect()->back()->withInput()->with('error', 'Username tidak ditemukan!');
+        // Netralisasi error untuk mencegah username enumeration
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            return redirect()->back()->withInput()->with('error', 'Username atau password salah.');
         }
 
-        //cek status akun (is_active)
-        if (isset($user['is_active']) && (int)$user['is_active'] !== 1) {
-            return redirect()->back()->withInput()->with('error', 'Akun Anda sudah tidak aktif.');
+        // Cek status akun (is_active)
+        if (isset($user['is_active']) && (int) $user['is_active'] !== 1) {
+            return redirect()->back()->withInput()->with('error', 'Akun Anda sudah dinonaktifkan. Silakan hubungi administrator.');
         }
 
-        //Verifikasi Enkripsi Password {BCRYPT}
-        if (password_verify($password, $user['password_hash'])) {
-            // Rotate the session ID after authentication to prevent session fixation.
-            session()->regenerate(true);
+        // Hapus token throttle setelah login berhasil
+        cache()->delete('throttler_' . $throttleKey);
 
-            //set session handling
-            $sessionData = [
-                'user_id'    => $user['id'],
-                'username'   => $user['username'],
-                'name'       => $user['name'],
-                'email'      => $user['email'],
-                'role_id'    => $user['role_id'],
-                'role_name'  => $user['role_name'],
-                'category'   => $user['category'],
-                'isLoggedIn' => true,
-                'last_activity' => time(),
-            ];
-            session()->set($sessionData);
+        // Rotate the session ID after authentication to prevent session fixation.
+        session()->regenerate(true);
 
-            return redirect()->to('/dashboard')
-                ->with('success', 'Selamat datang kembali, ' . $user['name'])
-                ->with('just_logged_in', true);
-        }
+        // Set session handling
+        $sessionData = [
+            'user_id'       => $user['id'],
+            'username'      => $user['username'],
+            'name'          => $user['name'],
+            'email'         => $user['email'],
+            'role_id'       => $user['role_id'],
+            'role_name'     => $user['role_name'],
+            'category'      => $user['category'],
+            'isLoggedIn'    => true,
+            'last_activity' => time(),
+        ];
+        session()->set($sessionData);
 
-        return redirect()->back()->withInput()->with('error', 'Password yang anda masukkan salah!');
+        return redirect()->to('/dashboard')
+            ->with('success', 'Selamat datang kembali, ' . $user['name'])
+            ->with('just_logged_in', true);
     }
 
     public function logout()

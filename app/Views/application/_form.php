@@ -253,7 +253,7 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
     <div class="application-action-bar">
         <div class="application-action-buttons">
             <a href="<?= base_url('/aplikasi') ?>" class="btn btn-outline-secondary px-4">Batal</a>
-            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i><?= esc($submitLabel) ?></button>
+            <button type="submit" class="btn btn-primary px-4"><?= esc($submitLabel) ?></button>
         </div>
     </div>
 </form>

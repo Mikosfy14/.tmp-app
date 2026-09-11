@@ -180,7 +180,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                 <input type="text" name="filter_end" id="filterEnd" class="form-control form-control-sm" placeholder="Pilih tanggal..." value="<?= esc($selectedEndDate ?? '') ?>">
             </div>
             <div class="col-12 col-md-4 col-lg-3">
-                <label class="form-label small fw-semibold text-muted mb-1">Pintasan Kuartal (<?= date('Y') ?>)</label>
+                <label class="form-label small fw-semibold text-muted mb-1">Kuartal (<?= date('Y') ?>)</label>
                 <div class="btn-group btn-group-sm w-100" role="group">
                     <button type="button" class="btn btn-outline-secondary btn-quarter" data-quarter="1">Q1</button>
                     <button type="button" class="btn btn-outline-secondary btn-quarter" data-quarter="2">Q2</button>
@@ -588,166 +588,208 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
             };
         }
 
-        const themeOpts = getChartThemeOptions();
-
-        // 1. SDLC Donut Chart
         const sdlcData = <?= json_encode($sdlcDistribution ?? []) ?>;
         const sdlcLabels = Object.keys(sdlcData);
         const sdlcSeries = Object.values(sdlcData).map(Number);
         const hasActiveSdlcData = sdlcSeries.some(val => val > 0);
-        const sdlcChartEl = document.querySelector("#teamSdlcChart");
 
-        let chartSdlc = null;
-        if (hasActiveSdlcData && sdlcChartEl) {
-            chartSdlc = new ApexCharts(sdlcChartEl, {
-                chart: {
-                    type: 'donut',
-                    height: 230,
-                    ...themeOpts.chart
-                },
-                series: sdlcSeries,
-                labels: sdlcLabels,
-                colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107', '#6c757d'],
-                theme: themeOpts.theme,
-                tooltip: themeOpts.tooltip,
-                legend: {
-                    position: 'bottom',
-                    fontSize: '11px',
-                    ...themeOpts.legend
-                },
-                dataLabels: {
-                    enabled: true,
-                    style: {
-                        colors: ['#ffffff']
-                    }
-                },
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            labels: {
-                                show: false
-                            }
-                        }
-                    }
-                }
-            });
-            chartSdlc.render();
-        }
-
-        // 2. Monthly Trend Stacked Bar Chart
         const trendMonths = <?= json_encode($completionChart['months'] ?? []) ?>;
         const trendOnTime = <?= json_encode($completionChart['on_time'] ?? []) ?>;
         const trendLate = <?= json_encode($completionChart['late'] ?? []) ?>;
 
-        var chartTrend = new ApexCharts(document.querySelector("#teamTrendChart"), {
-            chart: {
-                type: 'bar',
-                height: 230,
-                stacked: true,
-                toolbar: {
-                    show: false
-                },
-                ...themeOpts.chart
-            },
-            series: [{
-                    name: 'Tepat Waktu',
-                    data: trendOnTime
-                },
-                {
-                    name: 'Terlambat',
-                    data: trendLate
-                }
-            ],
-            colors: ['#198754', '#dc3545'],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '45%',
-                    borderRadius: 3
-                }
-            },
-            xaxis: {
-                categories: trendMonths,
-                ...themeOpts.xaxis
-            },
-            yaxis: {
-                ...themeOpts.yaxis,
-                labels: {
-                    ...themeOpts.yaxis.labels,
-                    formatter: function(val) {
-                        return Math.floor(val);
-                    }
-                }
-            },
-            grid: themeOpts.grid,
-            legend: {
-                position: 'top',
-                fontSize: '11px',
-                ...themeOpts.legend
-            },
-            tooltip: {
-                ...themeOpts.tooltip,
-                y: {
-                    formatter: function(val) {
-                        return val + ' project';
-                    }
-                }
-            },
-            dataLabels: {
-                enabled: false
-            },
-            theme: themeOpts.theme
-        });
-        chartTrend.render();
+        const organicActive = <?= (int) $organicActiveTasks ?>;
+        const nonOrganicActive = <?= (int) $nonOrganicActiveTasks ?>;
 
-        // 3. Capacity Allocation Donut Chart
-        const organicActive = <?= $organicActiveTasks ?>;
-        const nonOrganicActive = <?= $nonOrganicActiveTasks ?>;
-        const capacityChartEl = document.querySelector("#teamCapacityChart");
-
+        let chartSdlc = null;
+        let chartTrend = null;
         let chartCapacity = null;
-        if ((organicActive + nonOrganicActive) > 0 && capacityChartEl) {
-            chartCapacity = new ApexCharts(capacityChartEl, {
-                chart: {
-                    type: 'donut',
-                    height: 200,
-                    ...themeOpts.chart
-                },
-                series: [organicActive, nonOrganicActive],
-                labels: ['Organik', 'Manmonth'],
-                colors: ['#435ebe', '#57caeb'],
-                theme: themeOpts.theme,
-                tooltip: themeOpts.tooltip,
-                legend: {
-                    position: 'bottom',
-                    fontSize: '11px',
-                    ...themeOpts.legend
-                },
-                dataLabels: {
-                    enabled: true,
-                    style: {
-                        colors: ['#ffffff']
-                    }
-                },
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            labels: {
-                                show: false
+
+        const renderTeamCharts = async () => {
+            if (chartSdlc) {
+                chartSdlc.destroy();
+                chartSdlc = null;
+            }
+            if (chartTrend) {
+                chartTrend.destroy();
+                chartTrend = null;
+            }
+            if (chartCapacity) {
+                chartCapacity.destroy();
+                chartCapacity = null;
+            }
+
+            const sdlcChartEl = document.querySelector("#teamSdlcChart");
+            if (sdlcChartEl) sdlcChartEl.innerHTML = '';
+            const trendChartEl = document.querySelector("#teamTrendChart");
+            if (trendChartEl) trendChartEl.innerHTML = '';
+            const capacityChartEl = document.querySelector("#teamCapacityChart");
+            if (capacityChartEl) capacityChartEl.innerHTML = '';
+
+            const themeOpts = getChartThemeOptions();
+
+            // 1. SDLC Donut Chart
+            if (hasActiveSdlcData && sdlcChartEl) {
+                chartSdlc = new ApexCharts(sdlcChartEl, {
+                    chart: {
+                        type: 'donut',
+                        height: 230,
+                        ...themeOpts.chart
+                    },
+                    series: sdlcSeries,
+                    labels: sdlcLabels,
+                    colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107', '#6c757d'],
+                    theme: themeOpts.theme,
+                    tooltip: themeOpts.tooltip,
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '11px',
+                        ...themeOpts.legend
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            colors: ['#ffffff']
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    show: false
+                                }
                             }
                         }
                     }
-                }
+                });
+                await chartSdlc.render();
+            }
+
+            // 2. Monthly Trend Stacked Bar Chart
+            if (trendChartEl) {
+                chartTrend = new ApexCharts(trendChartEl, {
+                    chart: {
+                        type: 'bar',
+                        height: 230,
+                        stacked: true,
+                        toolbar: {
+                            show: false
+                        },
+                        ...themeOpts.chart
+                    },
+                    series: [{
+                            name: 'Tepat Waktu',
+                            data: trendOnTime
+                        },
+                        {
+                            name: 'Terlambat',
+                            data: trendLate
+                        }
+                    ],
+                    colors: ['#198754', '#dc3545'],
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '45%',
+                            borderRadius: 3
+                        }
+                    },
+                    xaxis: {
+                        categories: trendMonths,
+                        ...themeOpts.xaxis
+                    },
+                    yaxis: {
+                        ...themeOpts.yaxis,
+                        labels: {
+                            ...themeOpts.yaxis.labels,
+                            formatter: function(val) {
+                                return Math.floor(val);
+                            }
+                        }
+                    },
+                    grid: themeOpts.grid,
+                    legend: {
+                        position: 'top',
+                        fontSize: '11px',
+                        ...themeOpts.legend
+                    },
+                    tooltip: {
+                        ...themeOpts.tooltip,
+                        y: {
+                            formatter: function(val) {
+                                return val + ' project';
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    theme: themeOpts.theme
+                });
+                await chartTrend.render();
+            }
+
+            // 3. Capacity Allocation Donut Chart
+            if ((organicActive + nonOrganicActive) > 0 && capacityChartEl) {
+                chartCapacity = new ApexCharts(capacityChartEl, {
+                    chart: {
+                        type: 'donut',
+                        height: 200,
+                        ...themeOpts.chart
+                    },
+                    series: [organicActive, nonOrganicActive],
+                    labels: ['Organik', 'Manmonth'],
+                    colors: ['#435ebe', '#57caeb'],
+                    theme: themeOpts.theme,
+                    tooltip: themeOpts.tooltip,
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '11px',
+                        ...themeOpts.legend
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            colors: ['#ffffff']
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    show: false
+                                }
+                            }
+                        }
+                    }
+                });
+                await chartCapacity.render();
+            }
+        };
+
+        renderTeamCharts();
+
+        const toggleDark = document.getElementById('toggle-dark');
+        if (toggleDark) {
+            toggleDark.addEventListener('change', function() {
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    renderTeamCharts();
+                }));
             });
-            chartCapacity.render();
         }
 
         // Chart Toggle between Monthly Trend and Capacity
-        document.getElementById('macroChartToggle').addEventListener('change', function() {
-            const isTrend = this.value === 'trend';
-            document.getElementById('view-macro-trend').classList.toggle('d-none', !isTrend);
-            document.getElementById('view-macro-capacity').classList.toggle('d-none', isTrend);
-        });
+        const macroToggle = document.getElementById('macroChartToggle');
+        if (macroToggle) {
+            macroToggle.addEventListener('change', function() {
+                const isTrend = this.value === 'trend';
+                document.getElementById('view-macro-trend').classList.toggle('d-none', !isTrend);
+                document.getElementById('view-macro-capacity').classList.toggle('d-none', isTrend);
+                window.setTimeout(() => {
+                    if (isTrend && chartTrend) chartTrend.resize();
+                    if (!isTrend && chartCapacity) chartCapacity.resize();
+                }, 50);
+            });
+        }
 
         // Flatpickr Range Initialization for Indonesian d/m/Y format
         let fpStart = null;

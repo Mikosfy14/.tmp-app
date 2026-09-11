@@ -58,12 +58,32 @@ class ProjectModel extends Model
         }
 
         if (!empty($keyword)) {
-            $escapedKeyword = $this->db->escape('%' . $this->db->escapeLikeString((string) $keyword) . '%');
+            $keywordStr = trim((string) $keyword);
+
+            // Lookup user IDs matching the PIC name keyword via parameterized Query Builder
+            $matchedUserIds = array_column(
+                $this->db->table('users')
+                    ->select('id')
+                    ->like('name', $keywordStr)
+                    ->get()
+                    ->getResultArray(),
+                'id'
+            );
+
             $builder->groupStart()
-                    ->like('projects.name', $keyword)
-                    ->orLike('projects.project_code', $keyword)
-                    ->orWhere("EXISTS (SELECT 1 FROM users assigned_user WHERE CHARINDEX(',' + CAST(assigned_user.id AS VARCHAR(20)) + ',', ',' + ISNULL(projects.assigned_to, '') + ',') > 0 AND assigned_user.name LIKE {$escapedKeyword})", null, false)
-                    ->groupEnd();
+                    ->like('projects.name', $keywordStr)
+                    ->orLike('projects.project_code', $keywordStr);
+
+            if (!empty($matchedUserIds)) {
+                foreach ($matchedUserIds as $matchedId) {
+                    $cleanId = abs((int) $matchedId);
+                    if ($cleanId > 0) {
+                        $builder->orWhere("CHARINDEX(',$cleanId,', ',' + ISNULL(projects.assigned_to, '') + ',') >", 0, false);
+                    }
+                }
+            }
+
+            $builder->groupEnd();
         }
 
         $this->applyDateRangeFilter($builder, $dateRange);
@@ -129,14 +149,14 @@ class ProjectModel extends Model
 
     private function whereAssignedToContains($builder, int $userId): void
     {
-        $userId = (int) $userId;
+        $cleanUserId = abs((int) $userId);
 
-        if ($userId <= 0) {
+        if ($cleanUserId <= 0) {
             $builder->where('1 = 0', null, false);
             return;
         }
 
-        $builder->where("CHARINDEX(',$userId,', ',' + ISNULL(projects.assigned_to, '') + ',') >", 0, false);
+        $builder->where("CHARINDEX(',$cleanUserId,', ',' + ISNULL(projects.assigned_to, '') + ',') >", 0, false);
     }
 
     private function applyDateRangeFilter($builder, ?array $dateRange): void
