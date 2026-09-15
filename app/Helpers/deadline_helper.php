@@ -90,23 +90,25 @@ if (!function_exists('is_project_completed')) {
     /**
      * Memeriksa apakah suatu project berstatus selesai.
      * Project dianggap sah selesai jika:
-     * 1. promote_date sudah terisi, ATAU
-     * 2. statusnya Complete/Selesai/Done.
-     * Status Deployment tanpa promote_date TIDAK dianggap selesai (mencegah bypass deadline alert).
+     * 1. Status Deployment DAN promote_date sudah terisi (tanggal aktual promote tercapai), ATAU
+     * 2. Statusnya eksplisit Complete / Selesai / Done.
+     *
+     * Catatan: Jika project masih berstatus Planning/Defining/Designing/Building/Testing,
+     * promote_date berfungsi sebagai target rencana milestone dan TIDAK membuat project berstatus selesai.
      *
      * @param array $project Data row project
      * @return bool
      */
     function is_project_completed(array $project): bool
     {
+        $status = strtolower(trim((string) ($project['status'] ?? $project['status_name'] ?? '')));
         $hasPromoteDate = !empty($project['promote_date']);
-        $status = strtolower((string) ($project['status'] ?? ''));
 
-        if ($hasPromoteDate) {
+        if (str_contains($status, 'complete') || str_contains($status, 'selesai') || str_contains($status, 'done')) {
             return true;
         }
 
-        if (str_contains($status, 'complete') || str_contains($status, 'selesai') || str_contains($status, 'done')) {
+        if (str_contains($status, 'deployment') && $hasPromoteDate) {
             return true;
         }
 

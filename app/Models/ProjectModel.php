@@ -91,16 +91,26 @@ class ProjectModel extends Model
         if ($isCompletedFilter !== null && $isCompletedFilter !== '') {
             if ($isCompletedFilter === '1' || $isCompletedFilter === 'completed') {
                 $builder->groupStart()
-                    ->where('projects.promote_date IS NOT NULL', null, false)
+                    ->groupStart()
+                        ->where("LOWER(project_status.status_name) LIKE '%deployment%'", null, false)
+                        ->where('projects.promote_date IS NOT NULL', null, false)
+                    ->groupEnd()
                     ->orWhere("LOWER(project_status.status_name) LIKE '%complete%'", null, false)
                     ->orWhere("LOWER(project_status.status_name) LIKE '%selesai%'", null, false)
                     ->orWhere("LOWER(project_status.status_name) LIKE '%done%'", null, false)
                     ->groupEnd();
             } elseif ($isCompletedFilter === '0' || $isCompletedFilter === 'not_completed') {
-                $builder->where('projects.promote_date IS NULL', null, false)
-                    ->groupStart()
+                $builder->groupStart()
                     ->where('project_status.status_name IS NULL', null, false)
-                    ->orWhere("(LOWER(project_status.status_name) NOT LIKE '%complete%' AND LOWER(project_status.status_name) NOT LIKE '%selesai%' AND LOWER(project_status.status_name) NOT LIKE '%done%')", null, false)
+                    ->orWhere("(
+                        LOWER(project_status.status_name) NOT LIKE '%complete%' 
+                        AND LOWER(project_status.status_name) NOT LIKE '%selesai%' 
+                        AND LOWER(project_status.status_name) NOT LIKE '%done%' 
+                        AND (
+                            LOWER(project_status.status_name) NOT LIKE '%deployment%' 
+                            OR projects.promote_date IS NULL
+                        )
+                    )", null, false)
                     ->groupEnd();
             }
         }

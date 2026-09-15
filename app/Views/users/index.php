@@ -291,9 +291,9 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                                     </td>
                                     <td class="py-3">
                                         <?php if ($isActive) : ?>
-                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Aktif</span>
+                                            <span class="badge bg-success">Aktif</span>
                                         <?php else : ?>
-                                            <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>Nonaktif</span>
+                                            <span class="badge bg-secondary">Nonaktif</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-3">
