@@ -19,6 +19,7 @@ class ProjectModel extends Model
         'name',
         'notes',
         'project_status_id',
+        'database_type_id',
         'start_date',
         'end_date',
         'unit_testing_date',
@@ -46,8 +47,9 @@ class ProjectModel extends Model
 
     private function buildProjectsQuery($statusFilter = null, $keyword = null, ?int $userId = null, bool $includeAll = false, ?array $dateRange = null, ?string $isCompletedFilter = null)
     {
-        $builder = $this->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
-            ->join('project_status', 'project_status.id = projects.project_status_id', 'left');
+        $builder = $this->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order, database_types.type_name AS database_type_name')
+            ->join('project_status', 'project_status.id = projects.project_status_id', 'left')
+            ->join('database_types', 'database_types.id = projects.database_type_id', 'left');
 
         if (!$includeAll && !empty($userId)) {
             $this->whereAssignedToContains($builder, $userId);
@@ -72,7 +74,8 @@ class ProjectModel extends Model
 
             $builder->groupStart()
                     ->like('projects.name', $keywordStr)
-                    ->orLike('projects.project_code', $keywordStr);
+                    ->orLike('projects.project_code', $keywordStr)
+                    ->orLike('database_types.type_name', $keywordStr);
 
             if (!empty($matchedUserIds)) {
                 foreach ($matchedUserIds as $matchedId) {
@@ -121,8 +124,9 @@ class ProjectModel extends Model
     /** Return all accessible projects for dashboard aggregation without pagination. */
     public function getDashboardProjects(?int $userId = null, bool $includeAll = false, ?array $dateRange = null): array
     {
-        $builder = $this->select('projects.*, project_status.status_name AS status, project_status.sort_order AS status_sort_order')
-            ->join('project_status', 'project_status.id = projects.project_status_id', 'left');
+        $builder = $this->select('projects.*, project_status.status_name AS status, project_status.sort_order AS status_sort_order, database_types.type_name AS database_type_name')
+            ->join('project_status', 'project_status.id = projects.project_status_id', 'left')
+            ->join('database_types', 'database_types.id = projects.database_type_id', 'left');
         if (!$includeAll && !empty($userId)) $this->whereAssignedToContains($builder, $userId);
         $this->applyDateRangeFilter($builder, $dateRange);
         return $this->attachAssignees($builder->orderBy('projects.id', 'DESC')->findAll());
@@ -132,8 +136,9 @@ class ProjectModel extends Model
     public function getProjectDetail($id, ?int $userId = null, bool $includeAll = false): ?array
     {
         $builder = $this->builder();
-        $builder->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order')
+        $builder->select('projects.*, project_status.status_name AS status, project_status.status_name, project_status.sort_order AS status_sort_order, database_types.type_name AS database_type_name')
             ->join('project_status', 'project_status.id = projects.project_status_id', 'left')
+            ->join('database_types', 'database_types.id = projects.database_type_id', 'left')
             ->where('projects.id', $id);
 
         if (!$includeAll && !empty($userId)) {

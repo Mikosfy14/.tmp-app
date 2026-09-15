@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\ProjectModel;
 use App\Models\ProjectFileModel;
 use App\Models\ProjectStatusModel;
+use App\Models\DatabaseTypeModel;
 use App\Models\UserModel;
 use App\Services\ReportExportService;
 
@@ -13,6 +14,7 @@ class Projects extends BaseController
     protected ProjectModel $projectModel;
     protected ProjectFileModel $projectFileModel;
     protected ProjectStatusModel $projectStatusModel;
+    protected DatabaseTypeModel $databaseTypeModel;
     protected UserModel $userModel;
     protected ReportExportService $exportService;
 
@@ -22,6 +24,7 @@ class Projects extends BaseController
         $this->projectModel = new ProjectModel();
         $this->projectFileModel = new ProjectFileModel();
         $this->projectStatusModel = new ProjectStatusModel();
+        $this->databaseTypeModel = new DatabaseTypeModel();
         $this->userModel = new UserModel();
         $this->exportService = new ReportExportService();
     }
@@ -381,6 +384,7 @@ class Projects extends BaseController
         return array_merge($context, [
             'users' => $this->getAssignableUsers($selectedAssignedIds),
             'statusOptions' => $this->projectStatusModel->getActiveOptions(),
+            'databaseTypeOptions' => $this->databaseTypeModel->getActiveOptions(),
             'project' => $project,
             'selectedAssignedIds' => $selectedAssignedIds,
         ]);
@@ -420,6 +424,13 @@ class Projects extends BaseController
                 'rules' => 'required|is_natural_no_zero',
                 'errors' => [
                     'required' => 'Status SDLC wajib dipilih.',
+                ],
+            ],
+            'database_type_id' => [
+                'rules' => 'required|is_natural_no_zero',
+                'errors' => [
+                    'required' => 'Tipe Database wajib dipilih.',
+                    'is_natural_no_zero' => 'Pilihan Tipe Database tidak valid.',
                 ],
             ],
             'start_date' => [
@@ -480,6 +491,7 @@ class Projects extends BaseController
             'name' => trim((string) $this->request->getPost('name')),
             'notes' => $this->nullablePost('notes'),
             'project_status_id' => (int) $this->request->getPost('project_status_id'),
+            'database_type_id' => (int) $this->request->getPost('database_type_id'),
             'start_date' => $this->request->getPost('start_date'),
             'end_date' => $this->request->getPost('end_date'),
             'unit_testing_date' => $this->nullablePost('unit_testing_date'),
@@ -652,16 +664,17 @@ class Projects extends BaseController
             'A' => 'No',
             'B' => 'Kode Project',
             'C' => 'Nama Project',
-            'D' => 'Status SDLC',
-            'E' => 'Deadline Status',
-            'F' => 'Assigned PIC',
-            'G' => 'Start Date',
-            'H' => 'End Date',
-            'I' => 'Unit Testing',
-            'J' => 'SIT',
-            'K' => 'UAT',
-            'L' => 'Promote Date',
-            'M' => 'Notes',
+            'D' => 'Tipe Database',
+            'E' => 'Status SDLC',
+            'F' => 'Deadline Status',
+            'G' => 'Assigned PIC',
+            'H' => 'Start Date',
+            'I' => 'End Date',
+            'J' => 'Unit Testing',
+            'K' => 'SIT',
+            'L' => 'UAT',
+            'M' => 'Promote Date',
+            'N' => 'Notes',
         ];
 
         $rows = [];
@@ -681,20 +694,21 @@ class Projects extends BaseController
                 'A' => $no++,
                 'B' => $prj['project_code'] ?? '-',
                 'C' => $prj['name'] ?? '-',
-                'D' => $prj['status'] ?? '-',
-                'E' => $deadline['label'] ?? '-',
-                'F' => !empty($assignedNames) ? implode(', ', $assignedNames) : '-',
-                'G' => !empty($prj['start_date']) ? date('d/m/Y', strtotime($prj['start_date'])) : '-',
-                'H' => !empty($prj['end_date']) ? date('d/m/Y', strtotime($prj['end_date'])) : '-',
-                'I' => !empty($prj['unit_testing_date']) ? date('d/m/Y', strtotime($prj['unit_testing_date'])) : '-',
-                'J' => !empty($prj['sit_date']) ? date('d/m/Y', strtotime($prj['sit_date'])) : '-',
-                'K' => !empty($prj['uat_date']) ? date('d/m/Y', strtotime($prj['uat_date'])) : '-',
-                'L' => !empty($prj['promote_date']) ? date('d/m/Y', strtotime($prj['promote_date'])) : '-',
-                'M' => $prj['notes'] ?? '-',
+                'D' => $prj['database_type_name'] ?? '-',
+                'E' => $prj['status'] ?? '-',
+                'F' => $deadline['label'] ?? '-',
+                'G' => !empty($assignedNames) ? implode(', ', $assignedNames) : '-',
+                'H' => !empty($prj['start_date']) ? date('d/m/Y', strtotime($prj['start_date'])) : '-',
+                'I' => !empty($prj['end_date']) ? date('d/m/Y', strtotime($prj['end_date'])) : '-',
+                'J' => !empty($prj['unit_testing_date']) ? date('d/m/Y', strtotime($prj['unit_testing_date'])) : '-',
+                'K' => !empty($prj['sit_date']) ? date('d/m/Y', strtotime($prj['sit_date'])) : '-',
+                'L' => !empty($prj['uat_date']) ? date('d/m/Y', strtotime($prj['uat_date'])) : '-',
+                'M' => !empty($prj['promote_date']) ? date('d/m/Y', strtotime($prj['promote_date'])) : '-',
+                'N' => $prj['notes'] ?? '-',
             ];
         }
 
-        $centerColumns = ['A', 'B', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L'];
+        $centerColumns = ['A', 'B', 'D', 'E', 'F', 'H', 'I', 'J', 'K', 'L', 'M'];
         $filename = 'Laporan_Project_Tracker_' . date('Ymd_His') . '.xlsx';
 
         $this->exportService->exportExcel(

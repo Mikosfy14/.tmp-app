@@ -242,16 +242,17 @@ $keyword = $keyword ?? '';
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 25px;" class="text-center">No</th>
-                <th style="width: 75px;">Kode</th>
+                <th style="width: 20px;" class="text-center">No</th>
+                <th style="width: 70px;">Kode</th>
                 <th>Nama Project</th>
-                <th style="width: 75px;">Status SDLC</th>
-                <th style="width: 70px;">Deadline</th>
-                <th style="width: 110px;">Assigned PIC</th>
-                <th style="width: 65px;" class="text-center">Start</th>
-                <th style="width: 65px;" class="text-center">End</th>
-                <th style="width: 65px;" class="text-center">Promote</th>
-                <th style="width: 110px;">Notes</th>
+                <th style="width: 70px;">Database</th>
+                <th style="width: 65px;">Status SDLC</th>
+                <th style="width: 65px;">Deadline</th>
+                <th style="width: 100px;">Assigned PIC</th>
+                <th style="width: 55px;" class="text-center">Start</th>
+                <th style="width: 55px;" class="text-center">End</th>
+                <th style="width: 55px;" class="text-center">Promote</th>
+                <th style="width: 100px;">Notes</th>
             </tr>
         </thead>
         <tbody>
@@ -271,6 +272,7 @@ $keyword = $keyword ?? '';
                         <td>
                             <strong style="color: #1e1e2d;"><?= esc($prj['name'] ?? '-') ?></strong>
                         </td>
+                        <td><?= esc($prj['database_type_name'] ?? '-') ?></td>
                         <td>
                             <span class="badge badge-<?= $statusSlug ?>"><?= esc($status) ?></span>
                         </td>
@@ -294,7 +296,7 @@ $keyword = $keyword ?? '';
                 <?php endforeach; ?>
             <?php else : ?>
                 <tr>
-                    <td colspan="10" class="text-center" style="padding: 15px; color: #6c757d;">Tidak ada data project yang sesuai dengan filter.</td>
+                    <td colspan="11" class="text-center" style="padding: 15px; color: #6c757d;">Tidak ada data project yang sesuai dengan filter.</td>
                 </tr>
             <?php endif; ?>
         </tbody>

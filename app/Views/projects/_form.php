@@ -2,6 +2,7 @@
 
 /**
  * @var array $statusOptions
+ * @var array $databaseTypeOptions
  * @var array $users
  * @var array|null $project
  * @var array $selectedAssignedIds
@@ -13,6 +14,7 @@
 
 $project = $project ?? null;
 $projectFiles = $projectFiles ?? [];
+$databaseTypeOptions = $databaseTypeOptions ?? [];
 $selectedAssignedIds = array_values(array_filter(array_map('intval', $selectedAssignedIds ?? [])));
 $selectedAssignedIds = !empty($selectedAssignedIds) ? $selectedAssignedIds : [(int) session()->get('user_id')];
 $responsibleAssignedId = $project
@@ -448,7 +450,7 @@ foreach ($users as $user) {
                     <label for="projectName" class="form-label">Nama Project <span class="text-danger">*</span></label>
                     <input type="text" id="projectName" name="name" class="form-control" maxlength="250" placeholder="Masukkan nama project" value="<?= esc($value('name', $project['name'] ?? '')) ?>" required>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="projectStatus" class="form-label">Status SDLC <span class="text-danger">*</span></label>
                     <select id="projectStatus" name="project_status_id" class="form-select" required>
                         <option value="">Pilih status project</option>
@@ -461,7 +463,20 @@ foreach ($users as $user) {
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-6">
+                    <label for="databaseType" class="form-label">Tipe Database <span class="text-danger">*</span></label>
+                    <select id="databaseType" name="database_type_id" class="form-select" required>
+                        <option value="">Pilih tipe database</option>
+                        <?php
+                        $currentDbId = (int) ($value('database_type_id', $project['database_type_id'] ?? 0));
+                        foreach ($databaseTypeOptions as $dbOpt) : ?>
+                            <option value="<?= esc($dbOpt['id']) ?>" <?= $currentDbId === (int) $dbOpt['id'] ? 'selected' : '' ?>>
+                                <?= esc($dbOpt['type_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12">
                     <label for="assignedTo" class="form-label">Assigned To / PIC</label>
                     <?php if ($canManageAssignees) : ?>
                         <div id="assignedToChoices" data-primary-id="<?= (int) $responsibleAssignedId ?>">
