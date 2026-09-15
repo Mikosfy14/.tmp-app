@@ -202,6 +202,7 @@
         [data-bs-theme="dark"] .text-dark,
         [data-bs-theme="dark"] .text-black,
         [data-bs-theme="dark"] .text-gray-600,
+        [data-bs-theme="dark"] .text-body,
         [data-bs-theme="dark"] h1,
         [data-bs-theme="dark"] h2,
         [data-bs-theme="dark"] h3,
@@ -216,16 +217,184 @@
             color: #a6a8b8 !important;
         }
 
+        [data-bs-theme="dark"] .text-primary {
+            color: #8fa0f0 !important;
+        }
+
+        [data-bs-theme="dark"] .text-success {
+            color: #4cd98b !important;
+        }
+
+        [data-bs-theme="dark"] .text-danger {
+            color: #ff6b7d !important;
+        }
+
+        [data-bs-theme="dark"] .text-warning {
+            color: #ffd166 !important;
+        }
+
+        [data-bs-theme="dark"] .text-info {
+            color: #4dd8f7 !important;
+        }
+
         [data-bs-theme="dark"] .bg-light,
-        [data-bs-theme="dark"] .bg-white,
-        [data-bs-theme="dark"] .bg-light-primary,
-        [data-bs-theme="dark"] .bg-light-secondary,
-        [data-bs-theme="dark"] .bg-light-success,
-        [data-bs-theme="dark"] .bg-light-danger,
-        [data-bs-theme="dark"] .bg-light-warning,
-        [data-bs-theme="dark"] .bg-light-info {
+        [data-bs-theme="dark"] .bg-white {
             background-color: #252539 !important;
             color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light-primary {
+            background-color: rgba(67, 94, 190, 0.22) !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light-secondary {
+            background-color: rgba(108, 117, 125, 0.22) !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light-success {
+            background-color: rgba(25, 135, 84, 0.22) !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light-danger {
+            background-color: rgba(220, 53, 69, 0.22) !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light-warning {
+            background-color: rgba(255, 193, 7, 0.22) !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light-info {
+            background-color: rgba(13, 202, 240, 0.22) !important;
+        }
+
+        [data-bs-theme="dark"] .border-primary-subtle {
+            border-color: rgba(67, 94, 190, 0.35) !important;
+        }
+
+        [data-bs-theme="dark"] .border-success-subtle {
+            border-color: rgba(25, 135, 84, 0.35) !important;
+        }
+
+        [data-bs-theme="dark"] .border-danger-subtle {
+            border-color: rgba(220, 53, 69, 0.35) !important;
+        }
+
+        [data-bs-theme="dark"] .border-warning-subtle {
+            border-color: rgba(255, 193, 7, 0.35) !important;
+        }
+
+        [data-bs-theme="dark"] .border-info-subtle {
+            border-color: rgba(13, 202, 240, 0.35) !important;
+        }
+
+        [data-bs-theme="dark"] .border-secondary-subtle {
+            border-color: rgba(108, 117, 125, 0.35) !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-item {
+            color: #d6d8ea !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-item:hover,
+        [data-bs-theme="dark"] .dropdown-item:focus {
+            background-color: #2b2b40 !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-item.active,
+        [data-bs-theme="dark"] .dropdown-item:active {
+            background-color: #435ebe !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-item.text-danger {
+            color: #ff6b7d !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-item.text-danger:hover,
+        [data-bs-theme="dark"] .dropdown-item.text-danger:focus {
+            background-color: rgba(220, 53, 69, 0.18) !important;
+            color: #ff8595 !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-header {
+            color: #8fa0b5 !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-divider {
+            border-color: #2b2b40 !important;
+            opacity: 1 !important;
+        }
+
+        [data-bs-theme="dark"] .alert-light {
+            background-color: #252539 !important;
+            border-color: #2b2b40 !important;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .alert-light-primary {
+            background-color: rgba(67, 94, 190, 0.16) !important;
+            border-color: rgba(67, 94, 190, 0.35) !important;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .burger-btn i {
+            color: #a6a8b8 !important;
+        }
+
+        [data-bs-theme="dark"] .burger-btn:hover i {
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .btn-close:not(.btn-close-white) {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        [data-bs-theme="dark"] .btn-light {
+            background-color: #252539 !important;
+            border-color: #2b2b40 !important;
+            color: #f5f7ff !important;
+        }
+
+        [data-bs-theme="dark"] .btn-light:hover {
+            background-color: #31314d !important;
+            border-color: #3b3b55 !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .form-label {
+            color: #e6eaee !important;
+        }
+
+        [data-bs-theme="dark"] .form-control:disabled,
+        [data-bs-theme="dark"] .form-control[readonly],
+        [data-bs-theme="dark"] .form-select:disabled {
+            background-color: #1c1c2b !important;
+            color: #8a8d9e !important;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-item .page-link {
+            color: #a6a8b8;
+            background-color: #1e1e2d;
+            border-color: #2b2b40;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-item:not(.active) .page-link:hover {
+            background-color: #2b2b40;
+            color: #ffffff;
+            border-color: #3b3b55;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-item.active .page-link {
+            background-color: #435ebe !important;
+            border-color: #435ebe !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-item.disabled .page-link {
+            color: #607080 !important;
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-color: #2b2b40 !important;
         }
 
         [data-bs-theme="dark"] .border,

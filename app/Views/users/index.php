@@ -131,6 +131,21 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
         cursor: not-allowed;
         pointer-events: none;
     }
+
+    [data-bs-theme="dark"] .user-pagination .page-item:not(.active) .page-link {
+        color: #a0aec0;
+        background: transparent;
+    }
+
+    [data-bs-theme="dark"] .user-pagination .page-item:not(.active) .page-link:hover {
+        background: rgba(67, 94, 190, 0.2);
+        color: #8fa0f0;
+    }
+
+    [data-bs-theme="dark"] .user-pagination .page-item.disabled .page-link {
+        color: #607080;
+        background: rgba(255, 255, 255, 0.05);
+    }
 </style>
 
 <div class="page-heading user-page-heading d-flex justify-content-between align-items-center mb-3">

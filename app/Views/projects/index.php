@@ -200,8 +200,31 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
         color: #607080;
     }
 
+    #projectsTable {
+        table-layout: fixed;
+        min-width: 960px;
+    }
+
+    .col-project-info {
+        width: 30%;
+    }
+
+    .col-project-status {
+        width: 15%;
+    }
+
+    .col-project-pic {
+        width: 21%;
+    }
+
+    .col-project-timeline {
+        width: 20%;
+    }
+
+    .col-project-actions,
     .project-actions {
-        width: 1%;
+        width: 14%;
+        min-width: 145px;
         white-space: nowrap;
     }
 
@@ -464,11 +487,11 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
                 <table class="table table-hover align-middle mb-0" id="projectsTable">
                     <thead class="table-light">
                         <tr>
-                            <th>Kode & Nama Project</th>
-                            <th>Status</th>
-                            <th>Assigned To (PIC)</th>
-                            <th>Timeline</th>
-                            <th class="text-center project-actions">Aksi</th>
+                            <th class="col-project-info">Kode & Nama Project</th>
+                            <th class="col-project-status">Status</th>
+                            <th class="col-project-pic">Assigned To (PIC)</th>
+                            <th class="col-project-timeline">Timeline</th>
+                            <th class="text-center project-actions col-project-actions">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

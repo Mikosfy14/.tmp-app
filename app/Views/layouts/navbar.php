@@ -97,6 +97,14 @@ $deadlineNotifications = get_user_deadline_notifications();
         color: #fff;
         background: #31314d;
     }
+
+    [data-bs-theme="dark"] .navbar-notification-menu .border-bottom {
+        border-color: #2b2b40 !important;
+    }
+
+    [data-bs-theme="dark"] .navbar-profile-menu .dropdown-header small {
+        color: #a6a8b8 !important;
+    }
 </style>
 
 <header>
