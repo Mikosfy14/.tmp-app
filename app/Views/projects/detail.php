@@ -114,6 +114,16 @@ if ($isCompleted) {
                             <span class="badge <?= $statusBadge ?>"><?= esc($project['status'] ?? '-') ?></span>
                         </div>
                         <div class="col-md-4">
+                            <small class="text-muted d-block">Tipe Database</small>
+                            <span class="badge bg-light-info text-info border border-info-subtle fw-semibold" style="font-size: 0.85rem;">
+                                <i class="bi bi-database me-1"></i><?= esc($project['database_type_name'] ?? '-') ?>
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Deadline Status</small>
+                            <span class="badge <?= $deadlineBadge ?>"><?= esc($deadlineLabel) ?></span>
+                        </div>
+                        <div class="col-md-4">
                             <small class="text-muted d-block">Start Date</small>
                             <strong><?= $dateValue($project['start_date'] ?? null) ?></strong>
                         </div>
@@ -121,12 +131,8 @@ if ($isCompleted) {
                             <small class="text-muted d-block">End Date</small>
                             <strong><?= $dateValue($project['end_date'] ?? null) ?></strong>
                         </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Deadline Status</small>
-                            <span class="badge <?= $deadlineBadge ?>"><?= esc($deadlineLabel) ?></span>
-                        </div>
                         <?php if ($timingText !== null) : ?>
-                            <div class="col-md-8">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block"><?= $isCompleted ? 'Keterangan Waktu Rilis' : 'Sisa Waktu Pengerjaan' ?></small>
                                 <span class="<?= $timingClass ?>" style="font-size: 0.9rem;">
                                     <i class="bi <?= $isCompleted ? ($timingClass === 'text-danger fw-semibold' ? 'bi-exclamation-circle-fill text-danger' : 'bi-check-circle-fill text-success') : 'bi-clock-history' ?> me-1"></i><?= esc($timingText) ?>

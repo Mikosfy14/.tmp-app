@@ -493,6 +493,7 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
                                 $searchText = strtolower(implode(' ', array_filter([
                                     $prj['project_code'] ?? '',
                                     $prj['name'] ?? '',
+                                    $prj['database_type_name'] ?? '',
                                     implode(' ', $assignedNames),
                                 ])));
                                 $isCompletedPrj = is_project_completed($prj);
@@ -525,7 +526,14 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
                                     data-status="<?= esc($prj['status'] ?? '') ?>">
                                     <td>
                                         <strong class="text-dark d-block"><?= esc($prj['name']) ?></strong>
-                                        <span class="badge bg-light-secondary text-muted"><?= esc($prj['project_code']) ?></span>
+                                        <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
+                                            <span class="badge bg-light-secondary text-muted"><?= esc($prj['project_code']) ?></span>
+                                            <?php if (!empty($prj['database_type_name'])) : ?>
+                                                <span class="badge bg-light-info text-info border border-info-subtle" title="Tipe Database">
+                                                    <i class="bi bi-database me-1"></i><?= esc($prj['database_type_name']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="badge <?= $statusBadge ?>"><?= esc($prj['status'] ?? '-') ?></span>
