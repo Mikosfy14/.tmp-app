@@ -230,8 +230,13 @@ foreach ($users as $user) {
     #assignedToChoices .choices__list--dropdown {
         z-index: 50;
         border-color: var(--bs-border-color);
+        overflow: hidden;
+    }
+
+    #assignedToChoices .choices__list--dropdown .choices__list {
         max-height: 260px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #assignedToChoices .choices__item--choice.is-highlighted {

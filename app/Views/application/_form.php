@@ -162,8 +162,13 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
     #assignedPicField .choices__list--dropdown {
         z-index: 50;
         border-color: var(--bs-border-color);
+        overflow: hidden;
+    }
+
+    #assignedPicField .choices__list--dropdown .choices__list {
         max-height: 260px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #assignedPicField .choices__item--choice.is-highlighted {
