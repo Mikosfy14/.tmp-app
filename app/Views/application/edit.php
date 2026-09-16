@@ -9,7 +9,12 @@ $application = $application ?? [];
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
-<div class="page-heading"><a href="<?= base_url('/aplikasi/detail/' . (int) ($application['id'] ?? 0)) ?>" class="btn btn-sm btn-outline-secondary mb-3"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Kembali ke Detail</a>
+<div class="page-heading">
+    <div class="mb-3">
+        <a href="<?= base_url('/aplikasi/detail/' . (int) ($application['id'] ?? 0)) ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Kembali ke Detail Aplikasi
+        </a>
+    </div>
     <h3 class="mb-1">Edit Aplikasi</h3>
     <p class="text-muted">Perbarui informasi <?= esc((string) ($application['app_component'] ?? 'aplikasi')) ?>.</p>
 </div>

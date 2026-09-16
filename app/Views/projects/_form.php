@@ -68,12 +68,6 @@ foreach ($users as $user) {
         margin: 0 auto 1.25rem;
     }
 
-    .project-form-page-header .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-    }
-
     .project-form-section-icon {
         display: inline-flex;
         align-items: center;

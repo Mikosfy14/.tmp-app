@@ -34,7 +34,11 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 
 <div class="profile-edit-shell">
     <div class="mb-4">
-        <a href="<?= base_url('/profile') ?>" class="btn btn-sm btn-outline-secondary mb-3"><i class="bi bi-arrow-left" aria-hidden="true"></i> Kembali ke Profil</a>
+        <div class="mb-3">
+            <a href="<?= base_url('/profile') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Kembali ke Profil
+            </a>
+        </div>
         <h3 class="mb-1">Edit Profil</h3>
         <p class="text-muted mb-0">Perbarui informasi pribadi atau ganti password akun Anda.</p>
     </div>
