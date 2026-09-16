@@ -106,19 +106,42 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
         gap: .75rem;
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 767.98px) {
         .application-action-bar {
             bottom: .5rem;
             padding: .75rem;
+            margin-bottom: 1rem;
+            z-index: 1030;
         }
 
-        .application-action-buttons,
-        .application-action-buttons .btn {
+        .application-action-buttons {
             width: 100%;
+            display: flex;
+            gap: .5rem;
         }
 
         .application-action-buttons .btn {
+            flex: 1 1 0 !important;
+            width: 50% !important;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
+            padding-left: .5rem !important;
+            padding-right: .5rem !important;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: .875rem;
+        }
+
+        .application-form-card .card-header {
+            padding: 1rem;
+        }
+
+        .application-section-icon {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
         }
     }
 
@@ -162,8 +185,13 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
     #assignedPicField .choices__list--dropdown {
         z-index: 50;
         border-color: var(--bs-border-color);
+        overflow: hidden;
+    }
+
+    #assignedPicField .choices__list--dropdown .choices__list {
         max-height: 260px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #assignedPicField .choices__item--choice.is-highlighted {
@@ -181,7 +209,7 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
                 <p class="text-muted mb-0 text-sm">Identitas dan klasifikasi dasar aplikasi.</p>
             </div>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body p-3 p-md-4">
             <div class="row g-4">
                 <div class="col-lg-8"><label for="appComponent" class="form-label">Nama Aplikasi / App Component <span class="text-danger">*</span></label><input id="appComponent" name="app_component" maxlength="150" required autofocus class="form-control" placeholder="Contoh: Portal HRD & Absensi" value="<?= esc($value('app_component')) ?>">
                     <div class="form-text">Gunakan nama yang mudah dikenali oleh pengguna dan tim pengelola.</div>
@@ -204,7 +232,7 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
                 <p class="text-muted mb-0 text-sm">Cara pengguna mengakses aplikasi dan alamat setiap environment.</p>
             </div>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body p-3 p-md-4">
             <div class="row g-4">
                 <?php foreach (['access_type' => 'Tipe Akses', 'login_auth' => 'Autentikasi Login'] as $name => $label) : ?><div class="col-md-6"><label for="<?= $name ?>" class="form-label"><?= $label ?></label><select id="<?= $name ?>" name="<?= $name ?>" class="form-select">
                             <option value="">Pilih <?= strtolower($label) ?></option><?php $renderOptions($name); ?>
@@ -228,7 +256,7 @@ $renderOptions = static function (string $field) use ($value, $selects): void {
                 <p class="text-muted mb-0 text-sm">Model pengembangan, deployment, owner, dan PIC aplikasi.</p>
             </div>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body p-3 p-md-4">
             <div class="row g-4">
                 <?php foreach (['development_type' => 'Tipe Pengembangan', 'license_scheme' => 'Skema Lisensi', 'deployment_type' => 'Tipe Deployment'] as $name => $label) : ?><div class="col-md-4"><label for="<?= $name ?>" class="form-label"><?= $label ?></label><select id="<?= $name ?>" name="<?= $name ?>" class="form-select">
                             <option value="">Pilih <?= strtolower($label) ?></option><?php $renderOptions($name); ?>

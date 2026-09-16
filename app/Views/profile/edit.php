@@ -26,7 +26,23 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
     [data-bs-theme="dark"] .profile-edit-avatar { border-color: #30304a; }
     [data-bs-theme="dark"] .profile-edit-avatar-hint { background: #252539; border-color: #30304a; }
     [data-bs-theme="dark"] .profile-readonly { background: #252539; border-color: #36364f; }
-    @media (max-width: 575.98px) { .profile-edit-section { padding: 1rem; } .profile-edit-actions { padding: 1rem; } .profile-edit-actions .btn { width: 100%; } }
+    @media (max-width: 767.98px) {
+        .profile-edit-section { padding: 1.15rem 1rem; }
+        .profile-edit-identity { padding: 1rem; }
+        .profile-edit-actions {
+            padding: 0.85rem 1rem;
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .profile-edit-actions .btn {
+            flex: 1 1 50%;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -34,7 +50,11 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 
 <div class="profile-edit-shell">
     <div class="mb-4">
-        <a href="<?= base_url('/profile') ?>" class="btn btn-sm btn-outline-secondary mb-3"><i class="bi bi-arrow-left" aria-hidden="true"></i> Kembali ke Profil</a>
+        <div class="mb-3">
+            <a href="<?= base_url('/profile') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Kembali ke Profil
+            </a>
+        </div>
         <h3 class="mb-1">Edit Profil</h3>
         <p class="text-muted mb-0">Perbarui informasi pribadi atau ganti password akun Anda.</p>
     </div>
@@ -139,7 +159,7 @@ $profileInitial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
                 </div>
             </section>
             <div class="profile-edit-actions d-flex justify-content-end">
-                <button type="submit" class="btn btn-warning"><i class="bi bi-key-fill me-1" aria-hidden="true"></i> Ganti Password</button>
+                <button type="submit" class="btn btn-warning w-100 w-md-auto"><i class="bi bi-key-fill me-1" aria-hidden="true"></i> Ganti Password</button>
             </div>
         </form>
     </div>

@@ -68,12 +68,6 @@ foreach ($users as $user) {
         margin: 0 auto 1.25rem;
     }
 
-    .project-form-page-header .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-    }
-
     .project-form-section-icon {
         display: inline-flex;
         align-items: center;
@@ -236,8 +230,13 @@ foreach ($users as $user) {
     #assignedToChoices .choices__list--dropdown {
         z-index: 50;
         border-color: var(--bs-border-color);
+        overflow: hidden;
+    }
+
+    #assignedToChoices .choices__list--dropdown .choices__list {
         max-height: 260px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #assignedToChoices .choices__item--choice.is-highlighted {
@@ -406,24 +405,55 @@ foreach ($users as $user) {
         color: #f5f7ff;
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 767.98px) {
 
-        .project-form-section,
-        .project-form-actions {
-            padding: 1rem;
+        .project-form-section {
+            padding: 1.15rem 1rem;
         }
 
         .project-form-actions {
+            padding: 0.85rem 1rem;
             align-items: stretch;
             flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1030;
+        }
+
+        .project-form-actions .small.text-muted {
+            text-align: center;
+            font-size: 0.78rem;
+            order: 2;
         }
 
         .project-form-actions .d-flex {
-            flex-direction: column-reverse;
+            width: 100%;
+            gap: 0.5rem;
+            order: 1;
         }
 
         .project-form-actions .btn {
+            flex: 1 1 0 !important;
+            width: 50% !important;
+            min-height: 44px;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .project-form-actions .btn-primary i {
+            display: none !important;
+        }
+
+        .project-file-item .d-flex.flex-wrap.gap-2.flex-shrink-0 {
             width: 100%;
+        }
+
+        .project-file-item .d-flex.flex-wrap.gap-2.flex-shrink-0 .btn {
+            flex: 1 1 45%;
+            justify-content: center;
+            min-height: 38px;
         }
     }
 </style>
@@ -697,7 +727,7 @@ foreach ($users as $user) {
             <div class="d-flex gap-2">
                 <a href="<?= base_url('/projects') ?>" class="btn btn-outline-secondary">Batal</a>
                 <button type="submit" class="btn btn-primary">
-                    </i><?= esc($submitLabel) ?>
+                    <i class="bi bi-check-lg d-none d-md-inline me-1" aria-hidden="true"></i><?= esc($submitLabel) ?>
                 </button>
             </div>
         </div>

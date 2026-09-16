@@ -255,7 +255,8 @@ $deadlineAlerts = get_user_deadline_notifications();
                     <?php endif; ?>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 240px; overflow-y: auto;">
+                    <!-- Desktop Table View -->
+                    <div class="table-responsive d-none d-md-block" style="max-height: 240px; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0 dashboard-project-table">
                             <thead class="table-light sticky-top">
                                 <tr>
@@ -335,6 +336,78 @@ $deadlineAlerts = get_user_deadline_notifications();
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Mobile Cards View -->
+                    <div class="d-block d-md-none p-2" style="max-height: 280px; overflow-y: auto;">
+                        <?php if (!empty($display_priority_projects)): ?>
+                            <?php foreach ($display_priority_projects as $prj) : ?>
+                                <?php
+                                $relativeDeadlineText = '-';
+                                $relativeDeadlineClass = 'text-muted';
+                                $isCompletedPrj = is_project_completed($prj);
+                                if ($isCompletedPrj) {
+                                    if (!empty($prj['promote_date']) && !empty($prj['end_date'])) {
+                                        $isOnTime = $prj['promote_date'] <= $prj['end_date'];
+                                        $relativeDeadlineText = $isOnTime ? 'Selesai Tepat Waktu' : 'Selesai Terlambat';
+                                        $relativeDeadlineClass = $isOnTime ? 'text-success fw-semibold' : 'text-danger fw-semibold';
+                                    } else {
+                                        $relativeDeadlineText = 'Selesai';
+                                        $relativeDeadlineClass = 'text-success fw-semibold';
+                                    }
+                                } elseif (!empty($prj['end_date'])) {
+                                    $today = new DateTimeImmutable(date('Y-m-d'));
+                                    $targetDate = new DateTimeImmutable(date('Y-m-d', strtotime($prj['end_date'])));
+                                    $diff = (int) $today->diff($targetDate)->format('%r%a');
+                                    if ($diff < 0) {
+                                        $relativeDeadlineText = abs($diff) . ' hari terlambat';
+                                        $relativeDeadlineClass = 'text-danger fw-semibold';
+                                    } elseif ($diff === 0) {
+                                        $relativeDeadlineText = 'Tenggat hari ini';
+                                        $relativeDeadlineClass = 'text-danger fw-bold';
+                                    } else {
+                                        $relativeDeadlineText = 'Sisa ' . $diff . ' hari';
+                                        $relativeDeadlineClass = !empty($prj['deadline_class']) ? 'text-' . esc($prj['deadline_class']) . ' fw-semibold' : 'text-muted';
+                                    }
+                                }
+                                ?>
+                                <div class="dashboard-priority-card">
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                        <div class="min-width-0 flex-grow-1" style="overflow: hidden;">
+                                            <strong class="d-block text-dark text-truncate small" title="<?= esc($prj['name']) ?>"><?= esc($prj['name']) ?></strong>
+                                            <small class="text-muted d-block"><?= esc($prj['project_code']) ?></small>
+                                        </div>
+                                        <span class="badge <?= esc($prj['status_class']) ?> flex-shrink-0" style="font-size: 0.7rem; white-space: nowrap;"><?= esc($prj['status']) ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between gap-2 pt-2 mt-2 border-top flex-wrap">
+                                        <div class="min-width-0 flex-grow-1" style="overflow: hidden;">
+                                            <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                                                <?php if (!empty($prj['deadline_label'])) : ?>
+                                                    <span class="badge bg-light-<?= esc($prj['deadline_class']) ?> text-<?= esc($prj['deadline_class']) ?> fw-semibold flex-shrink-0" style="font-size: 0.68rem;">
+                                                        <?= esc($prj['deadline_label']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($prj['end_date'])) : ?>
+                                                    <small class="<?= $relativeDeadlineClass ?> text-truncate" style="font-size: 0.72rem;">
+                                                        <?= esc($relativeDeadlineText) ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </div>
+                                            <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">
+                                                <i class="bi bi-calendar-event me-1"></i><?= !empty($prj['end_date']) ? date('d M Y', strtotime($prj['end_date'])) : '-' ?>
+                                            </small>
+                                        </div>
+                                        <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap flex-shrink-0" title="Detail Project" style="font-size: 0.78rem;">
+                                            <i class="bi bi-eye-fill me-1"></i>Detail
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="text-center py-4 text-muted small">
+                                Tidak ada proyek mendekati tenggat atau overdue saat ini.
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
@@ -344,7 +417,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="card-title mb-0 fs-6 fw-bold text-dark">Analisis Beban Kerja</h5>
                     </div>
-                    <select id="personalChartToggle" class="form-select form-select-sm w-auto py-1">
+                    <select id="personalChartToggle" class="form-select form-select-sm w-100 w-sm-auto py-1">
                         <option value="sdlc" selected>Distribusi Fase SDLC</option>
                         <option value="rates">Penyelesaian & Ketepatan Waktu</option>
                         <option value="trend">Tren Penyelesaian Bulanan</option>
@@ -520,17 +593,17 @@ $deadlineAlerts = get_user_deadline_notifications();
                                     elseif (in_array($ext, ['doc', 'docx'])) $iconClass = 'bi-file-earmark-word-fill text-primary';
                                     elseif (in_array($ext, ['xls', 'xlsx', 'csv'])) $iconClass = 'bi-file-earmark-excel-fill text-success';
                                     ?>
-                                    <div class="p-2 border rounded d-flex justify-content-between align-items-center bg-light-subtle">
-                                        <div class="d-flex align-items-center gap-2 min-width-0 me-2 flex-grow-1">
+                                    <div class="p-2 border rounded d-flex justify-content-between align-items-center bg-light-subtle recent-file-item">
+                                        <div class="d-flex align-items-center gap-2 min-width-0 me-2 flex-grow-1" style="overflow: hidden;">
                                             <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded bg-white border" style="width: 38px; height: 38px;">
                                                 <i class="bi <?= $iconClass ?> fs-5 lh-1"></i>
                                             </div>
-                                            <div class="min-width-0 flex-grow-1">
+                                            <div class="min-width-0 flex-grow-1" style="overflow: hidden;">
                                                 <strong class="d-block text-dark text-truncate text-sm mb-1" title="<?= esc($file['original_name']) ?>">
                                                     <?= esc($file['original_name']) ?>
                                                 </strong>
-                                                <div class="text-muted d-flex align-items-center flex-wrap gap-2" style="font-size: 0.74rem;">
-                                                    <span class="text-truncate text-secondary fw-medium me-1" style="max-width: 170px;" title="<?= esc($file['project_name'] ?? '-') ?>">
+                                                <div class="text-muted d-flex align-items-center flex-wrap gap-1" style="font-size: 0.74rem;">
+                                                    <span class="text-truncate text-secondary fw-medium me-1" style="max-width: 140px;" title="<?= esc($file['project_name'] ?? '-') ?>">
                                                         <i class="bi bi-folder2 me-1"></i><?= esc($file['project_name'] ?? '-') ?>
                                                     </span>
                                                     <span class="text-nowrap text-muted">
@@ -539,7 +612,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                                                 </div>
                                             </div>
                                         </div>
-                                        <a href="<?= base_url('/projects/files/' . $file['id'] . '/download') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2 flex-shrink-0 d-inline-flex align-items-center gap-1" title="Unduh Berkas">
+                                        <a href="<?= base_url('/projects/files/' . $file['id'] . '/download') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2 flex-shrink-0 d-inline-flex align-items-center gap-1 ms-1" title="Unduh Berkas" style="min-width: 36px; min-height: 36px; justify-content: center;">
                                             <i class="bi bi-download"></i>
                                         </a>
                                     </div>
@@ -561,6 +634,32 @@ $deadlineAlerts = get_user_deadline_notifications();
     .dashboard-project-table> :not(caption)>*>* {
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
+    }
+
+    @media (max-width: 767.98px) {
+        .dashboard-priority-card {
+            border: 1px solid var(--bs-border-color, #e9ecef);
+            border-radius: 8px;
+            padding: 0.85rem;
+            background-color: var(--bs-card-bg, #ffffff);
+            margin-bottom: 0.65rem;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        [data-bs-theme="dark"] .dashboard-priority-card {
+            background-color: #252539 !important;
+            border-color: #2b2b40 !important;
+        }
+
+        .dashboard-priority-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .recent-file-item {
+            width: 100%;
+            overflow: hidden;
+        }
     }
 </style>
 

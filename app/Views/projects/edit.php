@@ -11,13 +11,13 @@
 <?= $this->section('content') ?>
 
 <div class="page-heading project-form-page-header">
-    <div>
-        <a href="<?= base_url('/projects/detail/' . $project['id']) ?>" class="btn btn-sm btn-outline-secondary mb-3">
-            <i class="bi bi-arrow-left" aria-hidden="true"></i> Kembali ke Detail Project
+    <div class="mb-3">
+        <a href="<?= base_url('/projects/detail/' . $project['id']) ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Kembali ke Detail Project
         </a>
-        <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
-        <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
     </div>
+    <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
+    <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
 </div>
 
 <?php if (session()->getFlashdata('errors')) : ?>

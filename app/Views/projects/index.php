@@ -14,6 +14,7 @@
  * @var string|null $scope
  * @var int|null $countMyProjects
  * @var int|null $countAllProjects
+ * @var string|null $keyword
  */
 
 helper('deadline');
@@ -26,6 +27,65 @@ $isKadept = (bool) ($isKadept ?? false);
 $scope = (string) ($scope ?? 'my');
 $countMyProjects = (int) ($countMyProjects ?? 0);
 $countAllProjects = (int) ($countAllProjects ?? 0);
+$keyword = (string) ($keyword ?? '');
+
+$prepareProjectData = function (array $prj): array {
+    $statusBadge = match ($prj['status'] ?? '') {
+        'Planning' => 'bg-secondary',
+        'Defining' => 'bg-info',
+        'Designing' => 'bg-primary',
+        'Building' => 'bg-warning text-dark',
+        'Testing' => 'bg-danger',
+        'Deployment' => 'bg-success',
+        default => 'bg-secondary',
+    };
+    $assignedNames = [];
+    if (!empty($prj['assigned_users'])) {
+        foreach ($prj['assigned_users'] as $assignedUser) {
+            $assignedNames[] = $assignedUser['name'] ?? '';
+        }
+    }
+    $searchText = strtolower(implode(' ', array_filter([
+        $prj['project_code'] ?? '',
+        $prj['name'] ?? '',
+        $prj['database_type_name'] ?? '',
+        implode(' ', $assignedNames),
+    ])));
+    $isCompletedPrj = is_project_completed($prj);
+    $deadline = get_deadline_status($prj['end_date'] ?? null, $isCompletedPrj);
+
+    $relativeDeadlineText = null;
+    $relativeDeadlineClass = 'text-muted';
+    if (!$isCompletedPrj && !empty($prj['end_date'])) {
+        try {
+            $today = new DateTimeImmutable(date('Y-m-d'));
+            $targetDate = new DateTimeImmutable(date('Y-m-d', strtotime($prj['end_date'])));
+            $diff = (int) $today->diff($targetDate)->format('%r%a');
+            if ($diff < 0) {
+                $relativeDeadlineText = abs($diff) . ' hari terlambat';
+                $relativeDeadlineClass = 'text-danger fw-semibold';
+            } elseif ($diff === 0) {
+                $relativeDeadlineText = 'Tenggat hari ini';
+                $relativeDeadlineClass = 'text-danger fw-bold';
+            } else {
+                $relativeDeadlineText = 'Sisa ' . $diff . ' hari';
+                $relativeDeadlineClass = !empty($deadline['class']) ? 'text-' . esc($deadline['class']) . ' fw-semibold' : 'text-muted';
+            }
+        } catch (\Exception $e) {
+            $relativeDeadlineText = null;
+        }
+    }
+
+    return compact(
+        'statusBadge',
+        'assignedNames',
+        'searchText',
+        'isCompletedPrj',
+        'deadline',
+        'relativeDeadlineText',
+        'relativeDeadlineClass'
+    );
+};
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -137,12 +197,49 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
     @media (max-width: 767.98px) {
         .project-page-heading {
             flex-direction: column;
-            align-items: flex-start !important;
+            align-items: stretch !important;
             gap: .85rem;
         }
 
-        .project-page-heading>a {
-            align-self: flex-start;
+        .project-header-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            gap: .5rem;
+        }
+
+        .project-header-actions .dropdown {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .project-header-actions .dropdown > button,
+        .project-header-actions > a {
+            width: 100%;
+            height: 100%;
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.875rem;
+            padding: 0.375rem 0.5rem;
+        }
+
+        .project-scope-pills {
+            width: 100%;
+            display: flex;
+        }
+
+        .project-scope-pills .nav-item {
+            flex: 1 1 50%;
+            text-align: center;
+        }
+
+        .project-scope-pills .nav-link {
+            width: 100%;
+            justify-content: center;
         }
     }
 
@@ -314,6 +411,38 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
         line-height: 1;
         margin-top: .25rem;
     }
+
+    .filter-chevron {
+        transition: transform 0.2s ease;
+    }
+
+    [data-bs-toggle="collapse"][aria-expanded="true"] .filter-chevron {
+        transform: rotate(180deg);
+    }
+
+    .project-mobile-card {
+        border-radius: 0.75rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .project-mobile-timeline-box {
+        background-color: #f8f9fa;
+        border: 1px solid #edf2f7;
+    }
+
+    [data-bs-theme="dark"] .project-mobile-card {
+        background-color: var(--bs-card-bg, #1e1e2d) !important;
+        border-color: var(--bs-border-color, #2b2b40) !important;
+    }
+
+    [data-bs-theme="dark"] .project-mobile-card .project-mobile-title {
+        color: #f5f7ff !important;
+    }
+
+    [data-bs-theme="dark"] .project-mobile-timeline-box {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -353,7 +482,7 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
     }
     $exportQueryString = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
     ?>
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 project-header-actions">
         <div class="dropdown">
             <button class="btn btn-outline-secondary text-body d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-file-export text-body"></i>
@@ -424,58 +553,94 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
 
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
-            <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>" class="row g-2 align-items-center">
+            <?php
+            $resetUrl = '/projects';
+            if (!empty($isFilteredUser) && !empty($targetUser)) {
+                $resetUrl = '/projects/user/' . $targetUser['id'];
+            } elseif ($isKadept && $scope === 'all') {
+                $resetUrl = '/projects?scope=all';
+            }
+            $hasActiveAdvancedFilter = !empty($selectedStatus) || !empty($selectedIsCompleted) || !empty($selectedStartDate) || !empty($selectedEndDate);
+            ?>
+            <form method="get" action="<?= base_url(!empty($isFilteredUser) && !empty($targetUser) ? '/projects/user/' . $targetUser['id'] : '/projects') ?>">
                 <input type="hidden" name="page_projects" value="1">
                 <?php if ($isKadept && empty($isFilteredUser)) : ?>
                     <input type="hidden" name="scope" value="<?= esc($scope) ?>">
                 <?php endif; ?>
-                <div class="col-12 col-lg-3">
-                    <div class="input-group">
-                        <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama, atau PIC..." value="<?= esc($keyword ?? '') ?>">
-                        <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
+
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 col-lg-3">
+                        <div class="input-group">
+                            <input type="text" name="keyword" class="form-control" placeholder="Cari kode, nama, atau PIC..." value="<?= esc($keyword ?? '') ?>">
+                            <?php if (!empty($keyword)) : ?>
+                                <a href="<?= base_url($resetUrl) ?>" class="btn btn-outline-secondary d-lg-none d-flex align-items-center px-2" title="Hapus pencarian">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                            <?php endif; ?>
+                            <button type="submit" class="btn btn-primary d-lg-none d-flex align-items-center px-3" title="Cari" aria-label="Cari">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            <span class="input-group-text bg-transparent d-none d-lg-flex align-items-center" aria-hidden="true"><i class="bi bi-search lh-1"></i></span>
+                        </div>
                     </div>
-                </div>
-                <div class="col-12 col-md-6 col-lg-2">
-                    <select name="status" class="form-select">
-                        <option value="">All SDLC Status</option>
-                        <?php foreach ($statusOptions as $st) : ?>
-                            <option value="<?= esc($st['id']) ?>" <?= (string) ($selectedStatus ?? '') === (string) $st['id'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6 col-lg-2">
-                    <select name="is_completed" class="form-select">
-                        <option value="">All</option>
-                        <option value="completed" <?= $selectedIsCompleted === 'completed' || $selectedIsCompleted === '1' ? 'selected' : '' ?>>Completed</option>
-                        <option value="not_completed" <?= $selectedIsCompleted === 'not_completed' || $selectedIsCompleted === '0' ? 'selected' : '' ?>>Not Completed</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6 col-lg-3">
-                    <label for="period_picker" class="visually-hidden">Filter tanggal</label>
-                    <div class="input-group period-filter-group">
-                        <input type="text" id="period_picker" class="form-control" placeholder="Date Range" readonly>
-                        <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-calendar3 lh-1"></i></span>
+                    <div class="col-12 d-lg-none">
+                        <button class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-between py-2" type="button" data-bs-toggle="collapse" data-bs-target="#projectAdvancedFilterCollapse" aria-expanded="<?= $hasActiveAdvancedFilter ? 'true' : 'false' ?>" aria-controls="projectAdvancedFilterCollapse">
+                            <span class="d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-funnel"></i>
+                                <span>Filter Lanjutan</span>
+                                <?php if ($hasActiveAdvancedFilter) : ?>
+                                    <span class="badge bg-primary rounded-pill">Aktif</span>
+                                <?php endif; ?>
+                            </span>
+                            <i class="bi bi-chevron-down filter-chevron"></i>
+                        </button>
                     </div>
-                    <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">
-                    <input type="hidden" name="filter_end" id="filter_end" value="<?= esc($selectedEndDate) ?>">
-                </div>
-                <div class="col-6 col-md-3 col-lg-1 d-flex">
-                    <button type="submit" class="btn btn-primary filter-submit-button w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
-                        <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span>
-                    </button>
-                </div>
-                <div class="col-6 col-md-3 col-lg-1 d-flex justify-content-lg-end">
-                    <?php
-                    $resetUrl = '/projects';
-                    if (!empty($isFilteredUser) && !empty($targetUser)) {
-                        $resetUrl = '/projects/user/' . $targetUser['id'];
-                    } elseif ($isKadept && $scope === 'all') {
-                        $resetUrl = '/projects?scope=all';
-                    }
-                    ?>
-                    <a href="<?= base_url($resetUrl) ?>" class="btn btn-outline-secondary filter-reset-button" title="Reset filter" aria-label="Reset filter">
-                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span>
-                    </a>
+                    <div class="col-12 col-lg-9 collapse d-lg-block <?= $hasActiveAdvancedFilter ? 'show' : '' ?>" id="projectAdvancedFilterCollapse">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <select name="status" class="form-select">
+                                    <option value="">All SDLC Status</option>
+                                    <?php foreach ($statusOptions as $st) : ?>
+                                        <option value="<?= esc($st['id']) ?>" <?= (string) ($selectedStatus ?? '') === (string) $st['id'] ? 'selected' : '' ?>><?= esc($st['status_name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <select name="is_completed" class="form-select">
+                                    <option value="">All Status</option>
+                                    <option value="completed" <?= $selectedIsCompleted === 'completed' || $selectedIsCompleted === '1' ? 'selected' : '' ?>>Completed</option>
+                                    <option value="not_completed" <?= $selectedIsCompleted === 'not_completed' || $selectedIsCompleted === '0' ? 'selected' : '' ?>>Not Completed</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label for="period_picker" class="visually-hidden">Filter tanggal</label>
+                                <div class="input-group period-filter-group">
+                                    <input type="text" id="period_picker" class="form-control" placeholder="Date Range" readonly>
+                                    <span class="input-group-text bg-transparent d-flex align-items-center" aria-hidden="true"><i class="bi bi-calendar3 lh-1"></i></span>
+                                </div>
+                                <input type="hidden" name="filter_start" id="filter_start" value="<?= esc($selectedStartDate) ?>">
+                                <input type="hidden" name="filter_end" id="filter_end" value="<?= esc($selectedEndDate) ?>">
+                            </div>
+                            <div class="col-6 col-md-3 col-lg-1 d-flex">
+                                <button type="submit" class="btn btn-primary filter-submit-button w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
+                                    <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Cari</span>
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-3 col-lg-1 d-flex justify-content-lg-end">
+                                <?php
+                                $resetUrl = '/projects';
+                                if (!empty($isFilteredUser) && !empty($targetUser)) {
+                                    $resetUrl = '/projects/user/' . $targetUser['id'];
+                                } elseif ($isKadept && $scope === 'all') {
+                                    $resetUrl = '/projects?scope=all';
+                                }
+                                ?>
+                                <a href="<?= base_url($resetUrl) ?>" class="btn btn-outline-secondary filter-reset-button" title="Reset filter" aria-label="Reset filter">
+                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -483,7 +648,8 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
 
     <div class="card shadow-sm">
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <!-- Desktop Table View -->
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle mb-0" id="projectsTable">
                     <thead class="table-light">
                         <tr>
@@ -498,51 +664,13 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
                         <?php if (!empty($displayProjects)) : ?>
                             <?php foreach ($displayProjects as $prj) : ?>
                                 <?php
-                                $statusBadge = match ($prj['status'] ?? '') {
-                                    'Planning' => 'bg-secondary',
-                                    'Defining' => 'bg-info',
-                                    'Designing' => 'bg-primary',
-                                    'Building' => 'bg-warning text-dark',
-                                    'Testing' => 'bg-danger',
-                                    'Deployment' => 'bg-success',
-                                    default => 'bg-secondary',
-                                };
-                                $assignedNames = [];
-                                if (!empty($prj['assigned_users'])) {
-                                    foreach ($prj['assigned_users'] as $assignedUser) {
-                                        $assignedNames[] = $assignedUser['name'] ?? '';
-                                    }
-                                }
-                                $searchText = strtolower(implode(' ', array_filter([
-                                    $prj['project_code'] ?? '',
-                                    $prj['name'] ?? '',
-                                    $prj['database_type_name'] ?? '',
-                                    implode(' ', $assignedNames),
-                                ])));
-                                $isCompletedPrj = is_project_completed($prj);
-                                $deadline = get_deadline_status($prj['end_date'] ?? null, $isCompletedPrj);
-
-                                $relativeDeadlineText = null;
-                                $relativeDeadlineClass = 'text-muted';
-                                if (!$isCompletedPrj && !empty($prj['end_date'])) {
-                                    try {
-                                        $today = new DateTimeImmutable(date('Y-m-d'));
-                                        $targetDate = new DateTimeImmutable(date('Y-m-d', strtotime($prj['end_date'])));
-                                        $diff = (int) $today->diff($targetDate)->format('%r%a');
-                                        if ($diff < 0) {
-                                            $relativeDeadlineText = abs($diff) . ' hari terlambat';
-                                            $relativeDeadlineClass = 'text-danger fw-semibold';
-                                        } elseif ($diff === 0) {
-                                            $relativeDeadlineText = 'Tenggat hari ini';
-                                            $relativeDeadlineClass = 'text-danger fw-bold';
-                                        } else {
-                                            $relativeDeadlineText = 'Sisa ' . $diff . ' hari';
-                                            $relativeDeadlineClass = !empty($deadline['class']) ? 'text-' . esc($deadline['class']) . ' fw-semibold' : 'text-muted';
-                                        }
-                                    } catch (\Exception $e) {
-                                        $relativeDeadlineText = null;
-                                    }
-                                }
+                                $prjData = $prepareProjectData($prj);
+                                $statusBadge = $prjData['statusBadge'];
+                                $assignedNames = $prjData['assignedNames'];
+                                $searchText = $prjData['searchText'];
+                                $deadline = $prjData['deadline'];
+                                $relativeDeadlineText = $prjData['relativeDeadlineText'];
+                                $relativeDeadlineClass = $prjData['relativeDeadlineClass'];
                                 ?>
                                 <tr class="project-row"
                                     data-search="<?= esc($searchText) ?>"
@@ -607,8 +735,131 @@ $countAllProjects = (int) ($countAllProjects ?? 0);
                     </tbody>
                 </table>
             </div>
+
+            <!-- Mobile Cards View -->
+            <div class="d-block d-md-none p-3">
+                <?php if (!empty($displayProjects)) : ?>
+                    <div class="project-mobile-feed">
+                        <?php foreach ($displayProjects as $prj) : ?>
+                            <?php
+                            $prjData = $prepareProjectData($prj);
+                            $statusBadge = $prjData['statusBadge'];
+                            $assignedNames = $prjData['assignedNames'];
+                            $searchText = $prjData['searchText'];
+                            $deadline = $prjData['deadline'];
+                            $relativeDeadlineText = $prjData['relativeDeadlineText'];
+                            $relativeDeadlineClass = $prjData['relativeDeadlineClass'];
+                            ?>
+                            <div class="card border shadow-sm mb-3 project-mobile-card"
+                                 data-search="<?= esc($searchText) ?>"
+                                 data-status="<?= esc($prj['status'] ?? '') ?>">
+                                <div class="card-body p-3">
+                                    <!-- Meta Badges -->
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                        <div class="d-flex align-items-center flex-wrap gap-1">
+                                            <span class="badge bg-light-secondary text-muted font-monospace small"><?= esc($prj['project_code']) ?></span>
+                                            <?php if (!empty($prj['database_type_name'])) : ?>
+                                                <span class="badge bg-light-info text-info border border-info-subtle" style="font-size: 0.72rem;">
+                                                    <i class="bi bi-database me-1"></i><?= esc($prj['database_type_name']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="d-flex align-items-center flex-wrap gap-1">
+                                            <span class="badge <?= $statusBadge ?>"><?= esc($prj['status'] ?? '-') ?></span>
+                                            <span class="badge bg-light-<?= esc($deadline['class']) ?> text-<?= esc($deadline['class']) ?>">
+                                                <?= esc($deadline['label']) ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Title -->
+                                    <h6 class="fw-bold mb-2">
+                                        <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="text-dark text-decoration-none project-mobile-title">
+                                            <?= esc($prj['name']) ?>
+                                        </a>
+                                    </h6>
+
+                                    <!-- Timeline & Deadline Box -->
+                                    <div class="project-mobile-timeline-box rounded-2 p-2 mb-2">
+                                        <div class="row g-2 mb-1">
+                                            <div class="col-6">
+                                                <div class="text-muted" style="font-size: 0.72rem; line-height: 1.2;">
+                                                    <i class="bi bi-calendar-event me-1"></i>Tanggal Mulai
+                                                </div>
+                                                <div class="fw-semibold text-body small mt-1">
+                                                    <?= !empty($prj['start_date']) ? date('d M Y', strtotime($prj['start_date'])) : '-' ?>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-muted" style="font-size: 0.72rem; line-height: 1.2;">
+                                                    <i class="bi bi-calendar-check me-1"></i>Tenggat Waktu
+                                                </div>
+                                                <div class="fw-semibold text-body small mt-1">
+                                                    <?= !empty($prj['end_date']) ? date('d M Y', strtotime($prj['end_date'])) : '-' ?>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <?php if ($relativeDeadlineText !== null || !empty($prj['promote_date'])) : ?>
+                                            <div class="pt-2 mt-1 border-top border-secondary-subtle">
+                                                <?php if ($relativeDeadlineText !== null) : ?>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-hourglass-split me-1"></i>Sisa Waktu:</span>
+                                                        <span class="<?= $relativeDeadlineClass ?>" style="font-size: 0.72rem;"><?= esc($relativeDeadlineText) ?></span>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($prj['promote_date'])) : ?>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-rocket-takeoff me-1"></i>Promote:</span>
+                                                        <span class="fw-semibold text-body" style="font-size: 0.72rem;"><?= date('d M Y', strtotime($prj['promote_date'])) ?></span>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Assigned PIC -->
+                                    <div class="mb-3">
+                                        <div class="text-muted small mb-1"><i class="bi bi-people me-1"></i>PIC Ditugaskan:</div>
+                                        <?php if (!empty($prj['assigned_users'])) : ?>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                <?php foreach ($prj['assigned_users'] as $assignedUser) : ?>
+                                                    <span class="badge bg-light-primary text-primary" style="font-size: 0.75rem;">
+                                                        <i class="bi bi-person-fill me-1"></i><?= esc($assignedUser['name']) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else : ?>
+                                            <span class="text-muted small fst-italic">Belum ada PIC ditugaskan</span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="row g-2 pt-2 border-top">
+                                        <div class="col-6">
+                                            <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-1 py-2">
+                                                <i class="bi bi-eye-fill"></i> Detail
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= base_url('/projects/edit/' . $prj['id']) ?>" class="btn btn-sm btn-outline-warning w-100 d-inline-flex align-items-center justify-content-center gap-1 py-2">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else : ?>
+                    <div class="text-center py-4 text-muted">
+                        Data project tidak tersedia
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <?php if (!empty($displayProjects) && !empty($pager) && $pager->getPageCount('projects') > 1) : ?>
-                <div class="project-pagination d-flex justify-content-end p-3 border-top">
+                <div class="project-pagination d-flex justify-content-center justify-content-md-end p-3 border-top">
                     <?= $pager->links('projects', 'complete') ?>
                 </div>
             <?php endif; ?>

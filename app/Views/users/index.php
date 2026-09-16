@@ -92,6 +92,33 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
 
         .user-page-heading > a {
             align-self: flex-start;
+            width: 100%;
+            display: inline-flex;
+            justify-content: center;
+        }
+
+        .user-mobile-card {
+            border: 1px solid var(--bs-border-color, #e9ecef);
+            border-radius: 10px;
+            padding: 0.85rem;
+            background-color: var(--bs-card-bg, #ffffff);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        [data-bs-theme="dark"] .user-mobile-card {
+            background-color: #252539 !important;
+            border-color: #2b2b40 !important;
+        }
+
+        .user-mobile-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .user-mobile-card-inactive {
+            opacity: 0.88;
+            border-left: 3px solid #6c757d;
         }
     }
 
@@ -153,7 +180,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
         <h3>User Management</h3>
         <p class="text-subtitle text-muted mb-0">Kelola akun lokal, role, dan status aktif pengguna.</p>
     </div>
-    <a href="<?= base_url('/users/create') ?>" class="btn btn-primary shadow-sm">
+    <a href="<?= base_url('/users/create') ?>" class="btn btn-primary shadow-sm w-100 w-sm-auto">
         <i class="bi bi-person-plus-fill me-1"></i> Tambah User
     </a>
 </div>
@@ -235,12 +262,12 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                         <option value="0" <?= ($selectedStatus ?? '') === '0' ? 'selected' : '' ?>>Nonaktif</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-4 col-lg-1 d-flex">
+                <div class="col-6 col-md-4 col-lg-1 d-flex">
                     <button type="submit" class="btn btn-primary management-filter-submit w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
-                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <i class="bi bi-search" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Filter</span>
                     </button>
                 </div>
-                <div class="col-12 col-md-4 col-lg-1 d-flex justify-content-lg-end">
+                <div class="col-6 col-md-4 col-lg-1 d-flex justify-content-lg-end">
                     <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary management-filter-reset" title="Reset filter" aria-label="Reset filter"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="d-inline d-lg-none ms-1">Reset</span></a>
                 </div>
             </form>
@@ -249,7 +276,8 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
 
     <div class="card shadow-sm">
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <!-- Desktop Table View -->
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle mb-0" id="usersTable">
                     <thead class="table-light">
                         <tr>
@@ -350,6 +378,93 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Cards View -->
+            <div class="d-block d-md-none p-3" id="usersMobileList">
+                <?php if (!empty($users)) : ?>
+                    <?php foreach ($users as $user) : ?>
+                        <?php
+                        $roleColor = $roleClass($user['role_name'] ?? null);
+                        $categoryColor = $categoryClass($user['category'] ?? null);
+                        $isActive = (int) ($user['is_active'] ?? 0) === 1;
+                        $isKepalaDepartemenUser = strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
+                        $canManageUser = !$isKepalaDepartemenUser || (int) ($user['id'] ?? 0) !== (int) session()->get('user_id');
+                        ?>
+                        <div class="user-mobile-card <?= !$isActive ? 'user-mobile-card-inactive' : '' ?>">
+                            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2 min-width-0 flex-grow-1" style="overflow: hidden;">
+                                    <div class="user-avatar bg-light-primary text-primary d-flex align-items-center justify-content-center fw-bold fs-6 flex-shrink-0">
+                                        <?= esc(strtoupper(substr($user['name'] ?? 'U', 0, 1))) ?>
+                                    </div>
+                                    <div class="min-width-0 flex-grow-1" style="overflow: hidden;">
+                                        <strong class="text-dark d-block text-truncate"><?= esc($user['name']) ?></strong>
+                                        <small class="text-muted d-block text-truncate" style="font-size: 0.75rem;">@<?= esc($user['username']) ?></small>
+                                    </div>
+                                </div>
+                                <?php if ($isActive) : ?>
+                                    <span class="badge bg-light-success text-success border border-success-subtle px-2 py-1 flex-shrink-0" style="font-size: 0.72rem;">Aktif</span>
+                                <?php else : ?>
+                                    <span class="badge bg-light-secondary text-secondary border border-secondary-subtle px-2 py-1 flex-shrink-0" style="font-size: 0.72rem;">Nonaktif</span>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-1 flex-wrap mb-2">
+                                <span class="badge bg-light-<?= $roleColor ?> text-<?= $roleColor ?>" style="font-size: 0.72rem;"><?= esc($user['role_name'] ?? '-') ?></span>
+                                <span class="badge bg-light-<?= $categoryColor ?> text-<?= $categoryColor ?>" style="font-size: 0.72rem;"><?= esc($user['category'] ?? '-') ?></span>
+                                <?php if (!empty($user['job_title'])) : ?>
+                                    <span class="text-muted small ms-1 text-truncate d-inline-block" style="font-size: 0.75rem; max-width: 160px;">
+                                        &middot; <?= esc($user['job_title']) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if (!empty($user['email']) || !empty($user['phone_number'])) : ?>
+                                <div class="user-mobile-contact mb-2 pt-2 border-top">
+                                    <?php if (!empty($user['email'])) : ?>
+                                        <div class="text-truncate text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-envelope me-1"></i><?= esc($user['email']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($user['phone_number'])) : ?>
+                                        <div class="text-truncate text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-telephone me-1"></i><?= esc($user['phone_number']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="d-flex align-items-center justify-content-between pt-2 mt-1 border-top gap-2 flex-wrap">
+                                <small class="text-muted" style="font-size: 0.72rem;">
+                                    <i class="bi bi-calendar-event me-1"></i><?= !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-' ?>
+                                </small>
+                                <div class="d-flex align-items-center gap-1 flex-wrap ms-auto">
+                                    <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">
+                                        <i class="bi bi-eye-fill me-1"></i>Detail
+                                    </a>
+                                    <?php if ($canManageUser) : ?>
+                                        <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-warning py-1 px-2" style="font-size: 0.75rem;">
+                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        </a>
+                                        <?php if ($isActive) : ?>
+                                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" style="font-size: 0.75rem;">
+                                                <i class="bi bi-person-dash-fill me-1"></i>Nonaktif
+                                            </button>
+                                        <?php else : ?>
+                                            <button type="button" class="btn btn-sm btn-outline-success py-1 px-2" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" style="font-size: 0.75rem;">
+                                                <i class="bi bi-person-check-fill me-1"></i>Aktifkan
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <div class="text-center py-4 text-muted small">
+                        Tidak ada user yang bisa ditampilkan.
+                    </div>
+                <?php endif; ?>
             </div>
             <?php if (!empty($users) && !empty($pager) && $pager->getPageCount('users') > 1) : ?>
                 <div class="user-pagination d-flex justify-content-end p-3 border-top">

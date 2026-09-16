@@ -150,7 +150,7 @@ class Users extends BaseController
             'pageSubtitle' => 'Perbarui profil, role akses, dan status akun user.',
             'roles' => $this->getRoles(),
             'formAction' => base_url('/users/update/' . $id),
-            'submitLabel' => 'Save Changes',
+            'submitLabel' => 'Simpan Perubahan',
             'cancelUrl' => base_url('/users'),
             'user' => $user,
             'defaultPassword' => self::DEFAULT_PASSWORD,
