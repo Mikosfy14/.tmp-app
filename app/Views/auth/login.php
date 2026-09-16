@@ -233,10 +233,10 @@
                                 id="username"
                                 class="form-control"
                                 placeholder="Masukkan username"
-                                value="<?= old('username') ?>"
+                                value="<?= old('username', $rememberedUsername ?? '') ?>"
                                 required
                                 autocomplete="username"
-                                autofocus>
+                                <?= empty($rememberedUsername) ? 'autofocus' : '' ?>>
                         </div>
                     </div>
 
@@ -255,7 +255,8 @@
                                 class="form-control"
                                 placeholder="Masukkan password"
                                 required
-                                autocomplete="current-password">
+                                autocomplete="current-password"
+                                <?= !empty($rememberedUsername) ? 'autofocus' : '' ?>>
                             <button class="btn btn-toggle-password" type="button" id="togglePassword" aria-label="Toggle password visibility">
                                 <i class="fa-solid fa-eye" id="eyeIcon"></i>
                             </button>
@@ -268,8 +269,23 @@
                         </div>
                     </div>
 
+                    <!-- Option Ingat Saya -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                type="checkbox"
+                                name="remember"
+                                id="remember"
+                                value="1"
+                                <?= old('remember', !empty($rememberedUsername)) ? 'checked' : '' ?>>
+                            <label class="form-check-label small text-secondary fw-semibold user-select-none" for="remember" style="cursor: pointer;">
+                                Ingat saya
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Submit Button with Loading State -->
-                    <button type="submit" id="btnLogin" class="btn btn-submit-login w-100 mt-4 d-flex align-items-center justify-content-center gap-2">
+                    <button type="submit" id="btnLogin" class="btn btn-submit-login w-100 mt-2 d-flex align-items-center justify-content-center gap-2">
                         <span id="btnText">Masuk ke Sistem</span>
                         <i class="fa-solid fa-arrow-right-to-bracket" id="btnIcon"></i>
                         <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
@@ -329,7 +345,29 @@
             });
         }
 
-        // Button Loading State on Form Submit
+        // Remember Me LocalStorage Sync (Client-side fallback)
+        const rememberCheckbox = document.querySelector('#remember');
+        const usernameField = document.querySelector('#username');
+
+        // If server cookie was not present, check localStorage fallback
+        if (usernameField && (!usernameField.value || usernameField.value.trim() === '')) {
+            try {
+                const storedUsername = localStorage.getItem('remember_username');
+                if (storedUsername && storedUsername.trim() !== '') {
+                    usernameField.value = storedUsername.trim();
+                    if (rememberCheckbox) {
+                        rememberCheckbox.checked = true;
+                    }
+                    if (passwordInput) {
+                        passwordInput.focus();
+                    }
+                }
+            } catch (err) {
+                // Ignore storage errors in restricted contexts
+            }
+        }
+
+        // Button Loading State on Form Submit & Remember Me Storage Sync
         const formLogin = document.querySelector('#formLogin');
         const btnLogin = document.querySelector('#btnLogin');
         const btnText = document.querySelector('#btnText');
@@ -340,6 +378,21 @@
             formLogin.addEventListener('submit', function(e) {
                 const usernameInput = document.querySelector('#username');
                 
+                // Sync remember username to localStorage
+                if (usernameInput) {
+                    try {
+                        if (rememberCheckbox && rememberCheckbox.checked) {
+                            if (usernameInput.value.trim() !== '') {
+                                localStorage.setItem('remember_username', usernameInput.value.trim());
+                            }
+                        } else {
+                            localStorage.removeItem('remember_username');
+                        }
+                    } catch (err) {
+                        // Ignore storage errors
+                    }
+                }
+
                 // Only trigger loading if basic inputs are filled
                 if (usernameInput && usernameInput.value.trim() !== '' && passwordInput && passwordInput.value !== '') {
                     btnLogin.disabled = true;
