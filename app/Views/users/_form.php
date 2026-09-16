@@ -276,27 +276,40 @@ foreach ($roles as $role) {
         border-color: #7185d5;
     }
 
-    @media (max-width: 575.98px) {
-        .user-form-section,
-        .user-form-actions {
-            padding: 1rem;
-        }
-
-        .user-status-options {
-            grid-template-columns: 1fr;
+    @media (max-width: 767.98px) {
+        .user-form-section {
+            padding: 1.15rem 1rem;
         }
 
         .user-form-actions {
+            padding: 0.85rem 1rem;
             align-items: stretch;
             flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .user-form-actions .small.text-muted {
+            text-align: center;
+            font-size: 0.78rem;
+            order: 2;
         }
 
         .user-form-actions .d-flex {
-            flex-direction: column-reverse;
+            width: 100%;
+            gap: 0.5rem;
+            order: 1;
         }
 
         .user-form-actions .btn {
-            width: 100%;
+            flex: 1 1 50%;
+            min-height: 44px;
+            padding-inline: 0.75rem;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .user-status-options {
+            grid-template-columns: 1fr;
         }
     }
 </style>

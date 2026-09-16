@@ -148,6 +148,64 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     .overdue-row {
         background-color: rgba(220, 53, 69, 0.045);
     }
+
+    .team-search-group {
+        width: 250px;
+    }
+
+    @media (max-width: 767.98px) {
+        .team-search-group {
+            width: 100% !important;
+        }
+
+        .kpi-macro-card .card-body {
+            padding: 0.85rem !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .kpi-macro-card .kpi-title {
+            font-size: 0.72rem;
+            line-height: 1.25;
+            min-height: 2.2rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .kpi-macro-card .kpi-value {
+            font-size: 1.45rem !important;
+        }
+
+        .kpi-macro-card .kpi-sub {
+            font-size: 0.68rem !important;
+        }
+
+        .team-member-mobile-card {
+            border: 1px solid var(--bs-border-color, #e9ecef);
+            border-radius: 10px;
+            padding: 0.85rem;
+            background-color: var(--bs-card-bg, #ffffff);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        [data-bs-theme="dark"] .team-member-mobile-card {
+            background-color: #252539 !important;
+            border-color: #2b2b40 !important;
+        }
+
+        .team-member-mobile-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .team-member-mobile-card.overdue-card {
+            border-left: 3px solid #dc3545;
+        }
+    }
 </style>
 
 <div class="page-heading">
@@ -206,7 +264,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 kpi-macro-card">
             <div class="card-body p-3">
-                <small class="text-muted d-block mb-1">Total Portofolio Proyek</small>
+                <small class="text-muted d-block mb-1 kpi-title">Total Portofolio Proyek</small>
                 <span class="kpi-value text-primary"><?= $totalProjects ?></span>
                 <small class="text-muted d-block kpi-sub mt-1">
                     <?= $activeProjects ?> aktif &middot; <?= $totalCompleted ?> selesai
@@ -219,7 +277,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 kpi-macro-card">
             <div class="card-body p-3">
-                <small class="text-muted d-block mb-1">Proyek Dalam Pengerjaan</small>
+                <small class="text-muted d-block mb-1 kpi-title">Proyek Dalam Pengerjaan</small>
                 <span class="kpi-value text-info"><?= $activeProjects ?></span>
                 <small class="d-block kpi-sub mt-1">
                     <?php if ($overdue > 0) : ?>
@@ -239,7 +297,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 kpi-macro-card">
             <div class="card-body p-3">
-                <small class="text-muted d-block mb-1">Tingkat Ketepatan Waktu</small>
+                <small class="text-muted d-block mb-1 kpi-title">Tingkat Ketepatan Waktu</small>
                 <span class="kpi-value <?= $onTimeRate >= 70 ? 'text-success' : ($onTimeRate >= 40 ? 'text-warning' : 'text-danger') ?>">
                     <?= $onTimeRate ?>%
                 </span>
@@ -254,7 +312,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 kpi-macro-card">
             <div class="card-body p-3">
-                <small class="text-muted d-block mb-1">Rata-Rata Beban per Anggota</small>
+                <small class="text-muted d-block mb-1 kpi-title">Rata-Rata Beban per Anggota</small>
                 <span class="kpi-value text-dark"><?= $avgActiveTasks ?></span>
                 <small class="text-muted d-block kpi-sub mt-1">
                     <?= $organicCount ?> Organik &middot; <?= $nonOrganicCount ?> Manmonth
@@ -269,11 +327,12 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <!-- Left: SDLC Bottleneck Distribution -->
     <div class="col-12 col-xl-6">
         <div class="card shadow-sm h-100">
-            <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fs-6 fw-bold">
-                    <i class="bi bi-diagram-3 me-2 text-primary"></i>Distribusi Fase SDLC (Bottleneck Analysis)
+            <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="card-title mb-0 fs-6 fw-bold text-truncate" style="max-width: 100%;" title="Distribusi Fase SDLC (Bottleneck Analysis)">
+                    <i class="bi bi-diagram-3 me-2 text-primary"></i>Distribusi Fase SDLC
+                    <small class="text-muted fw-normal d-none d-sm-inline">(Bottleneck Analysis)</small>
                 </h5>
-                <span class="badge bg-light-info text-info border border-info-subtle">
+                <span class="badge bg-light-info text-info border border-info-subtle flex-shrink-0">
                     <?= $activeProjects ?> Proyek Aktif
                 </span>
             </div>
@@ -326,11 +385,11 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <!-- Right: Capacity Allocation & Monthly Completion Trend -->
     <div class="col-12 col-xl-6">
         <div class="card shadow-sm h-100">
-            <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fs-6 fw-bold">
+            <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="card-title mb-0 fs-6 fw-bold text-truncate" title="Tren & Alokasi Sumber Daya">
                     <i class="bi bi-bar-chart-line me-2 text-primary"></i>Tren & Alokasi Sumber Daya
                 </h5>
-                <select id="macroChartToggle" class="form-select form-select-sm w-auto py-1">
+                <select id="macroChartToggle" class="form-select form-select-sm w-100 w-sm-auto py-1">
                     <option value="trend" selected>Tren Penyelesaian Bulanan</option>
                     <option value="capacity">Alokasi Kapasitas (Organik vs Manmonth)</option>
                 </select>
@@ -389,15 +448,15 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
             </h5>
             <small class="text-muted">Distribusi beban kerja seluruh staf dan pengembang pada departemen.</small>
         </div>
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <form method="get" action="<?= base_url('/kinerja-tim') ?>" class="d-flex align-items-center">
+        <div class="d-flex align-items-center gap-2 flex-wrap w-100 w-md-auto">
+            <form method="get" action="<?= base_url('/kinerja-tim') ?>" class="d-flex align-items-center flex-grow-1 flex-md-grow-0">
                 <?php if (!empty($selectedStartDate)) : ?>
                     <input type="hidden" name="filter_start" value="<?= esc($selectedStartDate) ?>">
                 <?php endif; ?>
                 <?php if (!empty($selectedEndDate)) : ?>
                     <input type="hidden" name="filter_end" value="<?= esc($selectedEndDate) ?>">
                 <?php endif; ?>
-                <div class="input-group input-group-sm" style="width: 250px;">
+                <div class="input-group input-group-sm team-search-group">
                     <input type="text" name="member_keyword" class="form-control" placeholder="Cari nama personel..." value="<?= esc($memberKeyword) ?>">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-search" aria-hidden="true"></i>
@@ -419,7 +478,8 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
         </div>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <!-- Desktop Table View -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
@@ -510,6 +570,84 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Cards View -->
+        <div class="d-block d-md-none p-3">
+            <?php if (!empty($members)) : ?>
+                <?php foreach ($members as $member) : ?>
+                    <?php
+                    $isOverdue = (int) ($member['overdue'] ?? 0) > 0;
+                    $wl = $member['workload_status'] ?? ['label' => 'Optimal', 'class' => 'success'];
+                    ?>
+                    <div class="team-member-mobile-card <?= $isOverdue ? 'overdue-card' : '' ?>">
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2 min-width-0 flex-grow-1" style="overflow: hidden;">
+                                <div class="team-member-avatar bg-light-primary text-primary d-flex align-items-center justify-content-center fw-bold fs-6 flex-shrink-0">
+                                    <?= esc(strtoupper(substr($member['name'] ?? 'U', 0, 1))) ?>
+                                </div>
+                                <div class="min-width-0 flex-grow-1" style="overflow: hidden;">
+                                    <strong class="text-dark d-block text-truncate"><?= esc($member['name']) ?></strong>
+                                    <small class="text-muted d-block text-truncate" style="font-size: 0.75rem;"><?= esc($member['job']) ?></small>
+                                </div>
+                            </div>
+                            <span class="badge bg-light-<?= esc($wl['class']) ?> text-<?= esc($wl['class']) ?> border border-<?= esc($wl['class']) ?>-subtle px-2 py-1 flex-shrink-0" style="font-size: 0.72rem;">
+                                <?= esc($wl['label']) ?>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 mb-2">
+                            <span class="badge bg-light-secondary text-muted" style="font-size: 0.68rem;"><?= esc($member['role']) ?></span>
+                            <span class="badge bg-light-<?= ($member['category'] ?? '') === 'NonOrganik' ? 'warning text-dark' : 'info text-info' ?>" style="font-size: 0.68rem;"><?= esc($member['category'] ?? 'Organik') ?></span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top gap-2 flex-wrap">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <div class="me-2">
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">Tugas Aktif</small>
+                                    <span class="badge bg-light-primary text-primary fw-bold" style="font-size: 0.8rem;">
+                                        <?= (int) $member['active_tasks'] ?>
+                                    </span>
+                                    <?php if ($isOverdue) : ?>
+                                        <small class="text-danger fw-semibold d-inline-block ms-1" style="font-size: 0.68rem;">
+                                            <?= (int) $member['overdue'] ?> overdue
+                                        </small>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="border-start ps-2">
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">Selesai</small>
+                                    <span class="text-success fw-bold" style="font-size: 0.85rem;"><?= (int) $member['completed'] ?></span>
+                                    <?php if ((int) ($member['late'] ?? 0) > 0) : ?>
+                                        <small class="text-danger" style="font-size: 0.68rem;">
+                                            (<?= (int) $member['late'] ?> telat)
+                                        </small>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <a href="<?= base_url('/users/detail/' . (int) $member['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap flex-shrink-0" title="Lihat Analisis Kinerja Personal" style="font-size: 0.78rem;">
+                                <i class="bi bi-person-lines-fill me-1"></i> Detail
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <div class="text-center py-4 text-muted small">
+                    <?php if (!empty($memberKeyword)) : ?>
+                        <div>Tidak ditemukan personel dengan kata kunci "<strong><?= esc($memberKeyword) ?></strong>".</div>
+                        <div class="mt-2">
+                            <?php
+                            $clearSearchQuery = [];
+                            if (!empty($selectedStartDate)) $clearSearchQuery['filter_start'] = $selectedStartDate;
+                            if (!empty($selectedEndDate)) $clearSearchQuery['filter_end'] = $selectedEndDate;
+                            $clearSearchUrl = base_url('/kinerja-tim') . (!empty($clearSearchQuery) ? '?' . http_build_query($clearSearchQuery) : '');
+                            ?>
+                            <a href="<?= $clearSearchUrl ?>" class="btn btn-sm btn-outline-secondary">
+                                Hapus Pencarian
+                            </a>
+                        </div>
+                    <?php else : ?>
+                        Belum ada data anggota tim pada sistem.
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <?php if (!empty($members) && !empty($pager) && $pager->getPageCount('members') > 1) : ?>
             <div class="workload-pagination d-flex justify-content-end p-3 border-top">

@@ -132,6 +132,25 @@ $textValue = static fn($value): string => !empty(trim((string) ($value ?? ''))) 
     .pic-item {
         padding: 0.25rem 0;
     }
+
+    @media (max-width: 767.98px) {
+        .application-detail-header {
+            padding: 1.25rem 1rem;
+        }
+
+        .application-header-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .application-header-actions .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -177,7 +196,7 @@ $textValue = static fn($value): string => !empty(trim((string) ($value ?? ''))) 
                 <?= esc($application['app_component'] ?? '-') ?>
             </h3>
         </div>
-        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto flex-wrap">
+        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto application-header-actions">
             <a href="<?= base_url('/aplikasi/edit/' . $application['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold">
                 Edit Aplikasi
             </a>

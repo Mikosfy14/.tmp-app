@@ -21,7 +21,7 @@
             <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
             <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
         </div>
-        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
+        <button type="button" class="btn btn-outline-warning w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
             <i class="bi bi-key-fill" aria-hidden="true"></i> Reset Password
         </button>
     </div>

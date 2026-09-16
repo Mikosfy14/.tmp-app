@@ -131,8 +131,43 @@ if ($isCompleted) {
     }
 
     @media (max-width: 767.98px) {
+        .project-detail-header {
+            padding: 1.25rem 1rem;
+        }
+
+        .project-header-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .project-header-actions .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+
         .milestone-track {
             grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .milestone-box {
+            padding: 0.75rem;
+        }
+
+        .milestone-name {
+            font-size: 0.72rem;
+        }
+
+        .milestone-date {
+            font-size: 0.875rem;
+        }
+
+        .btn-file-download {
+            width: 38px !important;
+            height: 38px !important;
         }
     }
 
@@ -372,7 +407,7 @@ if ($isCompleted) {
                 <?= esc($project['name']) ?>
             </h3>
         </div>
-        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto flex-wrap">
+        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto project-header-actions">
             <a href="<?= base_url('/projects/edit/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold">
                 Edit Project
             </a>
@@ -384,11 +419,11 @@ if ($isCompleted) {
 
     <!-- Timeline & Deadline Integrated Row (No Promote Date here to avoid milestone redundancy) -->
     <div class="row g-3 pt-4 mt-3 border-top">
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-4">
             <div class="meta-item-label">Tanggal Mulai</div>
             <div class="meta-item-value"><?= $dateValue($project['start_date'] ?? null) ?></div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-4">
             <div class="meta-item-label">Tanggal Selesai</div>
             <div class="meta-item-value"><?= $dateValue($project['end_date'] ?? null) ?></div>
         </div>

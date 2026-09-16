@@ -165,6 +165,46 @@ foreach ($assignedProjects as $p) {
         font-size: 0.75rem;
         letter-spacing: 0.5px;
     }
+
+    @media (max-width: 767.98px) {
+        .user-detail-header {
+            padding: 1.25rem 1rem;
+        }
+
+        .user-header-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .user-header-actions .btn-edit-user {
+            grid-column: span 2;
+        }
+
+        .user-header-actions .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .user-project-mobile-card {
+            border: 1px solid var(--bs-border-color, #e9ecef);
+            border-radius: 10px;
+            padding: 1rem;
+            background-color: var(--bs-card-bg, #ffffff);
+            margin-bottom: 0.75rem;
+        }
+
+        [data-bs-theme="dark"] .user-project-mobile-card {
+            background-color: #252539 !important;
+            border-color: #2b2b40 !important;
+        }
+
+        .user-project-mobile-card:last-child {
+            margin-bottom: 0;
+        }
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -227,8 +267,8 @@ foreach ($assignedProjects as $p) {
                 </div>
             </div>
         </div>
-        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto flex-wrap">
-            <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold">
+        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto user-header-actions">
+            <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold btn-edit-user">
                 Edit Pengguna
             </a>
             <button type="button" class="btn btn-sm btn-outline-warning px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
@@ -422,7 +462,8 @@ foreach ($assignedProjects as $p) {
             <div class="tab-content">
                 <!-- Active Projects Tab -->
                 <div class="tab-pane fade show active" id="tab-active-projects" role="tabpanel">
-                    <div class="table-responsive">
+                    <!-- Desktop Table View -->
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
@@ -466,11 +507,45 @@ foreach ($assignedProjects as $p) {
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Mobile Cards View -->
+                    <div class="d-block d-md-none p-3">
+                        <?php if (!empty($activeProjectsList)) : ?>
+                            <?php foreach ($activeProjectsList as $project) : ?>
+                                <div class="user-project-mobile-card">
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                        <div class="min-width-0 flex-grow-1">
+                                            <strong class="text-body d-block fs-6 mb-1 text-break"><?= esc($project['name'] ?? '-') ?></strong>
+                                            <span class="badge bg-light-primary text-primary border border-primary-subtle user-project-code"><?= esc($project['project_code'] ?? '-') ?></span>
+                                        </div>
+                                        <span class="badge <?= $statusBadge($project['status'] ?? null) ?> fw-semibold flex-shrink-0"><?= esc($project['status'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top">
+                                        <div>
+                                            <div class="meta-item-label" style="font-size: 0.7rem; margin-bottom: 0.1rem;">Tenggat Waktu</div>
+                                            <span class="fw-semibold text-body small"><?= $dateValue($project['end_date'] ?? null) ?></span>
+                                            <?php if (!empty($project['deadline_label'])) : ?>
+                                                <span class="badge bg-light-<?= esc($project['deadline_class'] ?? 'secondary') ?> text-<?= esc($project['deadline_class'] ?? 'secondary') ?> border border-<?= esc($project['deadline_class'] ?? 'secondary') ?>-subtle d-inline-block ms-1 fw-semibold" style="font-size: 0.65rem;">
+                                                    <?= esc($project['deadline_label']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <a href="<?= base_url('/projects/detail/' . (int) $project['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-1 fw-semibold">
+                                            Detail
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="text-center py-4 text-muted small">Tidak ada proyek aktif yang ditugaskan.</div>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Completed Projects Tab -->
                 <div class="tab-pane fade" id="tab-completed-projects" role="tabpanel">
-                    <div class="table-responsive">
+                    <!-- Desktop Table View -->
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
@@ -514,6 +589,42 @@ foreach ($assignedProjects as $p) {
                                 <?php endif; ?>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Mobile Cards View -->
+                    <div class="d-block d-md-none p-3">
+                        <?php if (!empty($completedProjectsList)) : ?>
+                            <?php foreach ($completedProjectsList as $project) : ?>
+                                <?php
+                                $isOnTime = !empty($project['promote_date']) && !empty($project['end_date']) && $project['promote_date'] <= $project['end_date'];
+                                ?>
+                                <div class="user-project-mobile-card">
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                        <div class="min-width-0 flex-grow-1">
+                                            <strong class="text-body d-block fs-6 mb-1 text-break"><?= esc($project['name'] ?? '-') ?></strong>
+                                            <span class="badge bg-light-primary text-primary border border-primary-subtle user-project-code"><?= esc($project['project_code'] ?? '-') ?></span>
+                                        </div>
+                                        <div class="text-end flex-shrink-0">
+                                            <span class="badge bg-success text-white fw-semibold">Selesai</span>
+                                            <span class="badge <?= $isOnTime ? 'bg-light-success text-success border border-success-subtle' : 'bg-light-danger text-danger border border-danger-subtle' ?> d-block mt-1 fw-semibold" style="font-size: 0.65rem;">
+                                                <?= $isOnTime ? 'Tepat Waktu' : 'Terlambat' ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top">
+                                        <div>
+                                            <div class="meta-item-label" style="font-size: 0.7rem; margin-bottom: 0.1rem;">Tanggal Selesai</div>
+                                            <span class="fw-semibold text-body small"><?= $dateValue($project['promote_date'] ?? null) ?></span>
+                                        </div>
+                                        <a href="<?= base_url('/projects/detail/' . (int) $project['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-1 fw-semibold">
+                                            Detail
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <div class="text-center py-4 text-muted small">Belum ada proyek yang diselesaikan.</div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
