@@ -370,7 +370,7 @@ $hasActiveAdvancedFilter = !empty($selectedCriticality) || $managedByMe;
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <div class="text-muted" style="font-size: 0.72rem; line-height: 1.2;">
-                                                <i class="bi bi-hdd-network me-1"></i>Platform
+                                                Platform
                                             </div>
                                             <div class="fw-semibold text-body small mt-1">
                                                 <?= esc((string) ($app['platform'] ?: '-')) ?>
@@ -378,7 +378,7 @@ $hasActiveAdvancedFilter = !empty($selectedCriticality) || $managedByMe;
                                         </div>
                                         <div class="col-6">
                                             <div class="text-muted" style="font-size: 0.72rem; line-height: 1.2;">
-                                                <i class="bi bi-cloud-arrow-up me-1"></i>Deployment
+                                                Deployment
                                             </div>
                                             <div class="fw-semibold text-body small mt-1">
                                                 <?= esc((string) ($app['deployment_type'] ?: '-')) ?>
@@ -388,7 +388,7 @@ $hasActiveAdvancedFilter = !empty($selectedCriticality) || $managedByMe;
                                     <?php if (!empty($app['criticality_recovery_description'])): ?>
                                         <div class="pt-2 mt-2 border-top border-secondary-subtle">
                                             <div class="text-muted" style="font-size: 0.7rem; line-height: 1.2;">
-                                                <i class="bi bi-shield-exclamation me-1"></i>Recovery: <span class="text-body"><?= esc((string) $app['criticality_recovery_description']) ?></span>
+                                                Recovery: <span class="text-body"><?= esc((string) $app['criticality_recovery_description']) ?></span>
                                             </div>
                                         </div>
                                     <?php endif; ?>
@@ -396,10 +396,10 @@ $hasActiveAdvancedFilter = !empty($selectedCriticality) || $managedByMe;
 
                                 <!-- PIC Section -->
                                 <div class="mb-3">
-                                    <div class="text-muted small mb-1"><i class="bi bi-person me-1"></i>PIC Pengelola:</div>
+                                    <div class="text-muted small mb-1">PIC Pengelola:</div>
                                     <?php if (!empty($app['assigned_user_name'])): ?>
                                         <span class="badge bg-light-primary text-primary" style="font-size: 0.75rem;">
-                                            <i class="bi bi-person-fill me-1"></i><?= esc((string) $app['assigned_user_name']) ?>
+                                            <?= esc((string) $app['assigned_user_name']) ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="text-muted small fst-italic">Belum ada PIC</span>
@@ -409,13 +409,13 @@ $hasActiveAdvancedFilter = !empty($selectedCriticality) || $managedByMe;
                                 <!-- Action Buttons (50% / 50%) -->
                                 <div class="row g-2 pt-2 border-top">
                                     <div class="col-6">
-                                        <a href="<?= base_url('/aplikasi/detail/' . $app['id']) ?>" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-1 py-2">
-                                            <i class="bi bi-eye-fill"></i> Detail
+                                        <a href="<?= base_url('/aplikasi/detail/' . $app['id']) ?>" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center py-2">
+                                            Detail
                                         </a>
                                     </div>
                                     <div class="col-6">
-                                        <a href="<?= base_url('/aplikasi/edit/' . $app['id']) ?>" class="btn btn-sm btn-outline-warning w-100 d-inline-flex align-items-center justify-content-center gap-1 py-2">
-                                            <i class="bi bi-pencil-square"></i> Edit
+                                        <a href="<?= base_url('/aplikasi/edit/' . $app['id']) ?>" class="btn btn-sm btn-outline-warning w-100 d-inline-flex align-items-center justify-content-center py-2">
+                                            Edit
                                         </a>
                                     </div>
                                 </div>

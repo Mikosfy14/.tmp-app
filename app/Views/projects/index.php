@@ -784,7 +784,7 @@ $prepareProjectData = function (array $prj): array {
                                         <div class="row g-2 mb-1">
                                             <div class="col-6">
                                                 <div class="text-muted" style="font-size: 0.72rem; line-height: 1.2;">
-                                                    <i class="bi bi-calendar-event me-1"></i>Tanggal Mulai
+                                                    Tanggal Mulai
                                                 </div>
                                                 <div class="fw-semibold text-body small mt-1">
                                                     <?= !empty($prj['start_date']) ? date('d M Y', strtotime($prj['start_date'])) : '-' ?>
@@ -792,7 +792,7 @@ $prepareProjectData = function (array $prj): array {
                                             </div>
                                             <div class="col-6">
                                                 <div class="text-muted" style="font-size: 0.72rem; line-height: 1.2;">
-                                                    <i class="bi bi-calendar-check me-1"></i>Tenggat Waktu
+                                                    Tenggat Waktu
                                                 </div>
                                                 <div class="fw-semibold text-body small mt-1">
                                                     <?= !empty($prj['end_date']) ? date('d M Y', strtotime($prj['end_date'])) : '-' ?>
@@ -804,13 +804,13 @@ $prepareProjectData = function (array $prj): array {
                                             <div class="pt-2 mt-1 border-top border-secondary-subtle">
                                                 <?php if ($relativeDeadlineText !== null) : ?>
                                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                                        <span class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-hourglass-split me-1"></i>Sisa Waktu:</span>
+                                                        <span class="text-muted" style="font-size: 0.72rem;">Sisa Waktu:</span>
                                                         <span class="<?= $relativeDeadlineClass ?>" style="font-size: 0.72rem;"><?= esc($relativeDeadlineText) ?></span>
                                                     </div>
                                                 <?php endif; ?>
                                                 <?php if (!empty($prj['promote_date'])) : ?>
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-rocket-takeoff me-1"></i>Promote:</span>
+                                                        <span class="text-muted" style="font-size: 0.72rem;">Promote:</span>
                                                         <span class="fw-semibold text-body" style="font-size: 0.72rem;"><?= date('d M Y', strtotime($prj['promote_date'])) ?></span>
                                                     </div>
                                                 <?php endif; ?>
@@ -820,12 +820,12 @@ $prepareProjectData = function (array $prj): array {
 
                                     <!-- Assigned PIC -->
                                     <div class="mb-3">
-                                        <div class="text-muted small mb-1"><i class="bi bi-people me-1"></i>PIC Ditugaskan:</div>
+                                        <div class="text-muted small mb-1">PIC Ditugaskan:</div>
                                         <?php if (!empty($prj['assigned_users'])) : ?>
                                             <div class="d-flex flex-wrap gap-1">
                                                 <?php foreach ($prj['assigned_users'] as $assignedUser) : ?>
                                                     <span class="badge bg-light-primary text-primary" style="font-size: 0.75rem;">
-                                                        <i class="bi bi-person-fill me-1"></i><?= esc($assignedUser['name']) ?>
+                                                        <?= esc($assignedUser['name']) ?>
                                                     </span>
                                                 <?php endforeach; ?>
                                             </div>
@@ -837,13 +837,13 @@ $prepareProjectData = function (array $prj): array {
                                     <!-- Action Buttons -->
                                     <div class="row g-2 pt-2 border-top">
                                         <div class="col-6">
-                                            <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-1 py-2">
-                                                <i class="bi bi-eye-fill"></i> Detail
+                                            <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center py-2">
+                                                Detail
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= base_url('/projects/edit/' . $prj['id']) ?>" class="btn btn-sm btn-outline-warning w-100 d-inline-flex align-items-center justify-content-center gap-1 py-2">
-                                                <i class="bi bi-pencil-square"></i> Edit
+                                            <a href="<?= base_url('/projects/edit/' . $prj['id']) ?>" class="btn btn-sm btn-outline-warning w-100 d-inline-flex align-items-center justify-content-center py-2">
+                                                Edit
                                             </a>
                                         </div>
                                     </div>

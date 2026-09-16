@@ -393,11 +393,11 @@ $deadlineAlerts = get_user_deadline_notifications();
                                                 <?php endif; ?>
                                             </div>
                                             <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">
-                                                <i class="bi bi-calendar-event me-1"></i><?= !empty($prj['end_date']) ? date('d M Y', strtotime($prj['end_date'])) : '-' ?>
+                                                <?= !empty($prj['end_date']) ? date('d M Y', strtotime($prj['end_date'])) : '-' ?>
                                             </small>
                                         </div>
                                         <a href="<?= base_url('/projects/detail/' . $prj['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap flex-shrink-0" title="Detail Project" style="font-size: 0.78rem;">
-                                            <i class="bi bi-eye-fill me-1"></i>Detail
+                                            Detail
                                         </a>
                                     </div>
                                 </div>

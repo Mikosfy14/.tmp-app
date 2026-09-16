@@ -180,8 +180,8 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
         <h3>User Management</h3>
         <p class="text-subtitle text-muted mb-0">Kelola akun lokal, role, dan status aktif pengguna.</p>
     </div>
-    <a href="<?= base_url('/users/create') ?>" class="btn btn-primary shadow-sm w-100 w-sm-auto">
-        <i class="bi bi-person-plus-fill me-1"></i> Tambah User
+    <a href="<?= base_url('/users/create') ?>" class="btn btn-primary d-flex align-items-center gap-1">
+        <i class="fas fa-plus-square me-1"></i> Tambah User
     </a>
 </div>
 
@@ -436,23 +436,23 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
 
                             <div class="d-flex align-items-center justify-content-between pt-2 mt-1 border-top gap-2 flex-wrap">
                                 <small class="text-muted" style="font-size: 0.72rem;">
-                                    <i class="bi bi-calendar-event me-1"></i><?= !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-' ?>
+                                    <?= !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-' ?>
                                 </small>
                                 <div class="d-flex align-items-center gap-1 flex-wrap ms-auto">
                                     <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">
-                                        <i class="bi bi-eye-fill me-1"></i>Detail
+                                        Detail
                                     </a>
                                     <?php if ($canManageUser) : ?>
                                         <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-warning py-1 px-2" style="font-size: 0.75rem;">
-                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                            Edit
                                         </a>
                                         <?php if ($isActive) : ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser<?= esc($user['id']) ?>" style="font-size: 0.75rem;">
-                                                <i class="bi bi-person-dash-fill me-1"></i>Nonaktif
+                                                Nonaktif
                                             </button>
                                         <?php else : ?>
                                             <button type="button" class="btn btn-sm btn-outline-success py-1 px-2" data-bs-toggle="modal" data-bs-target="#modalActivateUser<?= esc($user['id']) ?>" style="font-size: 0.75rem;">
-                                                <i class="bi bi-person-check-fill me-1"></i>Aktifkan
+                                                Aktifkan
                                             </button>
                                         <?php endif; ?>
                                     <?php endif; ?>

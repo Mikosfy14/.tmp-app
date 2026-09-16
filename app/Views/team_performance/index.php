@@ -313,7 +313,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
         <div class="card shadow-sm h-100 kpi-macro-card">
             <div class="card-body p-3">
                 <small class="text-muted d-block mb-1 kpi-title">Rata-Rata Beban per Anggota</small>
-                <span class="kpi-value text-dark"><?= $avgActiveTasks ?></span>
+                <span class="kpi-value text-dark"><?= $avgActiveTasks ?> <small class="text-muted fw-normal" style="font-size: 0.82rem;">proyek / personel</small></span>
                 <small class="text-muted d-block kpi-sub mt-1">
                     <?= $organicCount ?> Organik &middot; <?= $nonOrganicCount ?> Manmonth
                 </small>
@@ -329,7 +329,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
         <div class="card shadow-sm h-100">
             <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="card-title mb-0 fs-6 fw-bold text-truncate" style="max-width: 100%;" title="Distribusi Fase SDLC (Bottleneck Analysis)">
-                    <i class="bi bi-diagram-3 me-2 text-primary"></i>Distribusi Fase SDLC
+                    Distribusi Fase SDLC
                     <small class="text-muted fw-normal d-none d-sm-inline">(Bottleneck Analysis)</small>
                 </h5>
                 <span class="badge bg-light-info text-info border border-info-subtle flex-shrink-0">
@@ -387,7 +387,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
         <div class="card shadow-sm h-100">
             <div class="card-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="card-title mb-0 fs-6 fw-bold text-truncate" title="Tren & Alokasi Sumber Daya">
-                    <i class="bi bi-bar-chart-line me-2 text-primary"></i>Tren & Alokasi Sumber Daya
+                    Tren & Alokasi Sumber Daya
                 </h5>
                 <select id="macroChartToggle" class="form-select form-select-sm w-100 w-sm-auto py-1">
                     <option value="trend" selected>Tren Penyelesaian Bulanan</option>
@@ -416,7 +416,6 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                         <div id="teamCapacityChart"></div>
                     <?php else : ?>
                         <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 border rounded bg-light-subtle my-2" style="min-height: 190px;">
-                            <i class="bi bi-people text-muted fs-3 mb-1"></i>
                             <div class="fw-semibold text-muted" style="font-size: 0.85rem;">Belum Ada Tugas Aktif</div>
                             <small class="text-muted" style="font-size: 0.75rem;">Tidak ada alokasi tugas aktif pada periode ini.</small>
                         </div>
@@ -444,7 +443,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
     <div class="card-header py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h5 class="card-title mb-0 fs-6 fw-bold">
-                <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Matriks Beban Kerja & Kapasitas Tim
+                Matriks Beban Kerja & Kapasitas Tim
             </h5>
             <small class="text-muted">Distribusi beban kerja seluruh staf dan pengembang pada departemen.</small>
         </div>
@@ -541,7 +540,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                                 </td>
                                 <td class="text-end pe-4">
                                     <a href="<?= base_url('/users/detail/' . (int) $member['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" title="Lihat Analisis Kinerja Personal">
-                                        <i class="bi bi-person-lines-fill me-1"></i> Detail Kinerja
+                                        Detail Kinerja
                                     </a>
                                 </td>
                             </tr>
@@ -623,7 +622,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                                 </div>
                             </div>
                             <a href="<?= base_url('/users/detail/' . (int) $member['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap flex-shrink-0" title="Lihat Analisis Kinerja Personal" style="font-size: 0.78rem;">
-                                <i class="bi bi-person-lines-fill me-1"></i> Detail
+                                Detail
                             </a>
                         </div>
                     </div>
@@ -654,18 +653,41 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                 <?= $pager->links('members', 'complete') ?>
             </div>
         <?php endif; ?>
+
+        <!-- Keterangan & Metodologi Perhitungan Beban Kerja -->
+        <div class="card-footer bg-light-subtle border-top p-3">
+            <div class="mb-2">
+                <strong class="text-dark small">Keterangan & Metodologi Perhitungan Beban Kerja:</strong>
+            </div>
+            <div class="row g-3 small text-muted" style="font-size: 0.8rem;">
+                <div class="col-12 col-md-4">
+                    <div class="fw-semibold text-dark mb-1">Tugas Aktif & Selesai</div>
+                    <div>Tugas aktif dihitung dari jumlah proyek berjalan yang menugaskan personel sebagai PIC. Proyek selesai dihitung saat mencapai tahap Deployment/Selesai.</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="fw-semibold text-dark mb-1">Kategori Ambang Batas Beban</div>
+                    <div class="d-flex flex-wrap gap-1 align-items-center">
+                        <span class="badge bg-light-danger text-danger border border-danger-subtle">Overloaded (&ge; 8)</span>
+                        <span class="badge bg-light-warning text-warning border border-warning-subtle">Tinggi (5-7)</span>
+                        <span class="badge bg-light-success text-success border border-success-subtle">Optimal (2-4)</span>
+                        <span class="badge bg-light-secondary text-secondary border border-secondary-subtle">Rendah (&lt; 2)</span>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="fw-semibold text-dark mb-1">Rata-Rata Beban & Kapasitas</div>
+                    <div>Rata-rata adalah total tugas aktif seluruh personel dibagi jumlah anggota terdaftar (<strong><?= $avgActiveTasks ?> proyek / personel</strong>). Kapasitas tim memetakan alokasi proyek antara personel Organik dan Manmonth.</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Executive Summary Alert -->
-<div class="alert alert-light-primary border border-primary-subtle d-flex align-items-center gap-3 mb-0">
-    <div class="fs-3 text-primary flex-shrink-0">
-        <i class="bi bi-info-circle-fill"></i>
-    </div>
+<div class="alert alert-light-primary border border-primary-subtle p-3 mb-0">
     <div>
         <strong class="text-dark d-block">Ringkasan Eksekutif Departemen:</strong>
         <span class="text-muted small">
-            Departemen saat ini mengelola <strong><?= $totalProjects ?></strong> proyek dengan <strong><?= $activeProjects ?></strong> proyek aktif dan <strong><?= $totalCompleted ?></strong> proyek selesai. Tingkat ketepatan waktu berada pada <strong><?= $onTimeRate ?>%</strong>. Beban rata-rata personel adalah <strong><?= $avgActiveTasks ?></strong> tugas per anggota tim.
+            Departemen saat ini mengelola <strong><?= $totalProjects ?></strong> proyek dengan <strong><?= $activeProjects ?></strong> proyek aktif dan <strong><?= $totalCompleted ?></strong> proyek selesai. Tingkat ketepatan waktu berada pada <strong><?= $onTimeRate ?>%</strong>. Beban rata-rata personel adalah <strong><?= $avgActiveTasks ?> proyek / personel</strong>.
             <?php if ($overdue > 0) : ?>
                 Terdapat <strong class="text-danger"><?= $overdue ?> proyek overdue</strong> yang memerlukan koordinasi tindak lanjut.
             <?php endif; ?>

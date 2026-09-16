@@ -25,6 +25,18 @@ function setSidebarState(isOpen) {
     document.documentElement.classList.toggle('sidebar-closed', !isOpen);
     const backdrop = document.getElementById('sidebar-backdrop');
     if (backdrop) backdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+    // Lock body scrolling exclusively on mobile when sidebar is active
+    if (window.innerWidth < 1200) {
+        if (isOpen) {
+            document.body.classList.add('sidebar-open');
+        } else {
+            document.body.classList.remove('sidebar-open');
+        }
+    } else {
+        document.body.classList.remove('sidebar-open');
+    }
+
     localStorage.setItem(sidebarStateKey, isOpen ? 'open' : 'closed');
 }
 
@@ -41,6 +53,10 @@ window.addEventListener('resize', () => {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
 
+    if (window.innerWidth >= 1200) {
+        document.body.classList.remove('sidebar-open');
+    }
+
     const savedState = localStorage.getItem(sidebarStateKey);
     setSidebarState(savedState ? savedState === 'open' : window.innerWidth >= 1200);
 });
@@ -50,13 +66,21 @@ document.querySelector('.burger-btn')?.addEventListener('click', () => {
     if (sidebar) setSidebarState(!sidebar.classList.contains('active'));
 });
 
-document.querySelector('.sidebar-hide')?.addEventListener('click', () => {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) setSidebarState(!sidebar.classList.contains('active'));
+document.querySelectorAll('.sidebar-hide')?.forEach(el => {
+    el.addEventListener('click', (e) => {
+        e.preventDefault();
+        setSidebarState(false);
+    });
 });
 
 document.getElementById('sidebar-backdrop')?.addEventListener('click', () => {
     setSidebarState(false);
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && window.innerWidth < 1200) {
+        setSidebarState(false);
+    }
 });
 
 
