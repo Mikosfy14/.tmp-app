@@ -15,12 +15,17 @@ class Auth extends BaseController
 
     public function index()
     {
-        //jika sudah login, langsung redirect ke password
+        //jika sudah login, langsung redirect ke dashboard
         if (session()->get('isLoggedIn')) {
             return redirect()->to('/dashboard');
         }
 
-        return view('auth/login');
+        helper('cookie');
+        $rememberedUsername = (string) (get_cookie('remember_username') ?? '');
+
+        return view('auth/login', [
+            'rememberedUsername' => $rememberedUsername,
+        ]);
     }
 
     public function attemptLogin()
@@ -81,9 +86,22 @@ class Auth extends BaseController
         ];
         session()->set($sessionData);
 
-        return redirect()->to('/dashboard')
+        // Handle "Ingat saya" cookie (kompatibel HTTP localhost dan HTTPS production)
+        helper('cookie');
+        $isSecure = $this->request->isSecure();
+        $remember = (bool) $this->request->getPost('remember');
+
+        $redirect = redirect()->to('/dashboard')
             ->with('success', 'Selamat datang kembali, ' . $user['name'])
             ->with('just_logged_in', true);
+
+        if ($remember) {
+            $redirect = $redirect->setCookie('remember_username', $username, 30 * 86400, '', '/', '', $isSecure, true, 'Lax');
+        } else {
+            $redirect = $redirect->deleteCookie('remember_username', '', '/');
+        }
+
+        return $redirect->withCookies();
     }
 
     public function logout()
