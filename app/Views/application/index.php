@@ -186,7 +186,7 @@ $criticalityClass = static fn(?string $name) => match ($name) {
                 </div>
             </div>
             <div class="col-6 col-md-6 col-lg-1 d-flex">
-                <button class="btn btn-primary application-filter-action w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
+                <button type="submit" class="btn btn-primary application-filter-action w-100 px-2" title="Terapkan filter" aria-label="Terapkan filter">
                     <i class="bi bi-search" aria-hidden="true"></i>
                     <span class="d-inline d-lg-none ms-1">Cari</span>
                 </button>

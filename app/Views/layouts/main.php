@@ -661,6 +661,107 @@
             modal.addEventListener('hidden.bs.modal', onModalHidden);
         });
     </script>
+    <script>
+        (function() {
+            let activeSubmitBtn = null;
+
+            // Track which submit button triggered the submission
+            document.addEventListener('click', function(event) {
+                const btn = event.target.closest('button[type="submit"], input[type="submit"]');
+                if (btn) {
+                    activeSubmitBtn = btn;
+                }
+            }, true);
+
+            // Handle form submission to show loading spinner
+            document.addEventListener('submit', function(event) {
+                const form = event.target;
+                if (!form || form.nodeName !== 'FORM') return;
+
+                // Skip forms that opt out or target a new tab/window
+                if (form.getAttribute('data-no-loader') === 'true' || form.target === '_blank') {
+                    return;
+                }
+
+                // Check HTML5 validity
+                if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+                    return;
+                }
+
+                if (event.defaultPrevented) {
+                    return;
+                }
+
+                // Find active or first submit button in form
+                let submitBtn = activeSubmitBtn;
+                if (!submitBtn || !form.contains(submitBtn)) {
+                    submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+                }
+
+                if (!submitBtn || submitBtn.getAttribute('data-is-loading') === 'true') {
+                    return;
+                }
+
+                // Preserve original markup and button width
+                submitBtn.setAttribute('data-is-loading', 'true');
+                submitBtn.setAttribute('data-original-html', submitBtn.innerHTML);
+
+                const currentWidth = submitBtn.getBoundingClientRect().width;
+                if (currentWidth > 0) {
+                    submitBtn.style.minWidth = currentWidth + 'px';
+                }
+
+                // Option 2 (Adaptive):
+                // Narrow buttons (< 115px) only show centered spinner to prevent text overflow/clipping.
+                // Wider buttons show spinner + text.
+                const customLoadingText = submitBtn.getAttribute('data-loading-text');
+                const isNarrowButton = currentWidth > 0 && currentWidth < 115;
+                let loaderHtml = '';
+
+                if (isNarrowButton && !customLoadingText) {
+                    loaderHtml = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                } else {
+                    const loadingText = customLoadingText || 'Memproses...';
+                    loaderHtml = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' + loadingText;
+                }
+
+                // Defer disabling to the next tick so browser dispatches the submit request properly
+                setTimeout(function() {
+                    submitBtn.innerHTML = loaderHtml;
+                    submitBtn.disabled = true;
+                }, 0);
+            });
+
+            // Reset loading state when page restored from back/forward cache
+            window.addEventListener('pageshow', function() {
+                document.querySelectorAll('[data-is-loading="true"]').forEach(function(btn) {
+                    const originalHtml = btn.getAttribute('data-original-html');
+                    if (originalHtml) {
+                        btn.innerHTML = originalHtml;
+                    }
+                    btn.disabled = false;
+                    btn.removeAttribute('data-is-loading');
+                    btn.style.minWidth = '';
+                });
+                activeSubmitBtn = null;
+            });
+
+            // Reset buttons when modal is dismissed without submitting
+            document.addEventListener('hidden.bs.modal', function(event) {
+                const modal = event.target;
+                if (!modal) return;
+                modal.querySelectorAll('[data-is-loading="true"]').forEach(function(btn) {
+                    const originalHtml = btn.getAttribute('data-original-html');
+                    if (originalHtml) {
+                        btn.innerHTML = originalHtml;
+                    }
+                    btn.disabled = false;
+                    btn.removeAttribute('data-is-loading');
+                    btn.style.minWidth = '';
+                });
+            });
+        })();
+    </script>
 </body>
 
 </html>
