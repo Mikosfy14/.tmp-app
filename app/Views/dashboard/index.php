@@ -745,196 +745,12 @@ $deadlineAlerts = get_user_deadline_notifications();
         const trendOnTime = <?= json_encode($completion_chart['on_time'] ?? []) ?>;
         const trendLate = <?= json_encode($completion_chart['late'] ?? []) ?>;
 
-        var personalThemeOptions = getChartThemeOptions();
+        let chartSdlc = null;
+        let chartCompletion = null;
+        let chartOntime = null;
+        let chartTrend = null;
 
-        // 1. SDLC Chart (Donut)
-        var chartSdlc = null;
-        var optionsSdlc = null;
-        if (sdlcSeries.length > 0 && document.querySelector("#chart-personal-sdlc")) {
-            optionsSdlc = {
-                chart: {
-                    type: 'donut',
-                    height: 240,
-                    ...personalThemeOptions.chart
-                },
-                series: sdlcSeries,
-                labels: sdlcLabels,
-                colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
-                theme: personalThemeOptions.theme,
-                tooltip: personalThemeOptions.tooltip,
-                legend: {
-                    position: 'bottom',
-                    fontSize: '11px',
-                    ...personalThemeOptions.legend
-                },
-                dataLabels: {
-                    enabled: true,
-                    ...personalThemeOptions.teamDataLabels
-                },
-                plotOptions: personalThemeOptions.plotOptions
-            };
-            chartSdlc = new ApexCharts(document.querySelector("#chart-personal-sdlc"), optionsSdlc);
-            chartSdlc.render();
-        }
-
-        // 2. Completion Rate Chart (RadialBar Gauge)
-        var optionsCompletion = {
-            chart: {
-                type: 'radialBar',
-                height: 220,
-                sparkline: {
-                    enabled: false
-                },
-                ...personalThemeOptions.chart
-            },
-            series: [completionRate],
-            colors: [completionRate >= 80 ? '#198754' : (completionRate >= 50 ? '#ffc107' : '#dc3545')],
-            plotOptions: {
-                radialBar: {
-                    startAngle: -135,
-                    endAngle: 135,
-                    hollow: {
-                        size: '62%'
-                    },
-                    track: {
-                        background: personalThemeOptions.grid.borderColor,
-                        strokeWidth: '97%'
-                    },
-                    dataLabels: {
-                        name: {
-                            show: true,
-                            fontSize: '12px',
-                            color: personalThemeOptions.theme.mode === 'dark' ? '#a6a8b8' : '#607080',
-                            offsetY: 20
-                        },
-                        value: {
-                            offsetY: -15,
-                            fontSize: '20px',
-                            fontWeight: 700,
-                            color: personalThemeOptions.chart.foreColor,
-                            formatter: function(val) {
-                                return val + '%';
-                            }
-                        }
-                    }
-                }
-            },
-            labels: ['Selesai'],
-            theme: personalThemeOptions.theme,
-            stroke: {
-                dashArray: 3
-            }
-        };
-        var chartCompletion = new ApexCharts(document.querySelector("#chart-personal-completion"), optionsCompletion);
-        chartCompletion.render();
-
-        // 3. On-Time Rate Chart (RadialBar Gauge)
-        var optionsOntime = {
-            chart: {
-                type: 'radialBar',
-                height: 220,
-                sparkline: {
-                    enabled: false
-                },
-                ...personalThemeOptions.chart
-            },
-            series: [onTimeRate],
-            colors: [onTimeRate >= 80 ? '#198754' : (onTimeRate >= 50 ? '#ffc107' : '#dc3545')],
-            plotOptions: {
-                radialBar: {
-                    startAngle: -135,
-                    endAngle: 135,
-                    hollow: {
-                        size: '62%'
-                    },
-                    track: {
-                        background: personalThemeOptions.grid.borderColor,
-                        strokeWidth: '97%'
-                    },
-                    dataLabels: {
-                        name: {
-                            show: true,
-                            fontSize: '12px',
-                            color: personalThemeOptions.theme.mode === 'dark' ? '#a6a8b8' : '#607080',
-                            offsetY: 20
-                        },
-                        value: {
-                            offsetY: -15,
-                            fontSize: '20px',
-                            fontWeight: 700,
-                            color: personalThemeOptions.chart.foreColor,
-                            formatter: function(val) {
-                                return val + '%';
-                            }
-                        }
-                    }
-                }
-            },
-            labels: ['Tepat Waktu'],
-            theme: personalThemeOptions.theme,
-            stroke: {
-                dashArray: 3
-            }
-        };
-        var chartOntime = new ApexCharts(document.querySelector("#chart-personal-ontime"), optionsOntime);
-        chartOntime.render();
-
-        // 4. Monthly Trend Chart (Stacked Bar)
-        var optionsTrend = {
-            chart: {
-                type: 'bar',
-                height: 250,
-                stacked: true,
-                toolbar: {
-                    show: false
-                },
-                ...personalThemeOptions.chart
-            },
-            series: [{
-                    name: 'Tepat Waktu',
-                    data: trendOnTime.length > 0 ? trendOnTime : [0]
-                },
-                {
-                    name: 'Terlambat',
-                    data: trendLate.length > 0 ? trendLate : [0]
-                }
-            ],
-            xaxis: {
-                categories: trendMonths.length > 0 ? trendMonths : ['-'],
-                ...personalThemeOptions.xaxis
-            },
-            yaxis: {
-                ...personalThemeOptions.yaxis,
-                labels: {
-                    ...personalThemeOptions.yaxis.labels,
-                    formatter: function(val) {
-                        return Math.round(val);
-                    }
-                }
-            },
-            colors: ['#198754', '#dc3545'],
-            theme: personalThemeOptions.theme,
-            tooltip: personalThemeOptions.tooltip,
-            grid: personalThemeOptions.grid,
-            legend: {
-                position: 'top',
-                ...personalThemeOptions.legend
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '40%',
-                    borderRadius: 2
-                }
-            },
-            dataLabels: {
-                enabled: false
-            }
-        };
-        var chartTrend = new ApexCharts(document.querySelector("#chart-personal-trend"), optionsTrend);
-        chartTrend.render();
-
-        const rebuildPersonalCharts = async () => {
+        const renderPersonalCharts = async () => {
             if (chartSdlc) {
                 chartSdlc.destroy();
                 chartSdlc = null;
@@ -951,6 +767,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                 chartTrend.destroy();
                 chartTrend = null;
             }
+
             const elSdlc = document.querySelector('#chart-personal-sdlc');
             if (elSdlc) elSdlc.innerHTML = '';
             const elCompletion = document.querySelector('#chart-personal-completion');
@@ -960,41 +777,202 @@ $deadlineAlerts = get_user_deadline_notifications();
             const elTrend = document.querySelector('#chart-personal-trend');
             if (elTrend) elTrend.innerHTML = '';
 
-            const freshTheme = getChartThemeOptions();
+            const themeOpts = getChartThemeOptions();
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
 
-            // 1. SDLC Rebuild
-            if (optionsSdlc && document.querySelector('#chart-personal-sdlc')) {
-                optionsSdlc.chart = {
-                    type: 'donut',
-                    height: 240,
-                    ...freshTheme.chart
+            // 1. SDLC Chart (Donut)
+            if (sdlcSeries.length > 0 && elSdlc) {
+                const optionsSdlc = {
+                    chart: {
+                        type: 'donut',
+                        height: 240,
+                        ...themeOpts.chart
+                    },
+                    series: sdlcSeries,
+                    labels: sdlcLabels,
+                    colors: ['#435ebe', '#57caeb', '#5ddab4', '#ff7976', '#ffc107'],
+                    theme: themeOpts.theme,
+                    tooltip: themeOpts.tooltip,
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '11px',
+                        ...themeOpts.legend
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        ...themeOpts.teamDataLabels
+                    },
+                    plotOptions: themeOpts.plotOptions
                 };
-                optionsSdlc.theme = freshTheme.theme;
-                optionsSdlc.tooltip = freshTheme.tooltip;
-                optionsSdlc.legend = {
-                    position: 'bottom',
-                    fontSize: '11px',
-                    ...freshTheme.legend
-                };
-                optionsSdlc.dataLabels = {
-                    enabled: true,
-                    ...freshTheme.teamDataLabels
-                };
-                optionsSdlc.plotOptions = freshTheme.plotOptions;
-
-                chartSdlc = new ApexCharts(document.querySelector('#chart-personal-sdlc'), optionsSdlc);
+                chartSdlc = new ApexCharts(elSdlc, optionsSdlc);
                 await chartSdlc.render();
             }
 
-            chartCompletion = new ApexCharts(document.querySelector('#chart-personal-completion'), optionsCompletion);
-            await chartCompletion.render();
+            // 2. Completion Rate Chart (RadialBar Gauge)
+            if (elCompletion) {
+                const optionsCompletion = {
+                    chart: {
+                        type: 'radialBar',
+                        height: 220,
+                        sparkline: {
+                            enabled: false
+                        },
+                        ...themeOpts.chart
+                    },
+                    series: [completionRate],
+                    colors: [completionRate >= 80 ? '#198754' : (completionRate >= 50 ? '#ffc107' : '#dc3545')],
+                    plotOptions: {
+                        radialBar: {
+                            startAngle: -135,
+                            endAngle: 135,
+                            hollow: {
+                                size: '62%'
+                            },
+                            track: {
+                                background: themeOpts.grid.borderColor,
+                                strokeWidth: '97%'
+                            },
+                            dataLabels: {
+                                name: {
+                                    show: true,
+                                    fontSize: '12px',
+                                    color: isDark ? '#a6a8b8' : '#607080',
+                                    offsetY: 20
+                                },
+                                value: {
+                                    offsetY: -15,
+                                    fontSize: '20px',
+                                    fontWeight: 700,
+                                    color: themeOpts.chart.foreColor,
+                                    formatter: function(val) {
+                                        return val + '%';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    labels: ['Selesai'],
+                    theme: themeOpts.theme,
+                    stroke: {
+                        dashArray: 3
+                    }
+                };
+                chartCompletion = new ApexCharts(elCompletion, optionsCompletion);
+                await chartCompletion.render();
+            }
 
-            chartOntime = new ApexCharts(document.querySelector('#chart-personal-ontime'), optionsOntime);
-            await chartOntime.render();
+            // 3. On-Time Rate Chart (RadialBar Gauge)
+            if (elOntime) {
+                const optionsOntime = {
+                    chart: {
+                        type: 'radialBar',
+                        height: 220,
+                        sparkline: {
+                            enabled: false
+                        },
+                        ...themeOpts.chart
+                    },
+                    series: [onTimeRate],
+                    colors: [onTimeRate >= 80 ? '#198754' : (onTimeRate >= 50 ? '#ffc107' : '#dc3545')],
+                    plotOptions: {
+                        radialBar: {
+                            startAngle: -135,
+                            endAngle: 135,
+                            hollow: {
+                                size: '62%'
+                            },
+                            track: {
+                                background: themeOpts.grid.borderColor,
+                                strokeWidth: '97%'
+                            },
+                            dataLabels: {
+                                name: {
+                                    show: true,
+                                    fontSize: '12px',
+                                    color: isDark ? '#a6a8b8' : '#607080',
+                                    offsetY: 20
+                                },
+                                value: {
+                                    offsetY: -15,
+                                    fontSize: '20px',
+                                    fontWeight: 700,
+                                    color: themeOpts.chart.foreColor,
+                                    formatter: function(val) {
+                                        return val + '%';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    labels: ['Tepat Waktu'],
+                    theme: themeOpts.theme,
+                    stroke: {
+                        dashArray: 3
+                    }
+                };
+                chartOntime = new ApexCharts(elOntime, optionsOntime);
+                await chartOntime.render();
+            }
 
-            chartTrend = new ApexCharts(document.querySelector('#chart-personal-trend'), optionsTrend);
-            await chartTrend.render();
+            // 4. Monthly Trend Chart (Stacked Bar)
+            if (elTrend) {
+                const optionsTrend = {
+                    chart: {
+                        type: 'bar',
+                        height: 250,
+                        stacked: true,
+                        toolbar: {
+                            show: false
+                        },
+                        ...themeOpts.chart
+                    },
+                    series: [{
+                            name: 'Tepat Waktu',
+                            data: trendOnTime.length > 0 ? trendOnTime : [0]
+                        },
+                        {
+                            name: 'Terlambat',
+                            data: trendLate.length > 0 ? trendLate : [0]
+                        }
+                    ],
+                    xaxis: {
+                        categories: trendMonths.length > 0 ? trendMonths : ['-'],
+                        ...themeOpts.xaxis
+                    },
+                    yaxis: {
+                        ...themeOpts.yaxis,
+                        labels: {
+                            ...themeOpts.yaxis.labels,
+                            formatter: function(val) {
+                                return Math.round(val);
+                            }
+                        }
+                    },
+                    colors: ['#198754', '#dc3545'],
+                    theme: themeOpts.theme,
+                    tooltip: themeOpts.tooltip,
+                    grid: themeOpts.grid,
+                    legend: {
+                        position: 'top',
+                        ...themeOpts.legend
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '40%',
+                            borderRadius: 2
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    }
+                };
+                chartTrend = new ApexCharts(elTrend, optionsTrend);
+                await chartTrend.render();
+            }
         };
+
+        renderPersonalCharts();
 
         // Toggle Views Logic
         const viewSdlc = document.getElementById('view-sdlc');
@@ -1029,9 +1007,23 @@ $deadlineAlerts = get_user_deadline_notifications();
         if (toggleDark) {
             toggleDark.addEventListener('change', function() {
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    rebuildPersonalCharts();
+                    renderPersonalCharts();
                 }));
             });
+        }
+
+        if (window.MutationObserver) {
+            const themeObserver = new MutationObserver(function(mutations) {
+                for (const mutation of mutations) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
+                        requestAnimationFrame(() => requestAnimationFrame(() => {
+                            renderPersonalCharts();
+                        }));
+                        break;
+                    }
+                }
+            });
+            themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
         }
 
         // Post-Login Windowed Deadline Alert Modal Trigger

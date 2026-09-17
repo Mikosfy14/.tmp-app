@@ -13,6 +13,9 @@ $stats = $stats ?? [];
 $sdlc_distribution = $sdlc_distribution ?? [];
 $completion_chart = $completion_chart ?? [];
 
+helper('navigation');
+$backNav = get_contextual_back('/users', 'Kembali ke Kelola Pengguna');
+
 $roleClass = static function (?string $roleName): string {
     return match ($roleName) {
         'Kepala Departemen' => 'primary',
@@ -46,6 +49,7 @@ $dateValue = static fn($value): string => !empty($value) ? date('d M Y', strtoti
 $valueOrDash = static fn($value): string => $value !== null && $value !== '' ? esc($value) : '-';
 $isActive = (int) ($user['is_active'] ?? 0) === 1;
 $isCurrentUser = (int) session()->get('user_id') === (int) ($user['id'] ?? 0);
+$isProtectedUser = (int) ($user['role_id'] ?? 0) === 1 || strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen' || $isCurrentUser;
 
 // KPI Calculations
 $totalCompleted = (int) ($stats['total_completed'] ?? 0);
@@ -214,8 +218,8 @@ foreach ($assignedProjects as $p) {
 
 <!-- Navigation Back Link -->
 <div class="mb-3">
-    <a href="<?= base_url('/users') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
-        <i class="bi bi-arrow-left"></i> Kembali ke Kelola Pengguna
+    <a href="<?= esc($backNav['url'], 'attr') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+        <i class="bi bi-arrow-left"></i> <?= esc($backNav['label']) ?>
     </a>
 </div>
 
@@ -268,20 +272,26 @@ foreach ($assignedProjects as $p) {
             </div>
         </div>
         <div class="d-flex align-items-center gap-2 align-self-stretch align-self-md-auto user-header-actions">
-            <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold btn-edit-user">
-                Edit Pengguna
-            </a>
-            <button type="button" class="btn btn-sm btn-outline-warning px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
-                Reset Password
-            </button>
-            <?php if ($isActive) : ?>
-                <button type="button" class="btn btn-sm btn-outline-danger px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser" <?= $isCurrentUser ? 'disabled' : '' ?>>
-                    Nonaktifkan
-                </button>
+            <?php if ($isProtectedUser) : ?>
+                <a href="<?= base_url('/profile/edit') ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Profil
+                </a>
             <?php else : ?>
-                <button type="button" class="btn btn-sm btn-outline-success px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalActivateUser">
-                    Aktifkan
+                <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary px-3 py-2 fw-semibold btn-edit-user">
+                    Edit Pengguna
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-warning px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
+                    Reset Password
                 </button>
+                <?php if ($isActive) : ?>
+                    <button type="button" class="btn btn-sm btn-outline-danger px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalDeactivateUser">
+                        Nonaktifkan
+                    </button>
+                <?php else : ?>
+                    <button type="button" class="btn btn-sm btn-outline-success px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalActivateUser">
+                        Aktifkan
+                    </button>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -632,6 +642,7 @@ foreach ($assignedProjects as $p) {
     </div>
 </div>
 
+<?php if (!$isProtectedUser) : ?>
 <!-- Modal Reset Password -->
 <div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -688,6 +699,7 @@ foreach ($assignedProjects as $p) {
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

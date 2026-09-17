@@ -84,6 +84,7 @@ class Users extends BaseController
         return view('users/detail', [
             'title'            => 'Detail User - ' . $user['name'],
             'user'             => $user,
+            'isCurrentUser'    => (int) session()->get('user_id') === (int) $id,
             'assignedProjects' => $metrics['projects'],
             'stats'            => $metrics['stats'],
             'sdlc_distribution' => $metrics['sdlc_distribution'],
@@ -142,6 +143,10 @@ class Users extends BaseController
         $user = $this->getUserWithRole($id);
         if (!$user) {
             return redirect()->to('/users')->with('error', 'User tidak ditemukan.');
+        }
+
+        if ($this->isTargetKepalaDepartemen($user)) {
+            return redirect()->to('/profile/edit')->with('error', 'Untuk memperbarui profil Kepala Departemen, silakan gunakan menu Edit Profil.');
         }
 
         return view('users/edit', [
@@ -206,8 +211,13 @@ class Users extends BaseController
 
     public function deactivate(int $id)
     {
-        if ((int) session()->get('user_id') === $id) {
-            return redirect()->back()->with('error', 'Anda tidak bisa menonaktifkan akun yang sedang digunakan.');
+        $targetUser = $this->getUserWithRole($id);
+        if (!$targetUser) {
+            return redirect()->to('/users')->with('error', 'User tidak ditemukan.');
+        }
+
+        if ((int) session()->get('user_id') === $id || $this->isTargetKepalaDepartemen($targetUser)) {
+            return redirect()->back()->with('error', 'Akun Kepala Departemen tidak dapat dinonaktifkan.');
         }
 
         return $this->setAccountStatus($id, 0);
@@ -219,8 +229,13 @@ class Users extends BaseController
             return $this->render403('Anda tidak memiliki akses menuju halaman ini. Silahkan kembali ke halaman sebelumnya');
         }
 
-        if (!$this->getUserWithRole($id)) {
+        $user = $this->getUserWithRole($id);
+        if (!$user) {
             return redirect()->to('/users')->with('error', 'User tidak ditemukan.');
+        }
+
+        if ($status === 0 && ((int) session()->get('user_id') === $id || $this->isTargetKepalaDepartemen($user))) {
+            return redirect()->back()->with('error', 'Akun Kepala Departemen tidak dapat dinonaktifkan.');
         }
 
         $this->userModel->update($id, ['is_active' => $status]);
@@ -376,5 +391,14 @@ class Users extends BaseController
     private function isKepalaDepartemen(): bool
     {
         return strtolower((string) session()->get('role_name')) === 'kepala departemen';
+    }
+
+    private function isTargetKepalaDepartemen(?array $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return (int) ($user['role_id'] ?? 0) === 1 || strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
     }
 }

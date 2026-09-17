@@ -212,7 +212,7 @@ $keyword = $keyword ?? '';
                 <div class="report-subtitle">Sistem Manajemen & Tracking Portofolio Proyek</div>
             </td>
             <td class="text-right" style="width: 200px;">
-                <div style="font-size: 8.5px; color: #6c757d;">Dicetak pada: <strong><?= date('d M Y, H:i') ?> WIB</strong></div>
+                <div style="font-size: 8.5px; color: #6c757d;">Dicetak pada: <strong><?= \CodeIgniter\I18n\Time::now('Asia/Jakarta')->format('d M Y, H:i') ?> WIB</strong></div>
                 <div style="font-size: 8.5px; color: #6c757d;">Dicetak oleh: <strong><?= esc(session()->get('name') ?? 'User') ?></strong></div>
             </td>
         </tr>

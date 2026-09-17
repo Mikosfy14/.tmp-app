@@ -657,7 +657,7 @@ class Projects extends BaseController
 
         $metadataLines = [
             'Cakupan: ' . $scopeText . ' | Status SDLC: ' . $statusText . ' | Penyelesaian: ' . $completionText . ' | Rentang Waktu: ' . $periodText . ' | Pencarian: ' . (!empty($keyword) ? $keyword : '-'),
-            'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project',
+            'Dicetak pada: ' . \CodeIgniter\I18n\Time::now('Asia/Jakarta')->format('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($projects) . ' Project',
         ];
 
         $headers = [
