@@ -211,7 +211,7 @@ class Application extends BaseController
         $sheet->mergeCells('A2:T2');
         $sheet->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->getColor()->setRGB('6C757D');
 
-        $sheet->setCellValue('A3', 'Dicetak pada: ' . date('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($applications) . ' Aplikasi');
+        $sheet->setCellValue('A3', 'Dicetak pada: ' . \CodeIgniter\I18n\Time::now('Asia/Jakarta')->format('d M Y, H:i') . ' WIB | Dicetak oleh: ' . (session()->get('name') ?? 'User') . ' | Total: ' . count($applications) . ' Aplikasi');
         $sheet->mergeCells('A3:T3');
         $sheet->getStyle('A3')->getFont()->setSize(9)->getColor()->setRGB('6C757D');
 

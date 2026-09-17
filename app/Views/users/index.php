@@ -345,7 +345,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                                     </td>
                                     <td class="text-center user-management-actions pe-4 py-3">
                                         <div class="user-management-action-group">
-                                            <?php if (!$isKepalaDepartemenUser || (int) ($user['id'] ?? 0) !== (int) session()->get('user_id')) : ?>
+                                            <?php if (!$isKepalaDepartemenUser) : ?>
                                                 <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary" title="Detail User">
                                                     <i class="bi bi-eye-fill"></i> Detail
                                                 </a>
@@ -439,10 +439,10 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
                                     <?= !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-' ?>
                                 </small>
                                 <div class="d-flex align-items-center gap-1 flex-wrap ms-auto">
-                                    <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">
-                                        Detail
-                                    </a>
-                                    <?php if ($canManageUser) : ?>
+                                    <?php if (!$isKepalaDepartemenUser) : ?>
+                                        <a href="<?= base_url('/users/detail/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">
+                                            Detail
+                                        </a>
                                         <a href="<?= base_url('/users/edit/' . (int) $user['id']) ?>" class="btn btn-sm btn-outline-warning py-1 px-2" style="font-size: 0.75rem;">
                                             Edit
                                         </a>
@@ -482,6 +482,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
     $isActive = (int) ($user['is_active'] ?? 0) === 1;
     $isKepalaDepartemenUser = strtolower((string) ($user['role_name'] ?? '')) === 'kepala departemen';
     ?>
+    <?php if (!$isKepalaDepartemenUser) : ?>
     <div class="modal fade" id="modalUserDetail<?= esc($user['id']) ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -645,6 +646,7 @@ $nonOrganicUsers = (int) ($userStats['nonOrganicUsers'] ?? 0);
             </div>
         </div>
     </div>
+    <?php endif; ?>
 <?php endforeach; ?>
 
 <div class="modal fade" id="modalUserForm" tabindex="-1" aria-hidden="true">
