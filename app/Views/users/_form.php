@@ -342,11 +342,11 @@ foreach ($roles as $role) {
                 </div>
                 <div class="col-md-6">
                     <label for="userPhone" class="form-label">Nomor Telepon</label>
-                    <input type="tel" id="userPhone" name="phone_number" class="form-control" placeholder="Contoh: 0812 3456 7890" autocomplete="tel" value="<?= esc($oldValue('phone_number', $user['phone_number'] ?? '')) ?>">
+                    <input type="tel" id="userPhone" name="phone_number" class="form-control" placeholder="08xxxxxxxxxx" autocomplete="tel" value="<?= esc($oldValue('phone_number', $user['phone_number'] ?? '')) ?>">
                 </div>
                 <div class="col-md-6">
                     <label for="userJobTitle" class="form-label">Job Title</label>
-                    <input type="text" id="userJobTitle" name="job_title" class="form-control" placeholder="Contoh: System Analyst" autocomplete="organization-title" value="<?= esc($oldValue('job_title', $user['job_title'] ?? '')) ?>">
+                    <input type="text" id="userJobTitle" name="job_title" class="form-control" placeholder="Masukkan job title" autocomplete="organization-title" value="<?= esc($oldValue('job_title', $user['job_title'] ?? '')) ?>">
                 </div>
             </div>
         </section>
@@ -406,7 +406,7 @@ foreach ($roles as $role) {
         </section>
 
         <section class="user-form-section">
-            <div class="user-security-note">
+            <div class="user-security-note mb-3">
                 <i class="bi bi-key-fill" aria-hidden="true"></i>
                 <div>
                     <div class="fw-bold mb-1"><?= $user ? 'Keamanan akun' : 'Password awal akun' ?></div>
@@ -419,6 +419,13 @@ foreach ($roles as $role) {
                     </div>
                 </div>
             </div>
+            <?php if (!empty($user)) : ?>
+                <div>
+                    <button type="button" class="btn btn-outline-warning d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
+                        <i class="bi bi-key-fill" aria-hidden="true"></i> Reset Password
+                    </button>
+                </div>
+            <?php endif; ?>
         </section>
 
         <div class="user-form-actions">
