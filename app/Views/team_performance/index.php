@@ -211,8 +211,8 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
 <div class="page-heading">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
         <div>
-            <h3>Kinerja Tim</h3>
-            <p class="text-muted mb-0">Makro analitik & pengawasan performa departemen secara menyeluruh.</p>
+            <h3>Team Performance</h3>
+            <p class="text-muted mb-0">Pengawasan performa departemen secara menyeluruh.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="badge bg-light-primary text-primary px-3 py-2 fs-7 fw-semibold">
@@ -539,7 +539,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <a href="<?= base_url('/users/detail/' . (int) $member['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2" title="Lihat Analisis Kinerja Personal">
+                                    <a href="<?= base_url('/users/detail/' . (int) $member['id'] . '?ref=kinerja-tim') ?>" class="btn btn-sm btn-outline-primary py-1 px-2" title="Lihat Analisis Kinerja Personal">
                                         Detail Kinerja
                                     </a>
                                 </td>
@@ -621,7 +621,7 @@ $nonOrganicActiveTasks = (int) ($capacity['non_organic_active_tasks'] ?? 0);
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <a href="<?= base_url('/users/detail/' . (int) $member['id']) ?>" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap flex-shrink-0" title="Lihat Analisis Kinerja Personal" style="font-size: 0.78rem;">
+                            <a href="<?= base_url('/users/detail/' . (int) $member['id'] . '?ref=kinerja-tim') ?>" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap flex-shrink-0" title="Lihat Analisis Kinerja Personal" style="font-size: 0.78rem;">
                                 Detail
                             </a>
                         </div>

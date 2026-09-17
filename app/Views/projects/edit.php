@@ -4,6 +4,10 @@
  * @var string $pageSubtitle
  * @var array $project
  */
+helper('navigation');
+$defaultBack = !empty($project['id']) ? '/projects/detail/' . $project['id'] : '/projects';
+$defaultBackLabel = !empty($project['id']) ? 'Kembali ke Detail Project' : 'Kembali ke Project Tracker';
+$backNav = get_contextual_back($defaultBack, $defaultBackLabel);
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -12,8 +16,8 @@
 
 <div class="page-heading project-form-page-header">
     <div class="mb-3">
-        <a href="<?= base_url('/projects/detail/' . $project['id']) ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
-            <i class="bi bi-arrow-left"></i> Kembali ke Detail Project
+        <a href="<?= esc($backNav['url'], 'attr') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> <?= esc($backNav['label']) ?>
         </a>
     </div>
     <h3 class="mb-1"><?= esc($pageTitle) ?></h3>

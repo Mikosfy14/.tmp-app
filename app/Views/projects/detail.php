@@ -5,7 +5,8 @@
  * @var array $projectFiles
  */
 
-helper('deadline');
+helper(['deadline', 'navigation']);
+$backNav = get_contextual_back('/projects', 'Kembali ke Project Tracker');
 
 $statusBadge = match ($project['status'] ?? '') {
     'Planning' => 'bg-secondary text-white',
@@ -373,8 +374,8 @@ if ($isCompleted) {
 
 <!-- Navigation Back Link -->
 <div class="mb-3">
-    <a href="<?= base_url('/projects') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
-        <i class="bi bi-arrow-left"></i> Kembali ke Project Tracker
+    <a href="<?= esc($backNav['url'], 'attr') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+        <i class="bi bi-arrow-left"></i> <?= esc($backNav['label']) ?>
     </a>
 </div>
 

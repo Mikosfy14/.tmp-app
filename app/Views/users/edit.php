@@ -4,6 +4,10 @@
  * @var string $pageSubtitle
  * @var array $user
  */
+helper('navigation');
+$defaultBack = !empty($user['id']) ? '/users/detail/' . (int) $user['id'] : '/users';
+$defaultBackLabel = !empty($user['id']) ? 'Kembali ke Detail Pengguna' : 'Kembali ke Kelola Pengguna';
+$backNav = get_contextual_back($defaultBack, $defaultBackLabel);
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -12,18 +16,13 @@
 
 <div class="page-heading user-form-page-header">
     <div class="mb-3">
-        <a href="<?= base_url('/users') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
-            <i class="bi bi-arrow-left"></i> Kembali ke Kelola Pengguna
+        <a href="<?= esc($backNav['url'], 'attr') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> <?= esc($backNav['label']) ?>
         </a>
     </div>
-    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
-        <div>
-            <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
-            <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
-        </div>
-        <button type="button" class="btn btn-outline-warning w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#modalResetPassword">
-            <i class="bi bi-key-fill" aria-hidden="true"></i> Reset Password
-        </button>
+    <div>
+        <h3 class="mb-1"><?= esc($pageTitle) ?></h3>
+        <p class="text-subtitle text-muted mb-0"><?= esc($pageSubtitle) ?></p>
     </div>
 </div>
 

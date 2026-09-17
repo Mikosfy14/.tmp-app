@@ -5,14 +5,18 @@
 /** @var string $formAction */
 /** @var string $submitLabel */
 $application = $application ?? [];
+helper('navigation');
+$defaultBack = !empty($application['id']) ? '/aplikasi/detail/' . (int) $application['id'] : '/aplikasi';
+$defaultBackLabel = !empty($application['id']) ? 'Kembali ke Detail Aplikasi' : 'Kembali ke Kelola Aplikasi';
+$backNav = get_contextual_back($defaultBack, $defaultBackLabel);
 ?>
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
 <div class="page-heading application-form-wrap mx-auto">
     <div class="mb-3">
-        <a href="<?= base_url('/aplikasi/detail/' . (int) ($application['id'] ?? 0)) ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
-            <i class="bi bi-arrow-left"></i> Kembali ke Detail Aplikasi
+        <a href="<?= esc($backNav['url'], 'attr') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> <?= esc($backNav['label']) ?>
         </a>
     </div>
     <h3 class="mb-1">Edit Aplikasi</h3>
