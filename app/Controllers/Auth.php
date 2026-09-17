@@ -63,7 +63,7 @@ class Auth extends BaseController
 
         // Cek status akun (is_active)
         if (isset($user['is_active']) && (int) $user['is_active'] !== 1) {
-            return redirect()->back()->withInput()->with('error', 'Akun Anda sudah dinonaktifkan. Silakan hubungi administrator.');
+            return redirect()->back()->withInput()->with('error', 'Akun Anda sudah dinonaktifkan. Silakan hubungi Kepala Departemen jika ini keliru');
         }
 
         // Hapus token throttle setelah login berhasil

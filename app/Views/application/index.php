@@ -181,7 +181,7 @@ $criticalityClass = static fn(?string $name) => match ($name) {
 <?= $this->section('content') ?>
 <div class="page-heading application-page-heading d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h3 class="mb-1">Application</h3>
+        <h3 class="mb-1">Application Management</h3>
         <p class="text-muted mb-0">Katalog aplikasi dan service yang dikelola tim.</p>
     </div>
     <?php
@@ -316,7 +316,7 @@ $hasActiveAdvancedFilter = !empty($selectedCriticality) || $managedByMe;
                 <tbody>
                     <?php if (!$applications): ?><tr>
                             <td colspan="5" class="text-center py-5">
-                                <p class="text-muted mt-2 mb-0">Belum ada aplikasi yang sesuai.</p>
+                                <p class="text-muted mt-2 mb-0">Aplikasi tidak ditemukan</p>
                             </td>
                         </tr><?php endif ?>
                     <?php foreach ($applications as $app): $criticalityName = $app['criticality_recovery'] ?? null;

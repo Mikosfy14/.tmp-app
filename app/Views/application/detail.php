@@ -3,6 +3,9 @@
 /** @var array<string, mixed> $application */
 $application = $application ?? [];
 
+helper('navigation');
+$backNav = get_contextual_back('/aplikasi', 'Kembali ke Kelola Aplikasi');
+
 $criticalityBadge = match ($application['criticality_recovery'] ?? '') {
     'Criticality 1' => 'bg-danger text-white',
     'Criticality 2' => 'bg-warning text-dark',
@@ -158,8 +161,8 @@ $textValue = static fn($value): string => !empty(trim((string) ($value ?? ''))) 
 
 <!-- Navigation Back Link -->
 <div class="mb-3">
-    <a href="<?= base_url('/aplikasi') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
-        <i class="bi bi-arrow-left"></i> Kembali ke Kelola Aplikasi
+    <a href="<?= esc($backNav['url'], 'attr') ?>" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+        <i class="bi bi-arrow-left"></i> <?= esc($backNav['label']) ?>
     </a>
 </div>
 

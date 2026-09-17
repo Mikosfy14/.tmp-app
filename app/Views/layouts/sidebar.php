@@ -54,7 +54,7 @@ $roleBadgeClass = match (strtolower($userRole)) {
                 <li class="sidebar-item <?= is_active('aplikasi') ?>">
                     <a href="<?= base_url('/aplikasi') ?>" class='sidebar-link d-flex align-items-center'>
                         <i class="bi bi-stack me-2 fs-5"></i>
-                        <span>Application</span>
+                        <span>Application Management</span>
                     </a>
                 </li>
 
