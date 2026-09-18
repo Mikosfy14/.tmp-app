@@ -837,6 +837,43 @@
         (function() {
             let activeSubmitBtn = null;
 
+            // Prevent accidental form submission when pressing Enter on input/select fields
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    const target = event.target;
+                    if (!target) return;
+
+                    // Allow Enter inside multiline textarea
+                    if (target.tagName === 'TEXTAREA') {
+                        return;
+                    }
+
+                    // Allow Enter when keyboard focus is explicitly on a submit button
+                    if (target.tagName === 'BUTTON' || (target.tagName === 'INPUT' && target.type === 'submit')) {
+                        return;
+                    }
+
+                    // Check if inside a form
+                    const form = target.closest('form');
+                    if (!form) return;
+
+                    // Allow Enter on GET search/filter forms
+                    if (form.method && form.method.toUpperCase() === 'GET') {
+                        return;
+                    }
+
+                    // Allow Enter if form explicitly opts out
+                    if (form.getAttribute('data-allow-enter-submit') === 'true') {
+                        return;
+                    }
+
+                    // Prevent premature submission on INPUT and SELECT elements
+                    if (target.tagName === 'INPUT' || target.tagName === 'SELECT') {
+                        event.preventDefault();
+                    }
+                }
+            });
+
             // Track which submit button triggered the submission
             document.addEventListener('click', function(event) {
                 const btn = event.target.closest('button[type="submit"], input[type="submit"]');
