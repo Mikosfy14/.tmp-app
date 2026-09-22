@@ -19,7 +19,7 @@
     <!-- Favicon / Title Bar Icon -->
     <link rel="shortcut icon" href="<?= base_url('assets/images/logo/tmp_logo.png') ?>" type="image/png">
     <link rel="icon" href="<?= base_url('assets/images/logo/tmp_logo.png') ?>" type="image/png">
-    <title><?= esc($title ?? 'Dashboard') ?> - .tmp Project Manager</title>
+    <title><?= esc($title ?? 'Dashboard') ?> - .tmp Workspace</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

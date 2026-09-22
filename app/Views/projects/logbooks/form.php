@@ -192,6 +192,19 @@ $currentStatusId = (int) old('project_status_id', $log['project_status_id'] ?? (
         padding-inline: 1.25rem;
     }
 
+    @media (max-width: 767.98px) {
+        .project-form-actions {
+            gap: .5rem;
+        }
+
+        .project-form-actions .btn {
+            flex: 1 1 0;
+            min-height: 44px;
+            padding-inline: .75rem;
+            white-space: nowrap;
+        }
+    }
+
     .context-pill-box {
         background-color: #f8f9fa;
         border: 1px solid #e9ecef;

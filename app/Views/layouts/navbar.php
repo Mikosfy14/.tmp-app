@@ -84,6 +84,22 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
         z-index: 1080;
     }
 
+    @media (max-width: 575.98px) {
+        .navbar-notification-menu {
+            position: fixed !important;
+            top: 4rem !important;
+            right: 0.5rem !important;
+            left: 0.5rem !important;
+            width: auto;
+            max-width: none;
+            transform: none !important;
+        }
+
+        .navbar-notification-menu .dropdown-item {
+            min-width: 0;
+        }
+    }
+
     .notif-tab-nav .nav-link {
         color: #607080;
         border-radius: 6px;
@@ -293,7 +309,7 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
                         <button id="profileDropdown" class="navbar-action-trigger navbar-profile-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Buka menu profil" title="Profil Saya">
                             <?= esc($profileInitial) ?>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end navbar-profile-menu shadow-sm" aria-labelledby="profileDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end navbar-profile-menu shadow-sm p-0" aria-labelledby="profileDropdown">
                             <li>
                                 <div class="dropdown-header">
                                     <div class="fw-bold text-body"><?= esc($profileName ?: 'User') ?></div>

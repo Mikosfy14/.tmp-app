@@ -520,7 +520,7 @@ $deadlineAlerts = get_user_deadline_notifications();
                                 <div class="p-2 border rounded d-flex justify-content-between align-items-center">
                                     <div class="min-width-0 me-2">
                                         <div class="fw-bold text-dark text-truncate text-sm" title="<?= esc($app['app_component']) ?>">
-                                            <?= esc($app['app_component']) ?>
+                                            <?= esc(mb_strimwidth($app['app_component'], 0, 25, '...')) ?>
                                         </div>
                                         <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
                                             <?php if (!empty($app['criticality_name'])) : ?>

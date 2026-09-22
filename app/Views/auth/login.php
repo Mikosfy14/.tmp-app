@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Favicon / Title Bar Icon -->
     <link rel="shortcut icon" href="<?= base_url('assets/images/logo/tmp_logo.png') ?>" type="image/png">
-    <title>Login - .tmp Team Dashboard</title>
+    <title>Login - .tmp Workspace</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -167,7 +167,7 @@
                 <div class="mb-4">
                     <img src="<?= base_url('assets/images/logo/tmp_logo.png') ?>" alt="Logo .tmp" style="height: 100px; width: auto; object-fit: contain;">
                 </div>
-                <h2 class="fw-bold text-white mb-2" style="font-size: 2rem; letter-spacing: -0.5px;">.tmp Team Dashboard</h2>
+                <h2 class="fw-bold text-white mb-2" style="font-size: 2rem; letter-spacing: -0.5px;">.tmp Workspace</h2>
                 <p class="text-white-50 fs-6 mb-0" style="line-height: 1.6;">
                     Monitor dan manajemen kinerja tim.
                 </p>
@@ -175,7 +175,7 @@
 
             <!-- Footer Kolom Kiri -->
             <div class="text-center text-white-50 small">
-                &copy; <?= date('Y') ?> .tmp Team Dashboard
+                &copy; <?= date('Y') ?> .tmp Workspace. All rights reserved.
             </div>
         </div>
 
@@ -294,7 +294,7 @@
 
                 <!-- Mobile Copyright Footer -->
                 <div class="text-center text-white small mt-4 d-block d-lg-none">
-                    &copy; <?= date('Y') ?> .tmp Team Dashboard.
+                    &copy; <?= date('Y') ?> .tmp Workspace. All rights reserved.
                 </div>
 
             </div>

@@ -49,7 +49,7 @@ class Projects extends BaseController
     public function create()
     {
         return view('projects/create', $this->getFormViewData([
-            'title' => 'Tambah Project - .tmp Project Manager',
+            'title' => 'Tambah Project - .tmp Workspace',
             'pageTitle' => 'Tambah Project',
             'pageSubtitle' => 'Buat project baru dengan status SDLC, timeline, PIC, dan file pendukung.',
             'formAction' => base_url('/projects/store'),

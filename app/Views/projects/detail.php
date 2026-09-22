@@ -146,9 +146,12 @@ if ($isCompleted) {
         }
 
         .project-header-actions .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
             text-align: center;
-            justify-content: center;
+            min-height: 44px;
         }
 
         .milestone-track {
@@ -169,8 +172,9 @@ if ($isCompleted) {
         }
 
         .btn-file-download {
-            width: 38px !important;
-            height: 38px !important;
+            width: 44px !important;
+            height: 44px !important;
+            min-height: 44px !important;
         }
     }
 
@@ -515,6 +519,84 @@ if ($isCompleted) {
         margin-bottom: 0;
     }
 
+    @media (max-width: 767.98px) {
+        .logbook-item-card {
+            padding: 1rem;
+        }
+
+        .logbook-card-header {
+            align-items: stretch !important;
+        }
+
+        .logbook-card-header > div:first-child,
+        .logbook-card-header > div:last-child {
+            width: 100%;
+        }
+
+        .logbook-card-header > div:last-child .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 44px;
+        }
+
+        .logbook-filter-row {
+            display: block !important;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+        }
+
+        .logbook-filter-group {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            min-width: max-content;
+        }
+
+        .logbook-filter-group .btn {
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        .logbook-entry-header {
+            align-items: flex-start !important;
+        }
+
+        .logbook-entry-header > .d-flex:first-child {
+            align-items: flex-start;
+            flex: 1 1 100%;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .logbook-entry-header > .d-flex:first-child > div:last-child {
+            min-width: 0;
+        }
+
+        .logbook-entry-actions {
+            width: 100%;
+            padding-top: 0.25rem;
+        }
+
+        .logbook-entry-actions .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            flex: 1 1 auto;
+        }
+
+        .logbook-entry-content {
+            gap: 1.25rem !important;
+        }
+
+        .logbook-entry-footer {
+            align-items: flex-start !important;
+            flex-direction: column;
+            gap: 0.35rem !important;
+        }
+    }
+
     .highlight-pulse {
         animation: pulseHighlight 2s ease-out;
     }
@@ -611,7 +693,7 @@ if ($isCompleted) {
     </div>
 </div>
 
-<<div class="page-content">
+<div class="page-content">
     <!-- Milestone Track (Unit Testing -> SIT -> UAT -> Promote) - Full Width -->
     <div class="card shadow-sm mb-4">
         <div class="card-header pb-0 border-0">
@@ -762,7 +844,7 @@ if ($isCompleted) {
 
     <!-- Logbook Progres Mingguan Section (Full Width) -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header pb-0 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="card-header logbook-card-header pb-0 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div>
                 <h5 class="card-title mb-0 fs-6 fw-bold">Logbook Progres Mingguan</h5>
                 <span class="text-muted small">Riwayat evaluasi mingguan & laporan progres pengerjaan</span>
@@ -776,8 +858,8 @@ if ($isCompleted) {
 
         <div class="card-body pt-3">
             <!-- Filter Pills -->
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <div class="btn-group btn-group-sm" role="group" id="logbookFilterGroup">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 logbook-filter-row">
+                <div class="btn-group btn-group-sm logbook-filter-group" role="group" id="logbookFilterGroup">
                     <button type="button" class="btn btn-outline-secondary logbook-filter-btn active" data-filter="all">
                         Semua <span class="badge bg-secondary ms-1">3</span>
                     </button>
@@ -796,7 +878,7 @@ if ($isCompleted) {
                 <!-- Item 1: Review Kadept -->
                 <div class="logbook-item-card is-kadept logbook-entry-card-wrapper" id="logbook-1" data-type="kadept">
                     <!-- Header Item Log -->
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-initial">
                                 KD
@@ -812,7 +894,7 @@ if ($isCompleted) {
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="d-flex align-items-center gap-1 logbook-entry-actions">
                             <?php if ($isKadept) : ?>
                                 <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
                                     data-log-id="1"
@@ -834,7 +916,7 @@ if ($isCompleted) {
                     </div>
 
                     <!-- Body Item Log: 3 Blok Ringkas -->
-                    <div class="d-flex flex-column gap-3">
+                    <div class="d-flex flex-column gap-3 logbook-entry-content">
                         <div>
                             <div class="meta-item-label">Capaian Minggu Ini</div>
                             <div class="logbook-richtext-content">
@@ -872,7 +954,7 @@ if ($isCompleted) {
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
                         <span>Target Milestone: <strong>Penyelesaian SIT & Verifikasi Dokumen POK</strong></span>
                         <span>Diperbarui: 12 Sep 2026, 16:30</span>
                     </div>
@@ -881,7 +963,7 @@ if ($isCompleted) {
                 <!-- Item 2: Laporan Tim PIC (Staff) -->
                 <div class="logbook-item-card is-team-staff logbook-entry-card-wrapper" id="logbook-2" data-type="team">
                     <!-- Header Item Log -->
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-initial" style="background-color: rgba(25, 135, 84, 0.12); color: #198754;">
                                 AP
@@ -897,7 +979,7 @@ if ($isCompleted) {
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="d-flex align-items-center gap-1 logbook-entry-actions">
                             <?php if ($isKadept) : ?>
                                 <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
                                     data-log-id="2"
@@ -919,7 +1001,7 @@ if ($isCompleted) {
                     </div>
 
                     <!-- Body Item Log: 3 Blok Ringkas -->
-                    <div class="d-flex flex-column gap-3">
+                    <div class="d-flex flex-column gap-3 logbook-entry-content">
                         <div>
                             <div class="meta-item-label">Capaian Minggu Ini</div>
                             <div class="logbook-richtext-content">
@@ -959,7 +1041,7 @@ if ($isCompleted) {
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
                         <span>Target Milestone: <strong>Stress test 500 req/sec & integrasi log error</strong></span>
                         <span>Diperbarui: 10 Sep 2026, 14:15</span>
                     </div>
@@ -968,7 +1050,7 @@ if ($isCompleted) {
                 <!-- Item 3: Laporan Tim PIC (Manmonth) -->
                 <div class="logbook-item-card is-team-manmonth logbook-entry-card-wrapper" id="logbook-3" data-type="team">
                     <!-- Header Item Log -->
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-initial" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309;">
                                 RA
@@ -984,7 +1066,7 @@ if ($isCompleted) {
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="d-flex align-items-center gap-1 logbook-entry-actions">
                             <?php if ($isKadept) : ?>
                                 <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
                                     data-log-id="3"
@@ -1006,7 +1088,7 @@ if ($isCompleted) {
                     </div>
 
                     <!-- Body Item Log: 3 Blok Ringkas -->
-                    <div class="d-flex flex-column gap-3">
+                    <div class="d-flex flex-column gap-3 logbook-entry-content">
                         <div>
                             <div class="meta-item-label">Capaian Minggu Ini</div>
                             <div class="logbook-richtext-content">
@@ -1042,7 +1124,7 @@ if ($isCompleted) {
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
                         <span>Target Milestone: <strong>Binding data tabel riwayat ke endpoint AJAX</strong></span>
                         <span>Diperbarui: 08 Sep 2026, 11:00</span>
                     </div>
