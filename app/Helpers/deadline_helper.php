@@ -169,3 +169,4 @@ if (!function_exists('get_user_deadline_notifications')) {
         }
     }
 }
+

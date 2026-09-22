@@ -7,6 +7,7 @@ use App\Models\ProjectFileModel;
 use App\Models\ProjectStatusModel;
 use App\Models\DatabaseTypeModel;
 use App\Models\UserModel;
+use App\Models\ProjectLogbookModel;
 use App\Services\ReportExportService;
 
 class Projects extends BaseController
@@ -16,16 +17,18 @@ class Projects extends BaseController
     protected ProjectStatusModel $projectStatusModel;
     protected DatabaseTypeModel $databaseTypeModel;
     protected UserModel $userModel;
+    protected ProjectLogbookModel $projectLogbookModel;
     protected ReportExportService $exportService;
 
     public function __construct()
     {
-        helper(['form', 'deadline', 'project_filter']);
+        helper(['form', 'deadline', 'notification', 'project_filter']);
         $this->projectModel = new ProjectModel();
         $this->projectFileModel = new ProjectFileModel();
         $this->projectStatusModel = new ProjectStatusModel();
         $this->databaseTypeModel = new DatabaseTypeModel();
         $this->userModel = new UserModel();
+        $this->projectLogbookModel = new ProjectLogbookModel();
         $this->exportService = new ReportExportService();
     }
 
@@ -46,7 +49,7 @@ class Projects extends BaseController
     public function create()
     {
         return view('projects/create', $this->getFormViewData([
-            'title' => 'Tambah Project',
+            'title' => 'Tambah Project - .tmp Project Manager',
             'pageTitle' => 'Tambah Project',
             'pageSubtitle' => 'Buat project baru dengan status SDLC, timeline, PIC, dan file pendukung.',
             'formAction' => base_url('/projects/store'),
@@ -88,6 +91,96 @@ class Projects extends BaseController
             'title' => 'Detail Project - ' . $project['name'],
             'project' => $project,
             'projectFiles' => $this->projectFileModel->getFilesByProject((int) $project['id']),
+            'isKadept' => $this->isKepalaDepartemen(),
+        ]);
+    }
+
+    public function createLogbook($id)
+    {
+        $project = $this->projectModel->getProjectDetail($id, (int) session()->get('user_id'), $this->isKepalaDepartemen());
+
+        if (!$project) {
+            return redirect()->to('/projects')->with('error', 'Project tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        return view('projects/logbooks/form', [
+            'title' => 'Tambah Log Mingguan - ' . $project['name'],
+            'pageTitle' => 'Tambah Log Mingguan',
+            'pageSubtitle' => 'Catat evaluasi mingguan atau capaian progres pengerjaan proyek.',
+            'project' => $project,
+            'statusOptions' => $this->projectStatusModel->findAll(),
+            'isEdit' => false,
+            'log' => [
+                'id' => null,
+                'log_type' => $this->isKepalaDepartemen() ? 'kadept_review' : 'team_log',
+                'log_date' => date('Y-m-d'),
+                'project_status_id' => $project['project_status_id'] ?? 3,
+                'progress_percentage' => $project['progress_percentage'] ?? 60,
+                'achievements' => '',
+                'blockers' => '',
+                'next_plans' => '',
+                'kadept_notes' => '',
+            ],
+            'formAction' => base_url('/projects/detail/' . $project['id']),
+        ]);
+    }
+
+    public function editLogbook($id, $logbookId)
+    {
+        $project = $this->projectModel->getProjectDetail($id, (int) session()->get('user_id'), $this->isKepalaDepartemen());
+
+        if (!$project) {
+            return redirect()->to('/projects')->with('error', 'Project tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        // Mock data representatif untuk pratinjau form edit
+        $mockLogs = [
+            '1' => [
+                'id' => 1,
+                'log_type' => 'kadept_review',
+                'log_date' => '2026-09-12',
+                'project_status_id' => 4,
+                'progress_percentage' => 65,
+                'achievements' => "Review berkala bersama tim dev. Modul integrasi payment gateway sandbox berhasil diverifikasi.\nPerlu akselerasi pengetesan end-to-end sebelum jadwal User Acceptance Test (UAT).",
+                'blockers' => '',
+                'next_plans' => "Penyelesaian modul settlement transaksi dan verifikasi security scan.\nPersiapan environment SIT dan pendaftaran whitelist IP firewall.",
+                'kadept_notes' => 'Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging.',
+            ],
+            '2' => [
+                'id' => 2,
+                'log_type' => 'team_log',
+                'log_date' => '2026-09-10',
+                'project_status_id' => 3,
+                'progress_percentage' => 60,
+                'achievements' => "Selesai mengimplementasikan API endpoint webhook transaksi.\nFixing validasi payload JSON dan sanitasi input database MSSQL.\nUnit testing coverage mencapai 78%.",
+                'blockers' => 'Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner.',
+                'next_plans' => "Stress test 500 req/sec pada service webhook.\nIntegrasi error log monitoring ke dashboard.",
+                'kadept_notes' => '',
+            ],
+            '3' => [
+                'id' => 3,
+                'log_type' => 'team_log',
+                'log_date' => '2026-09-08',
+                'project_status_id' => 3,
+                'progress_percentage' => 50,
+                'achievements' => "Slicing antarmuka dashboard monitoring transaksi dan filter tanggal.\nPenyelarasan palet warna Dark Mode dengan template Mazer.",
+                'blockers' => '',
+                'next_plans' => "Binding data tabel riwayat ke endpoint AJAX.\nPenyesuaian interaktivitas filter status SDLC.",
+                'kadept_notes' => '',
+            ]
+        ];
+
+        $log = $mockLogs[(string) $logbookId] ?? $mockLogs['1'];
+
+        return view('projects/logbooks/form', [
+            'title' => 'Edit Log Mingguan - ' . $project['name'],
+            'pageTitle' => 'Edit Log Mingguan',
+            'pageSubtitle' => 'Perbarui catatan evaluasi mingguan atau laporan progres teknis.',
+            'project' => $project,
+            'statusOptions' => $this->projectStatusModel->findAll(),
+            'isEdit' => true,
+            'log' => $log,
+            'formAction' => base_url('/projects/detail/' . $project['id']),
         ]);
     }
 

@@ -130,10 +130,10 @@ _modules/*
 # Database Dumps
 *.sql
 *.bak
-/docs/database/
+
+#Documentations
+/docs
 
 # Agent
-TODO.md
 AGENTS.md
 GEMINI.md
-test_scenario.md

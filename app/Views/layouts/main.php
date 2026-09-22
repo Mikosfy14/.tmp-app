@@ -627,9 +627,8 @@
                     <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; border-radius: 50%; background-color: rgba(255, 193, 7, 0.15); color: #eaca4a;">
                         <i class="bi bi-clock-history" style="font-size: 2rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto;"></i>
                     </div>
-                    <h5 class="modal-title fw-bold mb-2" id="modalSessionExpiredLabel">Sesi Telah Habis</h5>
-                    <p class="text-muted mb-4" style="font-size: 0.92rem; line-height: 1.5;">
-                        Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Demi keamanan data akun Anda, silakan masuk kembali.
+                    <p class="text-dark mb-4" style="font-size: 0.92rem; line-height: 1.5;">
+                        Sesi Anda telah berakhir. Demi keamanan data akun Anda, silakan masuk kembali.
                     </p>
                     <div class="d-grid">
                         <a href="<?= base_url('/logout') ?>" class="btn btn-primary py-2 fw-semibold" id="btnSessionRelogin" style="border-radius: 8px;">

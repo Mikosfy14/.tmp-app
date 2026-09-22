@@ -49,6 +49,8 @@ $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->post('files/bulk-delete', 'Projects::bulkDeleteFiles');
     $routes->get('files/(:segment)/download', 'Projects::downloadFile/$1');
     $routes->post('files/delete/(:segment)', 'Projects::deleteFile/$1');
+    $routes->get('(:segment)/logbooks/create', 'Projects::createLogbook/$1');
+    $routes->get('(:segment)/logbooks/(:segment)/edit', 'Projects::editLogbook/$1/$2');
 });
 
 $routes->group('users', ['filter' => 'auth'], function($routes) {
