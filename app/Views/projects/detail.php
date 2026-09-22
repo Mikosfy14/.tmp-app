@@ -370,6 +370,48 @@ if ($isCompleted) {
         color: #e6eaee !important;
     }
 
+    .pic-scrollable-list {
+        max-height: 180px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .file-scrollable-list {
+        max-height: 180px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .notes-scrollable-container {
+        max-height: 380px;
+        overflow-y: auto;
+    }
+
+    .pic-scrollable-list::-webkit-scrollbar,
+    .file-scrollable-list::-webkit-scrollbar,
+    .notes-scrollable-container::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .pic-scrollable-list::-webkit-scrollbar-track,
+    .file-scrollable-list::-webkit-scrollbar-track,
+    .notes-scrollable-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .pic-scrollable-list::-webkit-scrollbar-thumb,
+    .file-scrollable-list::-webkit-scrollbar-thumb,
+    .notes-scrollable-container::-webkit-scrollbar-thumb {
+        background: rgba(108, 117, 125, 0.3);
+        border-radius: 4px;
+    }
+
+    .pic-scrollable-list::-webkit-scrollbar-thumb:hover,
+    .file-scrollable-list::-webkit-scrollbar-thumb:hover,
+    .notes-scrollable-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(108, 117, 125, 0.5);
+    }
+
     /* Logbook Progres Mingguan - Native Enterprise Styling */
     .logbook-feed-container {
         display: flex;
@@ -569,352 +611,60 @@ if ($isCompleted) {
     </div>
 </div>
 
-<div class="page-content">
-    <div class="row g-4">
-        <!-- Main Content Area -->
-        <div class="col-12 col-lg-8">
-            <!-- Milestone Track (Unit Testing -> SIT -> UAT -> Promote) -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header pb-0 border-0">
-                    <h5 class="card-title mb-0 fs-6 fw-bold">Target Milestone</h5>
+<<div class="page-content">
+    <!-- Milestone Track (Unit Testing -> SIT -> UAT -> Promote) - Full Width -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header pb-0 border-0">
+            <h5 class="card-title mb-0 fs-6 fw-bold">Target Milestone</h5>
+        </div>
+        <div class="card-body pt-3">
+            <div class="milestone-track">
+                <div class="milestone-box <?= !empty($project['unit_testing_date']) ? 'has-date' : '' ?>">
+                    <div class="milestone-name">Unit Testing</div>
+                    <div class="milestone-date"><?= $dateValue($project['unit_testing_date'] ?? null) ?></div>
                 </div>
-                <div class="card-body pt-3">
-                    <div class="milestone-track">
-                        <div class="milestone-box <?= !empty($project['unit_testing_date']) ? 'has-date' : '' ?>">
-                            <div class="milestone-name">Unit Testing</div>
-                            <div class="milestone-date"><?= $dateValue($project['unit_testing_date'] ?? null) ?></div>
-                        </div>
-                        <div class="milestone-box <?= !empty($project['sit_date']) ? 'has-date' : '' ?>">
-                            <div class="milestone-name">SIT</div>
-                            <div class="milestone-date"><?= $dateValue($project['sit_date'] ?? null) ?></div>
-                        </div>
-                        <div class="milestone-box <?= !empty($project['uat_date']) ? 'has-date' : '' ?>">
-                            <div class="milestone-name">UAT</div>
-                            <div class="milestone-date"><?= $dateValue($project['uat_date'] ?? null) ?></div>
-                        </div>
-                        <div class="milestone-box <?= !empty($project['promote_date']) ? 'has-date' : '' ?>">
-                            <div class="milestone-name">Promote</div>
-                            <div class="milestone-date"><?= $dateValue($project['promote_date'] ?? null) ?></div>
-                        </div>
-                    </div>
+                <div class="milestone-box <?= !empty($project['sit_date']) ? 'has-date' : '' ?>">
+                    <div class="milestone-name">SIT</div>
+                    <div class="milestone-date"><?= $dateValue($project['sit_date'] ?? null) ?></div>
+                </div>
+                <div class="milestone-box <?= !empty($project['uat_date']) ? 'has-date' : '' ?>">
+                    <div class="milestone-name">UAT</div>
+                    <div class="milestone-date"><?= $dateValue($project['uat_date'] ?? null) ?></div>
+                </div>
+                <div class="milestone-box <?= !empty($project['promote_date']) ? 'has-date' : '' ?>">
+                    <div class="milestone-name">Promote</div>
+                    <div class="milestone-date"><?= $dateValue($project['promote_date'] ?? null) ?></div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Notes Section -->
-            <div class="card shadow-sm">
+    <!-- Justified Equal-Height Row: Catatan Proyek (Left) vs Tim Penanggung Jawab & Berkas Proyek (Right) -->
+    <div class="row g-4 mb-4 align-items-stretch">
+        <!-- Catatan Proyek (Left Column) -->
+        <div class="col-12 col-lg-7 d-flex flex-column">
+            <div class="card shadow-sm h-100 d-flex flex-column mb-0">
                 <div class="card-header pb-0 border-0">
                     <h5 class="card-title mb-0 fs-6 fw-bold">Catatan Proyek</h5>
                 </div>
-                <div class="card-body pt-3">
+                <div class="card-body pt-3 d-flex flex-column flex-grow-1">
                     <?php if (!empty(trim((string) ($project['notes'] ?? '')))) : ?>
-                        <div class="notes-container text-body">
+                        <div class="notes-container notes-scrollable-container text-body flex-grow-1">
                             <?= nl2br(esc($project['notes'])) ?>
                         </div>
                     <?php else : ?>
-                        <div class="text-muted small py-2">
+                        <div class="text-muted small py-2 flex-grow-1">
                             Tidak ada catatan tambahan untuk project ini.
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
-
-            <!-- Logbook Progres Mingguan Section (Native Enterprise Feed) -->
-            <div class="card shadow-sm mt-4">
-                <div class="card-header pb-0 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <div>
-                        <h5 class="card-title mb-0 fs-6 fw-bold">Logbook Progres Mingguan</h5>
-                        <span class="text-muted small">Riwayat evaluasi mingguan & laporan progres pengerjaan</span>
-                    </div>
-                    <div>
-                        <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/create') ?>" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-lg me-1"></i> Tambah Log Mingguan
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body pt-3">
-                    <!-- Filter Pills -->
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                        <div class="btn-group btn-group-sm" role="group" id="logbookFilterGroup">
-                            <button type="button" class="btn btn-outline-secondary logbook-filter-btn active" data-filter="all">
-                                Semua <span class="badge bg-secondary ms-1">3</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary logbook-filter-btn" data-filter="kadept">
-                                Review Kadept <span class="badge bg-primary ms-1">1</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary logbook-filter-btn" data-filter="team">
-                                Laporan Tim <span class="badge bg-success ms-1">2</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Native Feed Container -->
-                    <div class="logbook-feed-container" id="logbookFeed">
-
-                        <!-- Item 1: Review Kadept -->
-                        <div class="logbook-item-card is-kadept logbook-entry-card-wrapper" id="logbook-1" data-type="kadept">
-                            <!-- Header Item Log -->
-                            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-initial">
-                                        KD
-                                    </div>
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <span class="fw-bold small text-body">Budi Santoso</span>
-                                            <span class="badge bg-primary">Kepala Departemen</span>
-                                            <span class="badge bg-info text-dark" title="Snapshot status SDLC proyek saat log dicatat">SIT</span>
-                                        </div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">
-                                            Jumat, 12 September 2026 &middot; Evaluasi Mingguan Pekan ke-2
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <?php if ($isKadept) : ?>
-                                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
-                                            data-log-id="1"
-                                            data-user-name="Budi Santoso"
-                                            data-log-date="Jumat, 12 September 2026"
-                                            data-blocker=""
-                                            data-notes="Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging."
-                                            title="Ubah Arahan">
-                                            <i class="bi bi-chat-left-text"></i> Ubah Arahan
-                                        </button>
-                                    <?php endif; ?>
-                                    <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/1/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Body Item Log: 3 Blok Ringkas -->
-                            <div class="d-flex flex-column gap-3">
-                                <div>
-                                    <div class="meta-item-label">Capaian Minggu Ini</div>
-                                    <div class="logbook-richtext-content">
-                                        <ul class="mb-0 ps-3">
-                                            <li>Review berkala bersama tim dev. Modul integrasi <strong>payment gateway</strong> sandbox berhasil diverifikasi.</li>
-                                            <li>Koordinasi awal dengan tim security terkait <em>vulnerability assessment</em> & skenario UAT.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="meta-item-label">Kendala & Masalah</div>
-                                    <div class="small text-muted ps-1">
-                                        - (Tidak ada kendala / pengerjaan sesuai target)
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="meta-item-label">Rencana Minggu Depan</div>
-                                    <div class="logbook-richtext-content">
-                                        <ul class="mb-0 ps-3">
-                                            <li>Penyelesaian modul settlement transaksi dan verifikasi security scan.</li>
-                                            <li>Persiapan environment SIT dan pendaftaran whitelist IP firewall staging.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-1">
-                                    <div class="logbook-callout-kadept">
-                                        <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
-                                        <div class="small text-body callout-notes-text">
-                                            Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
-                                <span>Target Milestone: <strong>Penyelesaian SIT & Verifikasi Dokumen POK</strong></span>
-                                <span>Diperbarui: 12 Sep 2026, 16:30</span>
-                            </div>
-                        </div>
-
-                        <!-- Item 2: Laporan Tim PIC (Staff) -->
-                        <div class="logbook-item-card is-team-staff logbook-entry-card-wrapper" id="logbook-2" data-type="team">
-                            <!-- Header Item Log -->
-                            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-initial" style="background-color: rgba(25, 135, 84, 0.12); color: #198754;">
-                                        AP
-                                    </div>
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <span class="fw-bold small text-body">Ahmad Prasetyo</span>
-                                            <span class="badge bg-light-success text-success border border-success-subtle">Staff (PIC)</span>
-                                            <span class="badge bg-secondary" title="Snapshot status SDLC proyek saat log dicatat">DEVELOPMENT</span>
-                                        </div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">
-                                            Rabu, 10 September 2026 &middot; Update Teknis Progres
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <?php if ($isKadept) : ?>
-                                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
-                                            data-log-id="2"
-                                            data-user-name="Ahmad Prasetyo"
-                                            data-log-date="Rabu, 10 September 2026"
-                                            data-blocker="Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner."
-                                            data-notes=""
-                                            title="Beri Arahan">
-                                            <i class="bi bi-chat-left-text"></i> Beri Arahan
-                                        </button>
-                                    <?php endif; ?>
-                                    <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/2/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Body Item Log: 3 Blok Ringkas -->
-                            <div class="d-flex flex-column gap-3">
-                                <div>
-                                    <div class="meta-item-label">Capaian Minggu Ini</div>
-                                    <div class="logbook-richtext-content">
-                                        <ul class="mb-0 ps-3">
-                                            <li>Selesai mengimplementasikan <strong>API endpoint webhook</strong> transaksi.</li>
-                                            <li>Fixing validasi payload JSON dan sanitasi input database MSSQL.</li>
-                                            <li>Unit testing coverage mencapai <strong>78%</strong>.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="meta-item-label">Kendala & Masalah</div>
-                                    <div class="logbook-callout-blocker">
-                                        <div class="fw-bold text-danger mb-1" style="font-size: 0.8rem;">Hambatan Integrasi</div>
-                                        <div class="small text-body">
-                                            Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="meta-item-label">Rencana Minggu Depan</div>
-                                    <div class="logbook-richtext-content">
-                                        <ul class="mb-0 ps-3">
-                                            <li>Stress test 500 req/sec pada service webhook & integrasi log error.</li>
-                                            <li>Uji coba skenario timeout handling bersama tim partner.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-2" style="display: none;">
-                                    <div class="logbook-callout-kadept">
-                                        <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
-                                        <div class="small text-body callout-notes-text"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
-                                <span>Target Milestone: <strong>Stress test 500 req/sec & integrasi log error</strong></span>
-                                <span>Diperbarui: 10 Sep 2026, 14:15</span>
-                            </div>
-                        </div>
-
-                        <!-- Item 3: Laporan Tim PIC (Manmonth) -->
-                        <div class="logbook-item-card is-team-manmonth logbook-entry-card-wrapper" id="logbook-3" data-type="team">
-                            <!-- Header Item Log -->
-                            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-initial" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309;">
-                                        RA
-                                    </div>
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <span class="fw-bold small text-body">Rian Ardiansyah</span>
-                                            <span class="badge bg-light-warning text-warning border border-warning-subtle">Manmonth</span>
-                                            <span class="badge bg-secondary" title="Snapshot status SDLC proyek saat log dicatat">DEVELOPMENT</span>
-                                        </div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">
-                                            Senin, 08 September 2026 &middot; Update Frontend UI
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <?php if ($isKadept) : ?>
-                                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
-                                            data-log-id="3"
-                                            data-user-name="Rian Ardiansyah"
-                                            data-log-date="Senin, 08 September 2026"
-                                            data-blocker=""
-                                            data-notes=""
-                                            title="Beri Arahan">
-                                            <i class="bi bi-chat-left-text"></i> Beri Arahan
-                                        </button>
-                                    <?php endif; ?>
-                                    <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/3/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Body Item Log: 3 Blok Ringkas -->
-                            <div class="d-flex flex-column gap-3">
-                                <div>
-                                    <div class="meta-item-label">Capaian Minggu Ini</div>
-                                    <div class="logbook-richtext-content">
-                                        <ul class="mb-0 ps-3">
-                                            <li>Slicing antarmuka dashboard monitoring transaksi dan filter tanggal.</li>
-                                            <li>Penyelarasan palet warna <strong>Dark Mode</strong> dengan template Mazer.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="meta-item-label">Kendala & Masalah</div>
-                                    <div class="small text-muted ps-1">
-                                        - (Tidak ada kendala / pengerjaan lancar)
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="meta-item-label">Rencana Minggu Depan</div>
-                                    <div class="logbook-richtext-content">
-                                        <ul class="mb-0 ps-3">
-                                            <li>Binding data tabel riwayat ke endpoint AJAX.</li>
-                                            <li>Penyesuaian interaktivitas filter status SDLC.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-3" style="display: none;">
-                                    <div class="logbook-callout-kadept">
-                                        <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
-                                        <div class="small text-body callout-notes-text"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
-                                <span>Target Milestone: <strong>Binding data tabel riwayat ke endpoint AJAX</strong></span>
-                                <span>Diperbarui: 08 Sep 2026, 11:00</span>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Sidebar Information -->
-        <div class="col-12 col-lg-4">
+        <!-- Tim Penanggung Jawab & Berkas Proyek (Right Column) -->
+        <div class="col-12 col-lg-5 d-flex flex-column justify-content-between gap-4">
             <!-- Assigned Team (PIC) -->
-            <div class="card shadow-sm mb-4">
+            <div class="card shadow-sm mb-0">
                 <div class="card-header pb-0 border-0">
                     <h5 class="card-title mb-0 fs-6 fw-bold">Tim Penanggung Jawab</h5>
                 </div>
@@ -922,8 +672,9 @@ if ($isCompleted) {
                     <?php if (!empty($project['assigned_users'])) : ?>
                         <?php
                         $primaryPicId = (int) (explode(',', (string) ($project['assigned_to'] ?? ''))[0] ?? 0);
+                        $isPicScrollable = count($project['assigned_users']) > 3;
                         ?>
-                        <div class="d-flex flex-column">
+                        <div class="d-flex flex-column <?= $isPicScrollable ? 'pic-scrollable-list' : '' ?>">
                             <?php foreach ($project['assigned_users'] as $assignedUser) : ?>
                                 <?php
                                 $isPrimaryPic = ((int) ($assignedUser['user_id'] ?? $assignedUser['id'] ?? 0) === $primaryPicId);
@@ -955,13 +706,14 @@ if ($isCompleted) {
             </div>
 
             <!-- Attached Files -->
-            <div class="card shadow-sm">
+            <div class="card shadow-sm mb-0">
                 <div class="card-header pb-0 border-0">
                     <h5 class="card-title mb-0 fs-6 fw-bold">Berkas Proyek</h5>
                 </div>
                 <div class="card-body pt-3">
                     <?php if (!empty($projectFiles)) : ?>
-                        <div class="d-flex flex-column">
+                        <?php $isFileScrollable = count($projectFiles) > 3; ?>
+                        <div class="d-flex flex-column <?= $isFileScrollable ? 'file-scrollable-list' : '' ?>">
                             <?php foreach ($projectFiles as $file) : ?>
                                 <?php
                                 $ext = strtolower(pathinfo($file['original_name'] ?? '', PATHINFO_EXTENSION));
@@ -1004,6 +756,298 @@ if ($isCompleted) {
                         <div class="text-muted small py-2">Belum ada berkas terunggah pada project ini.</div>
                     <?php endif; ?>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logbook Progres Mingguan Section (Full Width) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header pb-0 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <h5 class="card-title mb-0 fs-6 fw-bold">Logbook Progres Mingguan</h5>
+                <span class="text-muted small">Riwayat evaluasi mingguan & laporan progres pengerjaan</span>
+            </div>
+            <div>
+                <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/create') ?>" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah Log Mingguan
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body pt-3">
+            <!-- Filter Pills -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div class="btn-group btn-group-sm" role="group" id="logbookFilterGroup">
+                    <button type="button" class="btn btn-outline-secondary logbook-filter-btn active" data-filter="all">
+                        Semua <span class="badge bg-secondary ms-1">3</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary logbook-filter-btn" data-filter="kadept">
+                        Review Kadept <span class="badge bg-primary ms-1">1</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary logbook-filter-btn" data-filter="team">
+                        Laporan Tim <span class="badge bg-success ms-1">2</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Native Feed Container -->
+            <div class="logbook-feed-container" id="logbookFeed">
+
+                <!-- Item 1: Review Kadept -->
+                <div class="logbook-item-card is-kadept logbook-entry-card-wrapper" id="logbook-1" data-type="kadept">
+                    <!-- Header Item Log -->
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-initial">
+                                KD
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="fw-bold small text-body">Budi Santoso</span>
+                                    <span class="badge bg-primary">Kepala Departemen</span>
+                                    <span class="badge bg-info text-dark" title="Snapshot status SDLC proyek saat log dicatat">SIT</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    Jumat, 12 September 2026 &middot; Evaluasi Mingguan Pekan ke-2
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <?php if ($isKadept) : ?>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
+                                    data-log-id="1"
+                                    data-user-name="Budi Santoso"
+                                    data-log-date="Jumat, 12 September 2026"
+                                    data-blocker=""
+                                    data-notes="Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging."
+                                    title="Ubah Arahan">
+                                    <i class="bi bi-chat-left-text"></i> Ubah Arahan
+                                </button>
+                            <?php endif; ?>
+                            <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/1/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body Item Log: 3 Blok Ringkas -->
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <div class="meta-item-label">Capaian Minggu Ini</div>
+                            <div class="logbook-richtext-content">
+                                <ul class="mb-0 ps-3">
+                                    <li>Review berkala bersama tim dev. Modul integrasi <strong>payment gateway</strong> sandbox berhasil diverifikasi.</li>
+                                    <li>Koordinasi awal dengan tim security terkait <em>vulnerability assessment</em> & skenario UAT.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="meta-item-label">Kendala & Masalah</div>
+                            <div class="small text-muted ps-1">
+                                - (Tidak ada kendala / pengerjaan sesuai target)
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="meta-item-label">Rencana Minggu Depan</div>
+                            <div class="logbook-richtext-content">
+                                <ul class="mb-0 ps-3">
+                                    <li>Penyelesaian modul settlement transaksi dan verifikasi security scan.</li>
+                                    <li>Persiapan environment SIT dan pendaftaran whitelist IP firewall staging.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-1">
+                            <div class="logbook-callout-kadept">
+                                <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
+                                <div class="small text-body callout-notes-text">
+                                    Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
+                        <span>Target Milestone: <strong>Penyelesaian SIT & Verifikasi Dokumen POK</strong></span>
+                        <span>Diperbarui: 12 Sep 2026, 16:30</span>
+                    </div>
+                </div>
+
+                <!-- Item 2: Laporan Tim PIC (Staff) -->
+                <div class="logbook-item-card is-team-staff logbook-entry-card-wrapper" id="logbook-2" data-type="team">
+                    <!-- Header Item Log -->
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-initial" style="background-color: rgba(25, 135, 84, 0.12); color: #198754;">
+                                AP
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="fw-bold small text-body">Ahmad Prasetyo</span>
+                                    <span class="badge bg-light-success text-success border border-success-subtle">Staff (PIC)</span>
+                                    <span class="badge bg-secondary" title="Snapshot status SDLC proyek saat log dicatat">DEVELOPMENT</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    Rabu, 10 September 2026 &middot; Update Teknis Progres
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <?php if ($isKadept) : ?>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
+                                    data-log-id="2"
+                                    data-user-name="Ahmad Prasetyo"
+                                    data-log-date="Rabu, 10 September 2026"
+                                    data-blocker="Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner."
+                                    data-notes=""
+                                    title="Beri Arahan">
+                                    <i class="bi bi-chat-left-text"></i> Beri Arahan
+                                </button>
+                            <?php endif; ?>
+                            <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/2/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body Item Log: 3 Blok Ringkas -->
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <div class="meta-item-label">Capaian Minggu Ini</div>
+                            <div class="logbook-richtext-content">
+                                <ul class="mb-0 ps-3">
+                                    <li>Selesai mengimplementasikan <strong>API endpoint webhook</strong> transaksi.</li>
+                                    <li>Fixing validasi payload JSON dan sanitasi input database MSSQL.</li>
+                                    <li>Unit testing coverage mencapai <strong>78%</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="meta-item-label">Kendala & Masalah</div>
+                            <div class="logbook-callout-blocker">
+                                <div class="fw-bold text-danger mb-1" style="font-size: 0.8rem;">Hambatan Integrasi</div>
+                                <div class="small text-body">
+                                    Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="meta-item-label">Rencana Minggu Depan</div>
+                            <div class="logbook-richtext-content">
+                                <ul class="mb-0 ps-3">
+                                    <li>Stress test 500 req/sec pada service webhook & integrasi log error.</li>
+                                    <li>Uji coba skenario timeout handling bersama tim partner.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-2" style="display: none;">
+                            <div class="logbook-callout-kadept">
+                                <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
+                                <div class="small text-body callout-notes-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
+                        <span>Target Milestone: <strong>Stress test 500 req/sec & integrasi log error</strong></span>
+                        <span>Diperbarui: 10 Sep 2026, 14:15</span>
+                    </div>
+                </div>
+
+                <!-- Item 3: Laporan Tim PIC (Manmonth) -->
+                <div class="logbook-item-card is-team-manmonth logbook-entry-card-wrapper" id="logbook-3" data-type="team">
+                    <!-- Header Item Log -->
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-initial" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309;">
+                                RA
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="fw-bold small text-body">Rian Ardiansyah</span>
+                                    <span class="badge bg-light-warning text-warning border border-warning-subtle">Manmonth</span>
+                                    <span class="badge bg-secondary" title="Snapshot status SDLC proyek saat log dicatat">DEVELOPMENT</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    Senin, 08 September 2026 &middot; Update Frontend UI
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <?php if ($isKadept) : ?>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
+                                    data-log-id="3"
+                                    data-user-name="Rian Ardiansyah"
+                                    data-log-date="Senin, 08 September 2026"
+                                    data-blocker=""
+                                    data-notes=""
+                                    title="Beri Arahan">
+                                    <i class="bi bi-chat-left-text"></i> Beri Arahan
+                                </button>
+                            <?php endif; ?>
+                            <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/3/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body Item Log: 3 Blok Ringkas -->
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <div class="meta-item-label">Capaian Minggu Ini</div>
+                            <div class="logbook-richtext-content">
+                                <ul class="mb-0 ps-3">
+                                    <li>Slicing antarmuka dashboard monitoring transaksi dan filter tanggal.</li>
+                                    <li>Penyelarasan palet warna <strong>Dark Mode</strong> dengan template Mazer.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="meta-item-label">Kendala & Masalah</div>
+                            <div class="small text-muted ps-1">
+                                - (Tidak ada kendala / pengerjaan lancar)
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="meta-item-label">Rencana Minggu Depan</div>
+                            <div class="logbook-richtext-content">
+                                <ul class="mb-0 ps-3">
+                                    <li>Binding data tabel riwayat ke endpoint AJAX.</li>
+                                    <li>Penyesuaian interaktivitas filter status SDLC.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-3" style="display: none;">
+                            <div class="logbook-callout-kadept">
+                                <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
+                                <div class="small text-body callout-notes-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted" style="font-size: 0.75rem;">
+                        <span>Target Milestone: <strong>Binding data tabel riwayat ke endpoint AJAX</strong></span>
+                        <span>Diperbarui: 08 Sep 2026, 11:00</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
