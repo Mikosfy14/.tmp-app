@@ -35,7 +35,7 @@ class ProjectLogbookModel extends Model
                 project_logbooks.*,
                 users.name as author_name,
                 users.username as author_username,
-                roles.name as role_name,
+                roles.role_name as role_name,
                 roles.category as role_category,
                 project_status.status_name as status_name,
                 reviewer.name as reviewer_name
@@ -49,4 +49,25 @@ class ProjectLogbookModel extends Model
             ->orderBy('project_logbooks.id', 'DESC')
             ->findAll();
     }
+
+    public function getLogbookByProjectAndId(int $projectId, int $logbookId): ?array
+    {
+        return $this->select('
+                project_logbooks.*,
+                users.name as author_name,
+                users.username as author_username,
+                roles.role_name as role_name,
+                roles.category as role_category,
+                project_status.status_name as status_name,
+                reviewer.name as reviewer_name
+            ')
+            ->join('users', 'users.id = project_logbooks.user_id', 'left')
+            ->join('roles', 'roles.id = users.role_id', 'left')
+            ->join('project_status', 'project_status.id = project_logbooks.project_status_id', 'left')
+            ->join('users as reviewer', 'reviewer.id = project_logbooks.kadept_reviewed_by', 'left')
+            ->where('project_logbooks.project_id', $projectId)
+            ->where('project_logbooks.id', $logbookId)
+            ->first();
+    }
+
 }

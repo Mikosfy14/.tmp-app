@@ -4,7 +4,8 @@ $profileName = trim((string) session()->get('name'));
 $profileInitial = strtoupper(substr($profileName !== '' ? $profileName : 'U', 0, 1));
 $deadlineNotifications = get_user_deadline_notifications();
 $feedbackNotifications = get_user_feedback_notifications();
-$totalNotifications = count($deadlineNotifications) + count($feedbackNotifications);
+$feedbackUnreadCount = get_user_feedback_unread_count();
+$totalNotifications = count($deadlineNotifications) + $feedbackUnreadCount;
 ?>
 
 <style>
@@ -79,9 +80,13 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
 
     .navbar-notification-menu {
         width: 360px;
-        max-height: 480px;
-        overflow-y: auto;
+        max-height: 560px;
         z-index: 1080;
+    }
+
+    .notification-list.is-scrollable {
+        max-height: 360px;
+        overflow-y: auto;
     }
 
     @media (max-width: 575.98px) {
@@ -185,6 +190,13 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
                         <div class="dropdown-menu dropdown-menu-end navbar-notification-menu shadow-sm p-0" aria-labelledby="notificationDropdown">
                             <!-- Header Tabs Navigation -->
                             <div class="p-2 border-bottom bg-light">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <?php if ($feedbackUnreadCount > 0): ?>
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" id="markAllNotificationsRead">
+                                            Tandai semua dibaca
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                                 <ul class="nav nav-pills nav-fill notif-tab-nav" id="notifTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active py-1 px-2 fw-semibold" id="tab-deadline-btn" data-bs-toggle="pill" data-bs-target="#notif-deadline-pane" type="button" role="tab" aria-controls="notif-deadline-pane" aria-selected="true" onclick="event.stopPropagation();">
@@ -197,8 +209,8 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link py-1 px-2 fw-semibold" id="tab-feedback-btn" data-bs-toggle="pill" data-bs-target="#notif-feedback-pane" type="button" role="tab" aria-controls="notif-feedback-pane" aria-selected="false" onclick="event.stopPropagation();">
                                             <i class="bi bi-chat-dots me-1"></i>Diskusi
-                                            <?php if (!empty($feedbackNotifications)): ?>
-                                                <span class="badge bg-primary ms-1"><?= count($feedbackNotifications) ?></span>
+                                            <?php if ($feedbackUnreadCount > 0): ?>
+                                                <span class="badge bg-primary ms-1"><?= $feedbackUnreadCount ?></span>
                                             <?php endif; ?>
                                         </button>
                                     </li>
@@ -210,7 +222,7 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
                                 <!-- Tab 1: Peringatan Deadline -->
                                 <div class="tab-pane fade show active" id="notif-deadline-pane" role="tabpanel" aria-labelledby="tab-deadline-btn">
                                     <?php if (!empty($deadlineNotifications)): ?>
-                                        <ul class="list-unstyled mb-0">
+                                        <ul class="list-unstyled mb-0 notification-list <?= count($deadlineNotifications) > 4 ? 'is-scrollable' : '' ?>">
                                             <?php foreach ($deadlineNotifications as $notif): ?>
                                                 <?php
                                                 $daysLeft = $notif['days_left'] ?? null;
@@ -259,7 +271,7 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
                                 <!-- Tab 2: Diskusi & Feedback Logbook -->
                                 <div class="tab-pane fade" id="notif-feedback-pane" role="tabpanel" aria-labelledby="tab-feedback-btn">
                                     <?php if (!empty($feedbackNotifications)): ?>
-                                        <ul class="list-unstyled mb-0">
+                                        <ul class="list-unstyled mb-0 notification-list <?= count($feedbackNotifications) > 4 ? 'is-scrollable' : '' ?>">
                                             <?php foreach ($feedbackNotifications as $fb): ?>
                                                 <?php
                                                 $senderName = $fb['sender_name'] ?? $fb['commenter_name'] ?? 'User';
@@ -273,7 +285,9 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
                                                 $detailUrl = base_url('/projects/detail/' . ($fb['project_id'] ?? 1) . (!empty($fb['logbook_id']) ? '#logbook-' . $fb['logbook_id'] : ''));
                                                 ?>
                                                 <li class="border-bottom">
-                                                    <a class="dropdown-item p-3 text-wrap notif-comment-item" href="<?= $detailUrl ?>">
+                                                    <a class="dropdown-item p-3 text-wrap notif-comment-item"
+                                                       href="<?= $detailUrl ?>"
+                                                       data-read-url="<?= base_url('/notifications/' . (int) ($fb['id'] ?? 0) . '/read') ?>">
                                                         <div class="d-flex align-items-center gap-2 mb-1">
                                                             <span class="badge bg-primary-subtle text-primary fw-bold" style="font-size: 0.7rem;"><?= esc($fbInitials) ?></span>
                                                             <strong class="text-dark small text-truncate" style="max-width: 170px;" title="<?= esc($senderName) ?>">
@@ -331,3 +345,47 @@ $totalNotifications = count($deadlineNotifications) + count($feedbackNotificatio
         </div>
     </nav>
 </header>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfHeader = '<?= csrf_header() ?>';
+        const csrfToken = '<?= csrf_hash() ?>';
+        const markAllButton = document.getElementById('markAllNotificationsRead');
+
+        document.querySelectorAll('[data-read-url]').forEach((item) => {
+            item.addEventListener('click', function(event) {
+                const url = this.dataset.readUrl;
+                if (!url) return;
+
+                event.preventDefault();
+                const destination = this.href;
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        [csrfHeader]: csrfToken
+                    },
+                    credentials: 'same-origin'
+                }).finally(() => {
+                    window.location.assign(destination);
+                });
+            });
+        });
+
+        if (markAllButton) {
+            markAllButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                fetch('<?= base_url('/notifications/read-all') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        [csrfHeader]: csrfToken
+                    },
+                    credentials: 'same-origin'
+                }).finally(() => {
+                    window.location.reload();
+                });
+            });
+        }
+    });
+</script>

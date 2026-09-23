@@ -3,6 +3,9 @@
 /**
  * @var array $project
  * @var array $projectFiles
+ * @var array $allowedLogTypes
+ * @var array $logbooks
+ * @var int $currentUserId
  */
 
 helper(['deadline', 'navigation']);
@@ -635,6 +638,12 @@ if ($isCompleted) {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
+<?php if (session()->getFlashdata('error')) : ?>
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <?= esc(session()->getFlashdata('error')) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
 <!-- Executive Header Card (Zero Redundancy) -->
 <div class="card project-detail-header shadow-sm mb-4">
@@ -842,298 +851,147 @@ if ($isCompleted) {
         </div>
     </div>
 
+    <?php
+    $logbooks = is_array($logbooks ?? null) ? $logbooks : [];
+    $allowedLogTypes = is_array($allowedLogTypes ?? null) ? $allowedLogTypes : [];
+    $logbookCounts = [
+        'all' => count($logbooks),
+        'kadept' => count(array_filter($logbooks, static fn (array $item): bool => ($item['log_type'] ?? '') === 'kadept_review')),
+        'team' => count(array_filter($logbooks, static fn (array $item): bool => ($item['log_type'] ?? '') === 'team_log')),
+    ];
+    $canCreateLogbook = !empty($allowedLogTypes);
+    ?>
+
     <!-- Logbook Progres Mingguan Section (Full Width) -->
+    <?php if (isset($logbooks)) : ?>
     <div class="card shadow-sm mb-4">
         <div class="card-header logbook-card-header pb-0 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div>
                 <h5 class="card-title mb-0 fs-6 fw-bold">Logbook Progres Mingguan</h5>
                 <span class="text-muted small">Riwayat evaluasi mingguan & laporan progres pengerjaan</span>
             </div>
-            <div>
-                <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/create') ?>" class="btn btn-sm btn-primary">
-                    <i class="bi bi-plus-lg me-1"></i> Tambah Log Mingguan
-                </a>
-            </div>
+            <?php if ($canCreateLogbook) : ?>
+                <div>
+                    <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/create') ?>" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Log Mingguan
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="card-body pt-3">
-            <!-- Filter Pills -->
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 logbook-filter-row">
                 <div class="btn-group btn-group-sm logbook-filter-group" role="group" id="logbookFilterGroup">
                     <button type="button" class="btn btn-outline-secondary logbook-filter-btn active" data-filter="all">
-                        Semua <span class="badge bg-secondary ms-1">3</span>
+                        Semua <span class="badge bg-secondary ms-1"><?= $logbookCounts['all'] ?></span>
                     </button>
                     <button type="button" class="btn btn-outline-secondary logbook-filter-btn" data-filter="kadept">
-                        Review Kadept <span class="badge bg-primary ms-1">1</span>
+                        Review Kadept <span class="badge bg-primary ms-1"><?= $logbookCounts['kadept'] ?></span>
                     </button>
                     <button type="button" class="btn btn-outline-secondary logbook-filter-btn" data-filter="team">
-                        Laporan Tim <span class="badge bg-success ms-1">2</span>
+                        Laporan Tim <span class="badge bg-success ms-1"><?= $logbookCounts['team'] ?></span>
                     </button>
                 </div>
             </div>
 
-            <!-- Native Feed Container -->
-            <div class="logbook-feed-container" id="logbookFeed">
-
-                <!-- Item 1: Review Kadept -->
-                <div class="logbook-item-card is-kadept logbook-entry-card-wrapper" id="logbook-1" data-type="kadept">
-                    <!-- Header Item Log -->
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-initial">
-                                KD
-                            </div>
-                            <div>
-                                <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <span class="fw-bold small text-body">Budi Santoso</span>
-                                    <span class="badge bg-primary">Kepala Departemen</span>
-                                    <span class="badge bg-info text-dark" title="Snapshot status SDLC proyek saat log dicatat">SIT</span>
-                                </div>
-                                <div class="text-muted" style="font-size: 0.75rem;">
-                                    Jumat, 12 September 2026 &middot; Evaluasi Mingguan Pekan ke-2
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 logbook-entry-actions">
-                            <?php if ($isKadept) : ?>
-                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
-                                    data-log-id="1"
-                                    data-user-name="Budi Santoso"
-                                    data-log-date="Jumat, 12 September 2026"
-                                    data-blocker=""
-                                    data-notes="Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging."
-                                    title="Ubah Arahan">
-                                    <i class="bi bi-chat-left-text"></i> Ubah Arahan
-                                </button>
-                            <?php endif; ?>
-                            <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/1/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Body Item Log: 3 Blok Ringkas -->
-                    <div class="d-flex flex-column gap-3 logbook-entry-content">
-                        <div>
-                            <div class="meta-item-label">Capaian Minggu Ini</div>
-                            <div class="logbook-richtext-content">
-                                <ul class="mb-0 ps-3">
-                                    <li>Review berkala bersama tim dev. Modul integrasi <strong>payment gateway</strong> sandbox berhasil diverifikasi.</li>
-                                    <li>Koordinasi awal dengan tim security terkait <em>vulnerability assessment</em> & skenario UAT.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="meta-item-label">Kendala & Masalah</div>
-                            <div class="small text-muted ps-1">
-                                - (Tidak ada kendala / pengerjaan sesuai target)
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="meta-item-label">Rencana Minggu Depan</div>
-                            <div class="logbook-richtext-content">
-                                <ul class="mb-0 ps-3">
-                                    <li>Penyelesaian modul settlement transaksi dan verifikasi security scan.</li>
-                                    <li>Persiapan environment SIT dan pendaftaran whitelist IP firewall staging.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-1">
-                            <div class="logbook-callout-kadept">
-                                <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
-                                <div class="small text-body callout-notes-text">
-                                    Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
-                        <span>Target Milestone: <strong>Penyelesaian SIT & Verifikasi Dokumen POK</strong></span>
-                        <span>Diperbarui: 12 Sep 2026, 16:30</span>
-                    </div>
+            <?php if (empty($logbooks)) : ?>
+                <div class="text-center text-muted py-4">
+                    Belum ada Logbook pada project ini.
                 </div>
-
-                <!-- Item 2: Laporan Tim PIC (Staff) -->
-                <div class="logbook-item-card is-team-staff logbook-entry-card-wrapper" id="logbook-2" data-type="team">
-                    <!-- Header Item Log -->
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-initial" style="background-color: rgba(25, 135, 84, 0.12); color: #198754;">
-                                AP
-                            </div>
-                            <div>
-                                <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <span class="fw-bold small text-body">Ahmad Prasetyo</span>
-                                    <span class="badge bg-light-success text-success border border-success-subtle">Staff (PIC)</span>
-                                    <span class="badge bg-secondary" title="Snapshot status SDLC proyek saat log dicatat">DEVELOPMENT</span>
+            <?php else : ?>
+                <div class="logbook-feed-container" id="logbookFeed">
+                    <?php foreach ($logbooks as $log) :
+                        $isTeamLog = ($log['log_type'] ?? '') === 'team_log';
+                        $logTypeClass = $isTeamLog ? 'team' : 'kadept';
+                        $isAuthor = (int) ($log['user_id'] ?? 0) === (int) ($currentUserId ?? 0);
+                        $canEditLog = $isAuthor && in_array($log['log_type'] ?? '', $allowedLogTypes, true);
+                        $displayRole = $log['role_name'] ?? ($isTeamLog ? 'PIC' : 'Kepala Departemen');
+                        $displayDate = !empty($log['log_date']) ? date('d M Y', strtotime($log['log_date'])) : '-';
+                        $updatedDate = !empty($log['updated_at']) ? date('d M Y, H:i', strtotime($log['updated_at'])) : $displayDate;
+                        $avatar = strtoupper(substr((string) ($log['author_name'] ?? 'U'), 0, 2));
+                    ?>
+                        <div class="logbook-item-card <?= $isTeamLog ? 'is-team-staff' : 'is-kadept' ?> logbook-entry-card-wrapper" id="logbook-<?= (int) $log['id'] ?>" data-type="<?= esc($logTypeClass, 'attr') ?>">
+                            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-initial"><?= esc($avatar) ?></div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="fw-bold small text-body"><?= esc($log['author_name'] ?? 'User') ?></span>
+                                            <span class="badge <?= $isTeamLog ? 'bg-light-success text-success border border-success-subtle' : 'bg-primary' ?>">
+                                                <?= esc($displayRole) ?>
+                                            </span>
+                                            <span class="badge bg-secondary"><?= esc($log['status_name'] ?? '-') ?></span>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">
+                                            <?= esc($displayDate) ?> &middot; <?= $isTeamLog ? 'Laporan Tim PIC' : 'Review Kepala Departemen' ?>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="text-muted" style="font-size: 0.75rem;">
-                                    Rabu, 10 September 2026 &middot; Update Teknis Progres
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 logbook-entry-actions">
-                            <?php if ($isKadept) : ?>
-                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
-                                    data-log-id="2"
-                                    data-user-name="Ahmad Prasetyo"
-                                    data-log-date="Rabu, 10 September 2026"
-                                    data-blocker="Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner."
-                                    data-notes=""
-                                    title="Beri Arahan">
-                                    <i class="bi bi-chat-left-text"></i> Beri Arahan
-                                </button>
-                            <?php endif; ?>
-                            <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/2/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Body Item Log: 3 Blok Ringkas -->
-                    <div class="d-flex flex-column gap-3 logbook-entry-content">
-                        <div>
-                            <div class="meta-item-label">Capaian Minggu Ini</div>
-                            <div class="logbook-richtext-content">
-                                <ul class="mb-0 ps-3">
-                                    <li>Selesai mengimplementasikan <strong>API endpoint webhook</strong> transaksi.</li>
-                                    <li>Fixing validasi payload JSON dan sanitasi input database MSSQL.</li>
-                                    <li>Unit testing coverage mencapai <strong>78%</strong>.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="meta-item-label">Kendala & Masalah</div>
-                            <div class="logbook-callout-blocker">
-                                <div class="fw-bold text-danger mb-1" style="font-size: 0.8rem;">Hambatan Integrasi</div>
-                                <div class="small text-body">
-                                    Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner.
+                                <div class="d-flex align-items-center gap-1 logbook-entry-actions">
+                                    <?php if ($isKadept) : ?>
+                                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
+                                            data-log-id="<?= (int) $log['id'] ?>"
+                                            data-user-name="<?= esc($log['author_name'] ?? 'User', 'attr') ?>"
+                                            data-log-date="<?= esc($displayDate, 'attr') ?>"
+                                            data-blocker="<?= esc(strip_tags((string) ($log['blockers'] ?? '')), 'attr') ?>"
+                                            data-notes="<?= esc(strip_tags((string) ($log['kadept_notes'] ?? '')), 'attr') ?>"
+                                            title="<?= !empty($log['kadept_notes']) ? 'Ubah Arahan' : 'Beri Arahan' ?>">
+                                            <i class="bi bi-chat-left-text"></i> <?= !empty($log['kadept_notes']) ? 'Ubah Arahan' : 'Beri Arahan' ?>
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if ($canEditLog) : ?>
+                                        <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/' . $log['id'] . '/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log"
+                                            data-log-id="<?= (int) $log['id'] ?>"
+                                            data-log-date="<?= esc($displayDate, 'attr') ?>"
+                                            title="Hapus Log">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        </div>
 
-                        <div>
-                            <div class="meta-item-label">Rencana Minggu Depan</div>
-                            <div class="logbook-richtext-content">
-                                <ul class="mb-0 ps-3">
-                                    <li>Stress test 500 req/sec pada service webhook & integrasi log error.</li>
-                                    <li>Uji coba skenario timeout handling bersama tim partner.</li>
-                                </ul>
+                            <div class="d-flex flex-column gap-3 logbook-entry-content">
+                                <div>
+                                    <div class="meta-item-label">Capaian Minggu Ini</div>
+                                    <div class="logbook-richtext-content"><?= $log['achievements'] ?? '' ?></div>
+                                </div>
+                                <div>
+                                    <div class="meta-item-label">Kendala & Masalah</div>
+                                    <?php if (!empty(trim(strip_tags((string) ($log['blockers'] ?? ''))))): ?>
+                                        <div class="logbook-callout-blocker"><?= $log['blockers'] ?></div>
+                                    <?php else: ?>
+                                        <div class="small text-muted ps-1">- Tidak ada kendala yang dilaporkan.</div>
+                                    <?php endif; ?>
+                                </div>
+                                <div>
+                                    <div class="meta-item-label">Rencana Minggu Depan</div>
+                                    <div class="logbook-richtext-content"><?= $log['next_plans'] ?? '' ?></div>
+                                </div>
+                                <?php if (!empty(trim(strip_tags((string) ($log['kadept_notes'] ?? ''))))): ?>
+                                    <div class="logbook-callout-kadept-wrapper">
+                                        <div class="logbook-callout-kadept">
+                                            <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
+                                            <div class="small text-body"><?= $log['kadept_notes'] ?></div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
+                                <span>Status: <strong><?= esc($log['status_name'] ?? '-') ?></strong></span>
+                                <span>Diperbarui: <?= esc($updatedDate) ?></span>
                             </div>
                         </div>
-
-                        <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-2" style="display: none;">
-                            <div class="logbook-callout-kadept">
-                                <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
-                                <div class="small text-body callout-notes-text"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
-                        <span>Target Milestone: <strong>Stress test 500 req/sec & integrasi log error</strong></span>
-                        <span>Diperbarui: 10 Sep 2026, 14:15</span>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-
-                <!-- Item 3: Laporan Tim PIC (Manmonth) -->
-                <div class="logbook-item-card is-team-manmonth logbook-entry-card-wrapper" id="logbook-3" data-type="team">
-                    <!-- Header Item Log -->
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 pb-2 border-bottom logbook-entry-header">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-initial" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309;">
-                                RA
-                            </div>
-                            <div>
-                                <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <span class="fw-bold small text-body">Rian Ardiansyah</span>
-                                    <span class="badge bg-light-warning text-warning border border-warning-subtle">Manmonth</span>
-                                    <span class="badge bg-secondary" title="Snapshot status SDLC proyek saat log dicatat">DEVELOPMENT</span>
-                                </div>
-                                <div class="text-muted" style="font-size: 0.75rem;">
-                                    Senin, 08 September 2026 &middot; Update Frontend UI
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 logbook-entry-actions">
-                            <?php if ($isKadept) : ?>
-                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-beri-arahan"
-                                    data-log-id="3"
-                                    data-user-name="Rian Ardiansyah"
-                                    data-log-date="Senin, 08 September 2026"
-                                    data-blocker=""
-                                    data-notes=""
-                                    title="Beri Arahan">
-                                    <i class="bi bi-chat-left-text"></i> Beri Arahan
-                                </button>
-                            <?php endif; ?>
-                            <a href="<?= base_url('/projects/' . $project['id'] . '/logbooks/3/edit') ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Log">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-delete-log" title="Hapus Log">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Body Item Log: 3 Blok Ringkas -->
-                    <div class="d-flex flex-column gap-3 logbook-entry-content">
-                        <div>
-                            <div class="meta-item-label">Capaian Minggu Ini</div>
-                            <div class="logbook-richtext-content">
-                                <ul class="mb-0 ps-3">
-                                    <li>Slicing antarmuka dashboard monitoring transaksi dan filter tanggal.</li>
-                                    <li>Penyelarasan palet warna <strong>Dark Mode</strong> dengan template Mazer.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="meta-item-label">Kendala & Masalah</div>
-                            <div class="small text-muted ps-1">
-                                - (Tidak ada kendala / pengerjaan lancar)
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="meta-item-label">Rencana Minggu Depan</div>
-                            <div class="logbook-richtext-content">
-                                <ul class="mb-0 ps-3">
-                                    <li>Binding data tabel riwayat ke endpoint AJAX.</li>
-                                    <li>Penyesuaian interaktivitas filter status SDLC.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="logbook-callout-kadept-wrapper" id="kadeptCalloutWrapper-3" style="display: none;">
-                            <div class="logbook-callout-kadept">
-                                <div class="meta-item-label text-primary mb-1">Arahan & Catatan Khusus Kadept</div>
-                                <div class="small text-body callout-notes-text"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 mt-3 border-top text-muted logbook-entry-footer" style="font-size: 0.75rem;">
-                        <span>Target Milestone: <strong>Binding data tabel riwayat ke endpoint AJAX</strong></span>
-                        <span>Diperbarui: 08 Sep 2026, 11:00</span>
-                    </div>
-                </div>
-
-            </div>
+            <?php endif; ?>
         </div>
     </div>
-</div>
+    <?php endif; ?>
+
 
 <!-- Modal Delete Confirmation (Structure and IDs Preserved) -->
 <div class="modal fade" id="modalDeleteProject" tabindex="-1" aria-hidden="true">
@@ -1150,6 +1008,27 @@ if ($isCompleted) {
                 <form action="<?= base_url('/projects/delete/' . $project['id']) ?>" method="POST" class="d-inline">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-danger" data-cooldown="3">Ya, Hapus Project</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDeleteLogbook" tabindex="-1" aria-labelledby="modalDeleteLogbookLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fs-6 fw-bold text-danger" id="modalDeleteLogbookLabel">Hapus Log Mingguan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Logbook tanggal <strong id="deleteLogbookDate">-</strong> akan dihapus permanen. Lanjutkan?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <form id="formDeleteLogbook" method="POST">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-danger" data-cooldown="3">Ya, Hapus Log</button>
                 </form>
             </div>
         </div>
@@ -1177,34 +1056,22 @@ if ($isCompleted) {
         });
 
         // Delete Log Confirmation Handler
+        const deleteLogbookModal = document.getElementById('modalDeleteLogbook');
+        const deleteLogbookForm = document.getElementById('formDeleteLogbook');
+        const deleteLogbookDate = document.getElementById('deleteLogbookDate');
+        const deleteLogbookInstance = deleteLogbookModal && typeof bootstrap !== 'undefined'
+            ? bootstrap.Modal.getOrCreateInstance(deleteLogbookModal)
+            : null;
+
         document.querySelectorAll('.btn-delete-log').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const cardWrapper = this.closest('.logbook-entry-card-wrapper');
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: 'Hapus Log Mingguan?',
-                        text: 'Catatan log ini akan dihapus permanen. Lanjutkan?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Ya, Hapus',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            if (cardWrapper) {
-                                cardWrapper.style.transition = 'opacity 0.3s ease';
-                                cardWrapper.style.opacity = '0';
-                                setTimeout(() => cardWrapper.remove(), 300);
-                            }
-                            Swal.fire('Terhapus', 'Catatan log berhasil dihapus (simulasi preview).', 'success');
-                        }
-                    });
-                } else if (confirm('Apakah Anda yakin ingin menghapus catatan log ini?')) {
-                    if (cardWrapper) {
-                        cardWrapper.remove();
-                    }
+                const logId = this.getAttribute('data-log-id');
+                const logDate = this.getAttribute('data-log-date') || '-';
+                if (deleteLogbookForm && deleteLogbookInstance && logId) {
+                    deleteLogbookForm.action = '<?= base_url('/projects/' . $project['id'] . '/logbooks') ?>/' + logId + '/delete';
+                    deleteLogbookDate.textContent = logDate;
+                    deleteLogbookInstance.show();
                 }
             });
         });
@@ -1247,36 +1114,16 @@ if ($isCompleted) {
                 const notesVal = notesInput.value.trim();
                 if (!notesVal) {
                     notesInput.focus();
+                    document.getElementById('modalArahanValidation').textContent = 'Arahan Kepala Departemen wajib diisi.';
+                    document.getElementById('modalArahanValidation').classList.remove('d-none');
                     return;
                 }
 
                 const logId = document.getElementById('modalLogId').value;
-                const targetWrapper = document.getElementById('kadeptCalloutWrapper-' + logId);
-
-                if (targetWrapper) {
-                    const textElem = targetWrapper.querySelector('.callout-notes-text');
-                    if (textElem) {
-                        textElem.textContent = notesVal;
-                    }
-                    targetWrapper.style.display = 'block';
-                }
-
-                if (activeTriggerBtn) {
-                    activeTriggerBtn.setAttribute('data-notes', notesVal);
-                    activeTriggerBtn.innerHTML = '<i class="bi bi-chat-left-text"></i> Ubah Arahan';
-                    activeTriggerBtn.title = 'Ubah Arahan';
-                }
-
-                bsModal.hide();
-
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Arahan Tersimpan',
-                        text: 'Arahan Kepala Departemen berhasil diperbarui.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                const reviewForm = document.getElementById('formBeriArahan');
+                if (reviewForm && logId) {
+                    reviewForm.action = '<?= base_url('/projects/' . $project['id'] . '/logbooks') ?>/' + logId + '/review';
+                    reviewForm.submit();
                 }
             });
         }
@@ -1319,11 +1166,13 @@ if ($isCompleted) {
                         </div>
                     </div>
 
-                    <form id="formBeriArahan">
+                    <form id="formBeriArahan" method="POST">
+                        <?= csrf_field() ?>
                         <input type="hidden" id="modalLogId" value="">
                         <div class="mb-3">
                             <label for="modalKadeptNotes" class="form-label fw-bold small">Instruksi & Arahan Tindak Lanjut <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="modalKadeptNotes" rows="4" placeholder="Tuliskan instruksi koordinasi, saran teknis, atau tanggapan blocker bagi tim proyek..." required></textarea>
+                            <textarea class="form-control" id="modalKadeptNotes" name="kadept_notes" rows="4" placeholder="Tuliskan instruksi koordinasi, saran teknis, atau tanggapan blocker bagi tim proyek..." required></textarea>
+                            <div id="modalArahanValidation" class="text-danger small mt-2 d-none"></div>
                         </div>
                     </form>
                 </div>

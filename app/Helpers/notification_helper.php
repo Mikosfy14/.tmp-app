@@ -2,7 +2,7 @@
 
 if (!function_exists('get_user_feedback_notifications')) {
     /**
-     * Mengambil daftar notifikasi feedback/arahan logbook untuk user aktif (Preview/Mock data).
+     * Mengambil daftar notifikasi Logbook untuk user aktif.
      *
      * @param int|null $userId ID User (default: session user_id)
      * @param int|null $roleId ID Role (default: session role_id)
@@ -16,28 +16,44 @@ if (!function_exists('get_user_feedback_notifications')) {
             return [];
         }
 
-        // Mock preview notifications for logbook feedback / arahan
-        return [
-            [
-                'id'           => 1,
-                'logbook_id'   => 1,
-                'project_id'   => 1,
-                'project_name' => 'Sistem Informasi Manajemen Aset',
-                'sender_name'  => 'Ahmad Fauzi, M.Kom',
-                'sender_role'  => 'Kepala Departemen',
-                'message'      => 'Mohon pastikan integrasi API payment gateway telah dilakukan stress test sebelum promote.',
-                'created_at'   => date('Y-m-d H:i:s', strtotime('-2 hours')),
-            ],
-            [
-                'id'           => 2,
-                'logbook_id'   => 2,
-                'project_id'   => 1,
-                'project_name' => 'Sistem Informasi Manajemen Aset',
-                'sender_name'  => 'Rian Pratama',
-                'sender_role'  => 'Staff',
-                'message'      => 'Terdapat blocker query timeout pada modul laporan rekonsiliasi bulanan.',
-                'created_at'   => date('Y-m-d H:i:s', strtotime('-1 day')),
-            ],
-        ];
+        try {
+            $notifications = (new \App\Models\NotificationModel())->getRecentForUser($userId);
+            return array_map(static function (array $notification): array {
+                return [
+                    'id' => (int) $notification['id'],
+                    'logbook_id' => (int) $notification['logbook_id'],
+                    'project_id' => (int) $notification['project_id'],
+                    'project_name' => (string) ($notification['project_name'] ?? 'Project'),
+                    'sender_name' => (string) ($notification['actor_name'] ?? 'User'),
+                    'sender_role' => $notification['notification_type'] === 'logbook_guidance'
+                        ? 'Kepala Departemen'
+                        : 'Laporan Logbook',
+                    'message' => (string) $notification['message'],
+                    'created_at' => (string) $notification['created_at'],
+                    'notification_type' => (string) $notification['notification_type'],
+                    'read_at' => $notification['read_at'],
+                ];
+            }, $notifications);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal mengambil notifikasi Logbook: {message}', ['message' => $e->getMessage()]);
+            return [];
+        }
+    }
+}
+
+if (!function_exists('get_user_feedback_unread_count')) {
+    function get_user_feedback_unread_count(?int $userId = null): int
+    {
+        $userId = $userId ?? (int) session()->get('user_id');
+        if ($userId <= 0) {
+            return 0;
+        }
+
+        try {
+            return (new \App\Models\NotificationModel())->countUnreadForUser($userId);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal menghitung notifikasi Logbook belum dibaca: {message}', ['message' => $e->getMessage()]);
+            return 0;
+        }
     }
 }

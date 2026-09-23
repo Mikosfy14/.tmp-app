@@ -8,6 +8,7 @@ use App\Models\ProjectStatusModel;
 use App\Models\DatabaseTypeModel;
 use App\Models\UserModel;
 use App\Models\ProjectLogbookModel;
+use App\Models\NotificationModel;
 use App\Services\ReportExportService;
 
 class Projects extends BaseController
@@ -18,6 +19,7 @@ class Projects extends BaseController
     protected DatabaseTypeModel $databaseTypeModel;
     protected UserModel $userModel;
     protected ProjectLogbookModel $projectLogbookModel;
+    protected NotificationModel $notificationModel;
     protected ReportExportService $exportService;
 
     public function __construct()
@@ -29,6 +31,7 @@ class Projects extends BaseController
         $this->databaseTypeModel = new DatabaseTypeModel();
         $this->userModel = new UserModel();
         $this->projectLogbookModel = new ProjectLogbookModel();
+        $this->notificationModel = new NotificationModel();
         $this->exportService = new ReportExportService();
     }
 
@@ -92,6 +95,9 @@ class Projects extends BaseController
             'project' => $project,
             'projectFiles' => $this->projectFileModel->getFilesByProject((int) $project['id']),
             'isKadept' => $this->isKepalaDepartemen(),
+            'logbooks' => $this->projectLogbookModel->getLogbooksByProjectId((int) $project['id']),
+            'allowedLogTypes' => $this->getAllowedLogTypes($project),
+            'currentUserId' => (int) session()->get('user_id'),
         ]);
     }
 
@@ -103,25 +109,32 @@ class Projects extends BaseController
             return redirect()->to('/projects')->with('error', 'Project tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
+        $allowedLogTypes = $this->getAllowedLogTypes($project);
+        if (empty($allowedLogTypes)) {
+            return redirect()->to('/projects/detail/' . $project['id'])->with('error', 'Anda tidak memiliki hak untuk menambah Logbook pada project ini.');
+        }
+
+        $defaultType = in_array('team_log', $allowedLogTypes, true) ? 'team_log' : 'kadept_review';
+
         return view('projects/logbooks/form', [
             'title' => 'Tambah Log Mingguan - ' . $project['name'],
             'pageTitle' => 'Tambah Log Mingguan',
             'pageSubtitle' => 'Catat evaluasi mingguan atau capaian progres pengerjaan proyek.',
             'project' => $project,
             'statusOptions' => $this->projectStatusModel->findAll(),
+            'allowedLogTypes' => $allowedLogTypes,
             'isEdit' => false,
             'log' => [
                 'id' => null,
-                'log_type' => $this->isKepalaDepartemen() ? 'kadept_review' : 'team_log',
+                'log_type' => old('log_type', $defaultType),
                 'log_date' => date('Y-m-d'),
                 'project_status_id' => $project['project_status_id'] ?? 3,
-                'progress_percentage' => $project['progress_percentage'] ?? 60,
-                'achievements' => '',
-                'blockers' => '',
-                'next_plans' => '',
+                'achievements' => old('achievements', ''),
+                'blockers' => old('blockers', ''),
+                'next_plans' => old('next_plans', ''),
                 'kadept_notes' => '',
             ],
-            'formAction' => base_url('/projects/detail/' . $project['id']),
+            'formAction' => base_url('/projects/' . $project['id'] . '/logbooks/store'),
         ]);
     }
 
@@ -133,44 +146,12 @@ class Projects extends BaseController
             return redirect()->to('/projects')->with('error', 'Project tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        // Mock data representatif untuk pratinjau form edit
-        $mockLogs = [
-            '1' => [
-                'id' => 1,
-                'log_type' => 'kadept_review',
-                'log_date' => '2026-09-12',
-                'project_status_id' => 4,
-                'progress_percentage' => 65,
-                'achievements' => "Review berkala bersama tim dev. Modul integrasi payment gateway sandbox berhasil diverifikasi.\nPerlu akselerasi pengetesan end-to-end sebelum jadwal User Acceptance Test (UAT).",
-                'blockers' => '',
-                'next_plans' => "Penyelesaian modul settlement transaksi dan verifikasi security scan.\nPersiapan environment SIT dan pendaftaran whitelist IP firewall.",
-                'kadept_notes' => 'Pastikan dokumen POK Promote dan POK Database disiapkan paralel pekan ini. Koordinasikan dengan Tim Infrastruktur untuk pembukaan port firewall staging.',
-            ],
-            '2' => [
-                'id' => 2,
-                'log_type' => 'team_log',
-                'log_date' => '2026-09-10',
-                'project_status_id' => 3,
-                'progress_percentage' => 60,
-                'achievements' => "Selesai mengimplementasikan API endpoint webhook transaksi.\nFixing validasi payload JSON dan sanitasi input database MSSQL.\nUnit testing coverage mencapai 78%.",
-                'blockers' => 'Koneksi ke endpoint mock bank partner kadang timeout pada jam sibuk. Sedang mengajukan whitelist IP development ke tim partner.',
-                'next_plans' => "Stress test 500 req/sec pada service webhook.\nIntegrasi error log monitoring ke dashboard.",
-                'kadept_notes' => '',
-            ],
-            '3' => [
-                'id' => 3,
-                'log_type' => 'team_log',
-                'log_date' => '2026-09-08',
-                'project_status_id' => 3,
-                'progress_percentage' => 50,
-                'achievements' => "Slicing antarmuka dashboard monitoring transaksi dan filter tanggal.\nPenyelarasan palet warna Dark Mode dengan template Mazer.",
-                'blockers' => '',
-                'next_plans' => "Binding data tabel riwayat ke endpoint AJAX.\nPenyesuaian interaktivitas filter status SDLC.",
-                'kadept_notes' => '',
-            ]
-        ];
-
-        $log = $mockLogs[(string) $logbookId] ?? $mockLogs['1'];
+        // Load the requested persisted logbook.
+        $log = $this->projectLogbookModel->getLogbookByProjectAndId((int) $project['id'], (int) $logbookId);
+        $currentUserId = (int) session()->get('user_id');
+        if (!$log || (int) $log['user_id'] !== $currentUserId || !in_array($log['log_type'], $this->getAllowedLogTypes($project), true)) {
+            return redirect()->to('/projects/detail/' . $project['id'])->with('error', 'Logbook tidak ditemukan atau Anda tidak memiliki akses untuk mengubahnya.');
+        }
 
         return view('projects/logbooks/form', [
             'title' => 'Edit Log Mingguan - ' . $project['name'],
@@ -178,10 +159,129 @@ class Projects extends BaseController
             'pageSubtitle' => 'Perbarui catatan evaluasi mingguan atau laporan progres teknis.',
             'project' => $project,
             'statusOptions' => $this->projectStatusModel->findAll(),
+            'allowedLogTypes' => [$log['log_type']],
             'isEdit' => true,
             'log' => $log,
-            'formAction' => base_url('/projects/detail/' . $project['id']),
+            'formAction' => base_url('/projects/' . $project['id'] . '/logbooks/' . $log['id'] . '/update'),
         ]);
+    }
+
+    public function storeLogbook($id)
+    {
+        $project = $this->projectModel->getProjectDetail($id, (int) session()->get('user_id'), $this->isKepalaDepartemen());
+        if (!$project) {
+            return redirect()->to('/projects')->with('error', 'Project tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        $logType = trim((string) $this->request->getPost('log_type'));
+        if (!in_array($logType, $this->getAllowedLogTypes($project), true)) {
+            return redirect()->to('/projects/' . $project['id'] . '/logbooks/create')->withInput()->with('error', 'Tipe Logbook tidak sesuai dengan hak akses Anda.');
+        }
+
+        $validationErrors = $this->validateLogbookInput();
+        if (!empty($validationErrors)) {
+            return redirect()->to('/projects/' . $project['id'] . '/logbooks/create')->withInput()->with('errors', $validationErrors);
+        }
+
+        $logbookId = $this->projectLogbookModel->insert($this->buildLogbookPayload($project, $logType));
+        if (!$logbookId) {
+            return redirect()->to('/projects/' . $project['id'] . '/logbooks/create')->withInput()->with('error', 'Logbook gagal disimpan.');
+        }
+
+        if ($logType === 'team_log') {
+            $this->notificationModel->createLogbookSubmittedNotifications(
+                (int) $project['id'],
+                (int) $logbookId,
+                (int) session()->get('user_id'),
+                (string) $project['name']
+            );
+        }
+
+        return redirect()->to('/projects/detail/' . $project['id'])->with('success', 'Logbook berhasil ditambahkan.');
+    }
+
+    public function updateLogbook($id, $logbookId)
+    {
+        $project = $this->projectModel->getProjectDetail($id, (int) session()->get('user_id'), $this->isKepalaDepartemen());
+        $log = $this->projectLogbookModel->getLogbookByProjectAndId((int) $id, (int) $logbookId);
+        $currentUserId = (int) session()->get('user_id');
+
+        if (!$project || !$log || (int) $log['user_id'] !== $currentUserId) {
+            return redirect()->to('/projects')->with('error', 'Logbook tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        $postedType = trim((string) $this->request->getPost('log_type'));
+        if ($postedType !== $log['log_type'] || !in_array($log['log_type'], $this->getAllowedLogTypes($project), true)) {
+            return redirect()->to('/projects/' . $project['id'] . '/logbooks/' . $log['id'] . '/edit')->withInput()->with('error', 'Tipe Logbook tidak dapat diubah atau sudah tidak sesuai dengan hak akses Anda.');
+        }
+
+        $validationErrors = $this->validateLogbookInput();
+        if (!empty($validationErrors)) {
+            return redirect()->to('/projects/' . $project['id'] . '/logbooks/' . $log['id'] . '/edit')->withInput()->with('errors', $validationErrors);
+        }
+
+        $this->projectLogbookModel->update((int) $log['id'], $this->buildLogbookPayload($project, $log['log_type'], false));
+
+        return redirect()->to('/projects/detail/' . $project['id'] . '#logbook-' . $log['id'])->with('success', 'Logbook berhasil diperbarui.');
+    }
+
+    public function deleteLogbook($id, $logbookId)
+    {
+        $project = $this->projectModel->getProjectDetail($id, (int) session()->get('user_id'), $this->isKepalaDepartemen());
+        $log = $this->projectLogbookModel->getLogbookByProjectAndId((int) $id, (int) $logbookId);
+        $currentUserId = (int) session()->get('user_id');
+
+        if (!$project || !$log || (int) $log['user_id'] !== $currentUserId || !in_array($log['log_type'], $this->getAllowedLogTypes($project), true)) {
+            return redirect()->to('/projects/detail/' . $id)->with('error', 'Logbook tidak ditemukan atau Anda tidak memiliki akses untuk menghapusnya.');
+        }
+
+        $this->projectLogbookModel->delete((int) $log['id']);
+
+        return redirect()->to('/projects/detail/' . $project['id'])->with('success', 'Logbook berhasil dihapus.');
+    }
+
+    public function reviewLogbook($id, $logbookId)
+    {
+        if (!$this->isKepalaDepartemen()) {
+            return redirect()->to('/projects')->with('error', 'Anda tidak memiliki akses untuk memberikan arahan.');
+        }
+
+        $project = $this->projectModel->getProjectDetail($id, (int) session()->get('user_id'), true);
+        $log = $this->projectLogbookModel->getLogbookByProjectAndId((int) $id, (int) $logbookId);
+        $notes = trim((string) $this->request->getPost('kadept_notes'));
+
+        if (!$project || !$log) {
+            return redirect()->to('/projects')->with('error', 'Logbook tidak ditemukan.');
+        }
+
+        if ($notes === '') {
+            return redirect()->to('/projects/detail/' . $project['id'] . '#logbook-' . $log['id'])->with('error', 'Arahan Kepala Departemen wajib diisi.');
+        }
+
+        $sanitizedNotes = $this->sanitizeRichText($notes);
+        $updated = $this->projectLogbookModel->update((int) $log['id'], [
+            'kadept_notes' => $sanitizedNotes,
+            'kadept_reviewed_by' => (int) session()->get('user_id'),
+            'kadept_reviewed_at' => date('Y-m-d H:i:s'),
+        ]);
+        if (!$updated) {
+            return redirect()->to('/projects/detail/' . $project['id'] . '#logbook-' . $log['id'])->with('error', 'Arahan Kepala Departemen gagal disimpan.');
+        }
+
+        $previousNotes = $this->sanitizeRichText((string) ($log['kadept_notes'] ?? ''));
+        if ($sanitizedNotes !== $previousNotes && (int) $log['user_id'] !== (int) session()->get('user_id')) {
+            $this->notificationModel->createGuidanceNotification(
+                (int) $log['user_id'],
+                (int) session()->get('user_id'),
+                (int) $project['id'],
+                (int) $log['id'],
+                (string) $project['name'],
+                sha1($sanitizedNotes),
+                trim(strip_tags($sanitizedNotes))
+            );
+        }
+
+        return redirect()->to('/projects/detail/' . $project['id'] . '#logbook-' . $log['id'])->with('success', 'Arahan Kepala Departemen berhasil disimpan.');
     }
 
     public function store()
@@ -707,7 +807,93 @@ class Projects extends BaseController
 
     private function isKepalaDepartemen(): bool
     {
-        return strtolower((string) session()->get('role_name')) === 'kepala departemen';
+        return strtolower((string) session()->get('role_name')) === 'kepala departemen'
+            || (int) session()->get('role_id') === 1;
+    }
+
+    private function getAllowedLogTypes(array $project): array
+    {
+        $roleName = strtolower(trim((string) session()->get('role_name')));
+        $roleId = (int) session()->get('role_id');
+        $isKadept = $roleName === 'kepala departemen' || $roleId === 1;
+        $userId = (int) session()->get('user_id');
+        $assignedIds = $this->parseAssignedToString($project['assigned_to'] ?? '');
+        $isAssignedPic = in_array($userId, $assignedIds, true);
+
+        if ($roleId === 2 || $roleId === 3 || in_array($roleName, ['staff', 'manmonth'], true)) {
+            return ['team_log'];
+        }
+
+        if (!$isKadept) {
+            return [];
+        }
+
+        return $isAssignedPic ? ['team_log', 'kadept_review'] : ['kadept_review'];
+    }
+
+    private function validateLogbookInput(): array
+    {
+        $errors = [];
+        $statusId = (int) $this->request->getPost('project_status_id');
+        $logDate = trim((string) $this->request->getPost('log_date'));
+        $achievements = trim((string) $this->request->getPost('achievements'));
+        $nextPlans = trim((string) $this->request->getPost('next_plans'));
+
+        if ($statusId <= 0 || !$this->projectStatusModel->find($statusId)) {
+            $errors['project_status_id'] = 'Status SDLC yang dipilih tidak valid.';
+        }
+
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $logDate);
+        if (!$date || $date->format('Y-m-d') !== $logDate) {
+            $errors['log_date'] = 'Tanggal Logbook tidak valid.';
+        }
+
+        if ($achievements === '' || $this->isEmptyRichText($achievements)) {
+            $errors['achievements'] = 'Capaian Minggu Ini wajib diisi.';
+        } elseif (mb_strlen(strip_tags($achievements)) > 10000) {
+            $errors['achievements'] = 'Capaian Minggu Ini terlalu panjang.';
+        }
+
+        if ($nextPlans === '' || $this->isEmptyRichText($nextPlans)) {
+            $errors['next_plans'] = 'Rencana Minggu Depan wajib diisi.';
+        } elseif (mb_strlen(strip_tags($nextPlans)) > 10000) {
+            $errors['next_plans'] = 'Rencana Minggu Depan terlalu panjang.';
+        }
+
+        if (mb_strlen(strip_tags((string) $this->request->getPost('blockers'))) > 10000) {
+            $errors['blockers'] = 'Kendala dan Masalah terlalu panjang.';
+        }
+
+        return $errors;
+    }
+
+    private function buildLogbookPayload(array $project, string $logType, bool $includeIdentity = true): array
+    {
+        $payload = [
+            'project_status_id' => (int) ($project['project_status_id'] ?? 0),
+            'log_type' => $logType,
+            'log_date' => trim((string) $this->request->getPost('log_date')),
+            'achievements' => $this->sanitizeRichText((string) $this->request->getPost('achievements')),
+            'blockers' => $this->sanitizeRichText((string) $this->request->getPost('blockers')),
+            'next_plans' => $this->sanitizeRichText((string) $this->request->getPost('next_plans')),
+        ];
+
+        if ($includeIdentity) {
+            $payload['project_id'] = (int) $project['id'];
+            $payload['user_id'] = (int) session()->get('user_id');
+        }
+
+        return $payload;
+    }
+
+    private function sanitizeRichText(string $value): string
+    {
+        return strip_tags(trim($value), '<p><br><strong><em><u><ol><ul><li>');
+    }
+
+    private function isEmptyRichText(string $value): bool
+    {
+        return trim(strip_tags($value)) === '';
     }
 
     public function exportExcel()

@@ -7,12 +7,16 @@
  * @var array $statusOptions
  * @var bool $isEdit
  * @var array $log
+ * @var array $allowedLogTypes
  * @var string $formAction
  */
 
 $isKadept = (strtolower((string) session()->get('role_name')) === 'kepala departemen') || ((int) session()->get('role_id') === 1);
+$allowedLogTypes = is_array($allowedLogTypes ?? null) ? $allowedLogTypes : ['team_log'];
 $currentType = old('log_type', $log['log_type'] ?? ($isKadept ? 'kadept_review' : 'team_log'));
 $currentStatusId = (int) old('project_status_id', $log['project_status_id'] ?? ($project['project_status_id'] ?? 1));
+$flashError = session()->getFlashdata('error');
+$validationErrors = session()->getFlashdata('errors') ?? [];
 ?>
 
 <?= $this->extend('layouts/main') ?>
@@ -253,7 +257,8 @@ $currentStatusId = (int) old('project_status_id', $log['project_status_id'] ?? (
 </div>
 
 <div class="card project-form-card shadow-sm">
-    <form id="formLogbook" action="<?= esc($formAction, 'attr') ?>" method="GET">
+    <form id="formLogbook" action="<?= esc($formAction, 'attr') ?>" method="POST">
+        <?= csrf_field() ?>
         <!-- Hidden input: Status SDLC otomatis mengikat snapshot status aktif proyek saat log disimpan -->
         <input type="hidden" id="project_status_id" name="project_status_id" value="<?= (int) $currentStatusId ?>">
 
@@ -307,16 +312,18 @@ $currentStatusId = (int) old('project_status_id', $log['project_status_id'] ?? (
                 <div class="col-12 col-md-6">
                     <label for="log_type" class="form-label">Tipe Catatan <span class="text-danger">*</span></label>
                     <select class="form-select" id="log_type" name="log_type" required>
-                        <?php if ($isKadept) : ?>
+                        <?php if (in_array('team_log', $allowedLogTypes, true)) : ?>
+                            <option value="team_log" <?= $currentType === 'team_log' ? 'selected' : '' ?>>Laporan Tim PIC</option>
+                        <?php endif; ?>
+                        <?php if (in_array('kadept_review', $allowedLogTypes, true)) : ?>
                             <option value="kadept_review" <?= $currentType === 'kadept_review' ? 'selected' : '' ?>>Review Kepala Departemen</option>
                         <?php endif; ?>
-                        <option value="team_log" <?= $currentType === 'team_log' ? 'selected' : '' ?>>Laporan Tim PIC</option>
                     </select>
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label for="log_date" class="form-label">Tanggal Review / Log <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="log_date" name="log_date" value="<?= esc($log['log_date'] ?? date('Y-m-d')) ?>" required>
+                    <input type="date" class="form-control" id="log_date" name="log_date" value="<?= esc(old('log_date', $log['log_date'] ?? date('Y-m-d'))) ?>" required>
                 </div>
             </div>
         </div>
@@ -376,6 +383,33 @@ $currentStatusId = (int) old('project_status_id', $log['project_status_id'] ?? (
     </form>
 </div>
 
+<div class="modal fade" id="modalLogbookValidation" tabindex="-1" aria-labelledby="modalLogbookValidationLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fs-6 fw-bold text-danger" id="modalLogbookValidationLabel">Validasi Logbook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <?php if ($flashError || !empty($validationErrors)) : ?>
+                    <?php if ($flashError) : ?>
+                        <p class="mb-0"><?= esc($flashError) ?></p>
+                    <?php else : ?>
+                        <ul class="mb-0">
+                            <?php foreach ($validationErrors as $message) : ?>
+                                <li><?= esc($message) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="<?= base_url('assets/vendors/quill/quill.min.js') ?>"></script>
 
 <script>
@@ -416,6 +450,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    const validationModal = document.getElementById('modalLogbookValidation');
+    const showValidation = function (message, focusEditor) {
+        if (focusEditor) {
+            focusEditor.focus();
+        }
+
+        const modalBody = validationModal?.querySelector('.modal-body');
+        if (modalBody) {
+            modalBody.innerHTML = '<p class="mb-0">' + message + '</p>';
+        }
+
+        if (validationModal && typeof bootstrap !== 'undefined') {
+            bootstrap.Modal.getOrCreateInstance(validationModal).show();
+        }
+    };
+
     // Sinkronisasi data Quill ke hidden input saat submit
     form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -429,33 +479,24 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('next_plans').value = isNextPlansEmpty ? '' : quillNextPlans.root.innerHTML;
 
         if (isAchievementsEmpty) {
-            quillAchievements.focus();
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('Validasi Gagal', 'Kolom Capaian Minggu Ini wajib diisi.', 'warning');
-            } else {
-                alert('Kolom Capaian Minggu Ini wajib diisi.');
-            }
+            showValidation('Kolom Capaian Minggu Ini wajib diisi.', quillAchievements);
             return;
         }
 
         if (isNextPlansEmpty) {
-            quillNextPlans.focus();
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('Validasi Gagal', 'Kolom Rencana Minggu Depan wajib diisi.', 'warning');
-            } else {
-                alert('Kolom Rencana Minggu Depan wajib diisi.');
-            }
+            showValidation('Kolom Rencana Minggu Depan wajib diisi.', quillNextPlans);
             return;
         }
 
         const submitBtn = document.getElementById('btnSubmitLogbook');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
-
-        setTimeout(function () {
-            window.location.href = '<?= base_url('/projects/detail/' . $project['id']) ?>';
-        }, 600);
+        form.submit();
     });
+
+    if (validationModal && typeof bootstrap !== 'undefined') {
+        bootstrap.Modal.getOrCreateInstance(validationModal).show();
+    }
 });
 </script>
 

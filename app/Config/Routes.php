@@ -51,6 +51,10 @@ $routes->group('projects', ['filter' => 'auth'], function($routes) {
     $routes->post('files/delete/(:segment)', 'Projects::deleteFile/$1');
     $routes->get('(:segment)/logbooks/create', 'Projects::createLogbook/$1');
     $routes->get('(:segment)/logbooks/(:segment)/edit', 'Projects::editLogbook/$1/$2');
+    $routes->post('(:segment)/logbooks/store', 'Projects::storeLogbook/$1');
+    $routes->post('(:segment)/logbooks/(:segment)/update', 'Projects::updateLogbook/$1/$2');
+    $routes->post('(:segment)/logbooks/(:segment)/delete', 'Projects::deleteLogbook/$1/$2');
+    $routes->post('(:segment)/logbooks/(:segment)/review', 'Projects::reviewLogbook/$1/$2');
 });
 
 $routes->group('users', ['filter' => 'auth'], function($routes) {
@@ -65,10 +69,15 @@ $routes->group('users', ['filter' => 'auth'], function($routes) {
     $routes->post('deactivate/(:num)', 'Users::deactivate/$1');
 });
 
+$routes->group('notifications', ['filter' => 'auth'], function($routes) {
+    $routes->post('(:segment)/read', 'Notifications::read/$1');
+    $routes->post('read-all', 'Notifications::readAll');
+});
+
+
 // Direct Testing Routes for Custom Error Pages (403, 404, 500)
 $routes->group('test-error', function($routes) {
     $routes->get('403', 'ErrorTest::error403');
     $routes->get('404', 'ErrorTest::error404');
     $routes->get('500', 'ErrorTest::error500');
 });
-
